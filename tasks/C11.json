@@ -1,0 +1,13 @@
+{
+  "id": "C11",
+  "module": "M2",
+  "control": true,
+  "status": "final",
+  "verified_by": [
+    "evalkit.domain.oracle.rules",
+    "evalkit.domain.oracle.reference"
+  ],
+  "history": "Keys: x, y. Initial: x=0, y=0. Every written value is unique per key.\nT1  commit=4  r(x)=0  w(x)=1\nT2  commit=5  r(x)=0  w(x)=2",
+  "expected_verdict": "invalid",
+  "prompt": "Apply M2 to this transaction history and end with a fenced JSON object containing verdict valid, invalid, or undetermined.\n\nKeys: x, y. Initial: x=0, y=0. Every written value is unique per key.\nT1  commit=4  r(x)=0  w(x)=1\nT2  commit=5  r(x)=0  w(x)=2"
+}

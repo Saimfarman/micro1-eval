@@ -1,0 +1,8 @@
+models:
+  - id: mock
+    provider: mock
+    display_name: Deterministic mock
+    enabled: true
+    requests_per_minute: 60
+    requests_per_day: 10000
+    max_tokens: 4096

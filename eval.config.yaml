@@ -1,0 +1,11 @@
+title: "Transaction History Reasoning Eval"
+domain: computer-science
+modules: [M1, M2, M3]
+repetitions: 1
+failure_taxonomy:
+  - wrong_verdict
+  - wrong_certificate
+  - calculation_error
+  - format_violation
+  - incomplete_answer
+  - refusal

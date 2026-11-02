@@ -1,0 +1,97 @@
+# Literature test vectors V1 to V10
+
+These are encoded in tests/domain/vectors.py and must pass under every checker.
+
+Classic cases whose verdicts are established in the literature (Berenson et al. 1995; Adya 1999; standard textbook treatments). Encode them as tests for every checker. Keys are x and y with initial value 0 unless stated. The timed form is for M1 and M3, the commit-ordered form for M2.
+
+```
+V1  Write skew
+  timed:
+    T1  start=1  commit=6  r(x)=0  w(y)=1
+    T2  start=2  commit=5  r(y)=0  w(x)=1
+  M1: valid.  reads_from: T1.op1=init, T2.op1=init
+  commit-ordered:
+    T2  commit=5  r(y)=0  w(x)=1
+    T1  commit=6  r(x)=0  w(y)=1
+  M2: invalid.  cycle: T1 -rw(x)-> T2 -rw(y)-> T1   (G2-item)
+
+V2  Lost update
+  timed:
+    T1  start=1  commit=4  r(x)=0  w(x)=1
+    T2  start=2  commit=5  r(x)=0  w(x)=2
+  M1: invalid.  first-committer-wins on x between T1 and T2
+  commit-ordered:
+    T1  commit=4  r(x)=0  w(x)=1
+    T2  commit=5  r(x)=0  w(x)=2
+  M2: invalid.  cycle: T1 -ww(x)-> T2 -rw(x)-> T1   (G-single)
+
+V3  Read skew
+  timed:
+    T1  start=1  commit=6  r(x)=0  r(y)=2
+    T2  start=2  commit=4  w(x)=1  w(y)=2
+  M1: invalid.  snapshot-read: T1.op2 expected init (0), observed 2, written by T2 after T1 started
+  commit-ordered:
+    T2  commit=4  w(x)=1  w(y)=2
+    T1  commit=6  r(x)=0  r(y)=2
+  M2: invalid.  cycle: T1 -rw(x)-> T2 -wr(y)-> T1   (G-single)
+
+V4  Stale-looking read (serializable, but not strict serializable)
+  timed:
+    T1  start=1  commit=3  w(x)=1
+    T2  start=2  commit=4  r(x)=0
+  M1: valid.  reads_from: T2.op1=init
+  commit-ordered:
+    T1  commit=3  w(x)=1
+    T2  commit=4  r(x)=0
+  M2: valid.  serial_order: T2, T1
+
+V5  Aborted read
+  timed:
+    T1  start=1  abort=2  w(x)=1
+    T2  start=3  commit=4  r(x)=1
+  M1: invalid.  snapshot-read named aborted-read: T2.op1 expected init (0), observed 1 from aborted T1
+  commit-ordered:
+    T1  abort  w(x)=1
+    T2  commit=4  r(x)=1
+  M2: invalid.  aborted-read: reader T2, writer T1, key x   (G1a)
+
+V6  Intermediate read
+  timed:
+    T1  start=1  commit=4  w(x)=1  w(x)=2
+    T2  start=5  commit=6  r(x)=1
+  M1: invalid.  snapshot-read named intermediate-read: T2.op1 expected T1 (value 2), observed 1
+  commit-ordered:
+    T1  commit=4  w(x)=1  w(x)=2
+    T2  commit=6  r(x)=1
+  M2: invalid.  intermediate-read: reader T2, writer T1, key x   (G1b)
+
+V7  In-doubt transaction, undetermined
+  timed:
+    T1  start=1  prepared commit_ts=4  w(x)=1
+    T2  start=5  commit=6  r(x)=1
+  M3: undetermined.
+    T1 committed: valid (T2.op1 reads from T1).
+    T1 aborted:   invalid (aborted-read: T2.op1 expected init, observed 1).
+
+V8  In-doubt transaction that cannot matter (keys x, y, z)
+  timed:
+    T1  start=1  prepared commit_ts=4  w(z)=1
+    T2  start=5  commit=6  r(x)=0  w(y)=1
+  M3: valid.  Both completions are valid (T2.op1 reads from init in each).
+
+V9  Reading your own write
+  timed:
+    T1  start=1  commit=3  w(x)=1  r(x)=1
+  M1: valid.  reads_from has no entry (the read follows T1’s own write)
+  broken variant:
+    T1  start=1  commit=3  w(x)=1  r(x)=0
+  M1: invalid.  own-write: T1.op2 must return 1
+
+V10  Adjacent timestamps, no concurrency
+  timed:
+    T1  start=1  commit=3  w(x)=1
+    T2  start=4  commit=5  r(x)=1  w(x)=2
+  M1: valid.  reads_from: T2.op1=T1. T2 starts after T1 commits, so no conflict.
+```
+
+Every vector above was worked through against D1 and D2 when this plan was written, but the plan is not the authority: the three checkers and the independent reviewer are. If a checker disagrees with a vector, stop and resolve it before building anything else.

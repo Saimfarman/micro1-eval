@@ -1,0 +1,13 @@
+{
+  "id": "C17",
+  "module": "M3",
+  "control": true,
+  "status": "final",
+  "verified_by": [
+    "evalkit.domain.oracle.rules",
+    "evalkit.domain.oracle.reference"
+  ],
+  "history": "Keys: x, y, z. Initial: x=0, y=0, z=0. Every written value is unique per key.\nT1  start=1  prepared commit_ts=4  w(z)=1\nT2  start=5  commit=6  r(x)=0  w(y)=1",
+  "expected_verdict": "valid",
+  "prompt": "Apply M3 to this transaction history and end with a fenced JSON object containing verdict valid, invalid, or undetermined.\n\nKeys: x, y, z. Initial: x=0, y=0, z=0. Every written value is unique per key.\nT1  start=1  prepared commit_ts=4  w(z)=1\nT2  start=5  commit=6  r(x)=0  w(y)=1"
+}
