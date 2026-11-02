@@ -4,10 +4,70 @@
   "control": true,
   "status": "final",
   "verified_by": [
+    "evalkit.domain.oracle.reference",
     "evalkit.domain.oracle.rules",
-    "evalkit.domain.oracle.reference"
+    "evalkit.domain.oracle.o3"
   ],
   "history": "Keys: x, y. Initial: x=0, y=0. Every written value is unique per key.\nT1  commit=4  w(x)=1  w(x)=2\nT2  commit=6  r(x)=1",
   "expected_verdict": "invalid",
-  "prompt": "Apply M2 to this transaction history and end with a fenced JSON object containing verdict valid, invalid, or undetermined.\n\nKeys: x, y. Initial: x=0, y=0. Every written value is unique per key.\nT1  commit=4  w(x)=1  w(x)=2\nT2  commit=6  r(x)=1"
+  "prompt": "Apply M2 to this history. Explain the decision and end with a fenced JSON object containing verdict valid, invalid, or undetermined.\n\nKeys: x, y. Initial: x=0, y=0. Every written value is unique per key.\nT1  commit=4  w(x)=1  w(x)=2\nT2  commit=6  r(x)=1",
+  "expected_certificate": {
+    "module": "M2",
+    "edges": [],
+    "violations": [
+      {
+        "rule": "intermediate-read",
+        "reader": "T2",
+        "writer": "T1",
+        "key": "x",
+        "op": 1
+      }
+    ],
+    "versions": {
+      "x": [
+        "init",
+        "T1"
+      ],
+      "y": [
+        "init"
+      ]
+    },
+    "verdict": "invalid",
+    "derivation": [
+      "1. Version order of x: initial (0), then T1's value 2 (commit 4).",
+      "2. Version order of y: initial (0).",
+      "3. VIOLATION (intermediate-read): {'rule': 'intermediate-read', 'reader': 'T2', 'writer': 'T1', 'key': 'x', 'op': 1}",
+      "4. Conclusion: NOT serializable."
+    ]
+  },
+  "derivation": [
+    "1. Version order of x: initial (0), then T1's value 2 (commit 4).",
+    "2. Version order of y: initial (0).",
+    "3. VIOLATION (intermediate-read): {'rule': 'intermediate-read', 'reader': 'T2', 'writer': 'T1', 'key': 'x', 'op': 1}",
+    "4. Conclusion: NOT serializable."
+  ],
+  "canonical_hash": "a13de4657047528189e8d119d32b5651633e8b46a18893346b14eb3680f3204c",
+  "difficulty": {
+    "transactions": 2,
+    "keys": 2,
+    "operations": 3,
+    "reads": 1,
+    "writes": 2,
+    "prepared": 0,
+    "certificate_items": 0
+  },
+  "provenance": {
+    "source": "frozen-v1",
+    "seed": null,
+    "generator": "frozen-corpus",
+    "oracles": [
+      "evalkit.domain.oracle.reference",
+      "evalkit.domain.oracle.rules",
+      "evalkit.domain.oracle.o3"
+    ]
+  },
+  "control_relationship": {
+    "kind": "standalone-control",
+    "paired_with": null
+  }
 }

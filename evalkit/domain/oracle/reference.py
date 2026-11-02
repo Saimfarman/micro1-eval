@@ -11,6 +11,8 @@ from __future__ import annotations
 from itertools import product
 
 from ..history import History, HistoryError
+from ..linearizability import RegisterHistory
+from .m4 import linearization
 
 
 def ref_si_valid(h: History) -> bool:
@@ -105,6 +107,10 @@ def _resolved(h: History, assignment: dict) -> History:
 
 def ref_verdict(h: History, module: str) -> str:
     module = module.upper()
+    if module == "M4":
+        if not isinstance(h, RegisterHistory):
+            raise HistoryError("M4 requires a register history")
+        return "valid" if linearization(h) is not None else "invalid"
     if module == "M1":
         return "valid" if ref_si_valid(h) else "invalid"
     if module == "M2":

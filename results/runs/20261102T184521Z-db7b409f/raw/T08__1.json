@@ -1,0 +1,23 @@
+{
+  "attempt_key": "20261102T184521Z-db7b409f/mock/T08/1",
+  "task_id": "T08",
+  "task_hash": "9ac65b6fd216efa8aa96beef3f4b96c915795d2917e307cc388f0f25cc240435",
+  "prompt_sent": "Apply M1 to this history. Explain the decision and end with a fenced JSON object containing verdict valid, invalid, or undetermined.\n\nKeys: x, y. Initial: x=0, y=0. Every written value is unique per key.\nT1  start=1  commit=3  w(x)=1  r(x)=0",
+  "model_requested": "mock",
+  "model_returned": "mock",
+  "settings": {
+    "temperature": 0,
+    "max_tokens": 4096
+  },
+  "response_text": "{\"module\": \"M1\", \"verdict\": \"invalid\", \"reads_from\": {}, \"violations\": [{\"rule\": \"own-write\", \"txn\": \"T1\", \"op\": 2, \"expected\": 1, \"observed\": 0}], \"derivation\": [\"1. T1 started at 1 and committed at 3.\", \"  op2 r(x): T1 wrote x=1 earlier in the same transaction, so the read must return 1. Observed 0: VIOLATION (own-write).\", \"2. No two overlapping committed transactions write a common key (first-committer-wins holds).\", \"3. Conclusion: NOT valid under snapshot isolation. First violation: T1.op2 expected 1 but observed 0 (own-write).\"]}",
+  "finish_reason": "stop",
+  "usage": {
+    "input_tokens": 39,
+    "output_tokens": 76,
+    "total_tokens": 115
+  },
+  "latency_ms": 0,
+  "provider_response_id": "mock-T08",
+  "created_at": "2026-11-02T18:45:21.156478+00:00",
+  "content_sha256": "f1366e643f7cbfa891230210fafca60ec82744da817a4b7c034d0c917eefe9c0"
+}

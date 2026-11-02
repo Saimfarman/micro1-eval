@@ -1,1 +1,3 @@
-# Runtime dependencies. The offline CLI and dashboard use only the standard library.
+# Runtime dependencies for the offline checker and optional Z3-backed O3 oracle.
+z3-solver==4.13.3.0
+Quart==0.20.0

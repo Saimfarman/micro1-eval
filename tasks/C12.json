@@ -4,10 +4,95 @@
   "control": true,
   "status": "final",
   "verified_by": [
+    "evalkit.domain.oracle.reference",
     "evalkit.domain.oracle.rules",
-    "evalkit.domain.oracle.reference"
+    "evalkit.domain.oracle.o3"
   ],
   "history": "Keys: x, y. Initial: x=0, y=0. Every written value is unique per key.\nT2  commit=4  w(x)=1  w(y)=2\nT1  commit=6  r(x)=0  r(y)=2",
   "expected_verdict": "invalid",
-  "prompt": "Apply M2 to this transaction history and end with a fenced JSON object containing verdict valid, invalid, or undetermined.\n\nKeys: x, y. Initial: x=0, y=0. Every written value is unique per key.\nT2  commit=4  w(x)=1  w(y)=2\nT1  commit=6  r(x)=0  r(y)=2"
+  "prompt": "Apply M2 to this history. Explain the decision and end with a fenced JSON object containing verdict valid, invalid, or undetermined.\n\nKeys: x, y. Initial: x=0, y=0. Every written value is unique per key.\nT2  commit=4  w(x)=1  w(y)=2\nT1  commit=6  r(x)=0  r(y)=2",
+  "expected_certificate": {
+    "module": "M2",
+    "edges": [
+      {
+        "from": "T1",
+        "to": "T2",
+        "edge": "rw",
+        "key": "x"
+      },
+      {
+        "from": "T2",
+        "to": "T1",
+        "edge": "wr",
+        "key": "y"
+      }
+    ],
+    "violations": [],
+    "versions": {
+      "x": [
+        "init",
+        "T2"
+      ],
+      "y": [
+        "init",
+        "T2"
+      ]
+    },
+    "cycle": [
+      {
+        "from": "T2",
+        "to": "T1",
+        "edge": "wr",
+        "key": "y"
+      },
+      {
+        "from": "T1",
+        "to": "T2",
+        "edge": "rw",
+        "key": "x"
+      }
+    ],
+    "anomaly": "G-single",
+    "verdict": "invalid",
+    "derivation": [
+      "1. Version order of x: initial (0), then T2's value 1 (commit 4).",
+      "2. Version order of y: initial (0), then T2's value 2 (commit 4).",
+      "3. T1 read a version of x whose next version is written by T2, so T1 must come before T2. Edge: T1 -> T2, type rw, key x.",
+      "4. T1 read the version of y written by T2, so T2 must come before T1. Edge: T2 -> T1, type wr, key y.",
+      "5. The graph has a cycle: T2 -wr(y)-> T1 -rw(x)-> T2. It has 1 rw edge(s) (class G-single), so no serial order can satisfy every edge.",
+      "6. Conclusion: NOT serializable."
+    ]
+  },
+  "derivation": [
+    "1. Version order of x: initial (0), then T2's value 1 (commit 4).",
+    "2. Version order of y: initial (0), then T2's value 2 (commit 4).",
+    "3. T1 read a version of x whose next version is written by T2, so T1 must come before T2. Edge: T1 -> T2, type rw, key x.",
+    "4. T1 read the version of y written by T2, so T2 must come before T1. Edge: T2 -> T1, type wr, key y.",
+    "5. The graph has a cycle: T2 -wr(y)-> T1 -rw(x)-> T2. It has 1 rw edge(s) (class G-single), so no serial order can satisfy every edge.",
+    "6. Conclusion: NOT serializable."
+  ],
+  "canonical_hash": "78ef0eba8c936f108fa56fb38ed2c36a129985bef6dac37e354fb3efc8c8b8f0",
+  "difficulty": {
+    "transactions": 2,
+    "keys": 2,
+    "operations": 4,
+    "reads": 2,
+    "writes": 2,
+    "prepared": 0,
+    "certificate_items": 2
+  },
+  "provenance": {
+    "source": "frozen-v1",
+    "seed": null,
+    "generator": "frozen-corpus",
+    "oracles": [
+      "evalkit.domain.oracle.reference",
+      "evalkit.domain.oracle.rules",
+      "evalkit.domain.oracle.o3"
+    ]
+  },
+  "control_relationship": {
+    "kind": "standalone-control",
+    "paired_with": null
+  }
 }

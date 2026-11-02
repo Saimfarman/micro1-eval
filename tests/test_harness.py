@@ -1,4 +1,5 @@
 import json
+import pytest
 
 from evalkit.grading import extract_answer, grade
 from evalkit.domain.history import parse
@@ -31,4 +32,38 @@ def test_m2_valid_serial_order_certificate_passes():
 
 def test_m3_requires_every_completion():
     result = grade(json.dumps({"verdict": "undetermined", "completions": []}), V["V7_timed"], "M3")
+    assert not result["passed"]
+
+
+def test_m4_valid_linearization_certificate_passes():
+    history = (
+        "Register: initial=0.\n"
+        "W1  invoke=1  response=2  write=1\n"
+        "R1  invoke=3  response=4  read=1\n"
+    )
+    answer = {"verdict": "valid", "linearization": ["W1", "R1"]}
+    assert grade(json.dumps(answer), history, "M4")["passed"]
+
+
+def test_m4_invalid_certificate_rejects_mutated_operations():
+    history = (
+        "Register: initial=0.\n"
+        "W1  invoke=1  response=2  write=1\n"
+        "R1  invoke=3  response=4  read=0\n"
+    )
+    answer = {
+        "verdict": "invalid",
+        "violation": {
+            "operations": ["W1"],
+            "reason": "no real-time-respecting legal linearization exists",
+        },
+    }
+    result = grade(json.dumps(answer), history, "M4")
+    assert not result["passed"]
+    assert not result["criteria"]["certificate"]
+
+
+def test_weighted_score_requires_critical_criteria():
+    result = grade(json.dumps({"verdict": "valid", "reads_from": {}}), V["V1_timed"], "M1")
+    assert result["score"] == pytest.approx(0.6)
     assert not result["passed"]

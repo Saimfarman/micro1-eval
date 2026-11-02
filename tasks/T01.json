@@ -4,10 +4,60 @@
   "control": false,
   "status": "final",
   "verified_by": [
+    "evalkit.domain.oracle.reference",
     "evalkit.domain.oracle.rules",
-    "evalkit.domain.oracle.reference"
+    "evalkit.domain.oracle.o3"
   ],
   "history": "Keys: x, y. Initial: x=0, y=0. Every written value is unique per key.\nT1  start=1  commit=6  r(x)=0  w(y)=1\nT2  start=2  commit=5  r(y)=0  w(x)=1",
   "expected_verdict": "valid",
-  "prompt": "Apply M1 to this transaction history and end with a fenced JSON object containing verdict valid, invalid, or undetermined.\n\nKeys: x, y. Initial: x=0, y=0. Every written value is unique per key.\nT1  start=1  commit=6  r(x)=0  w(y)=1\nT2  start=2  commit=5  r(y)=0  w(x)=1"
+  "prompt": "Apply M1 to this history. Explain the decision and end with a fenced JSON object containing verdict valid, invalid, or undetermined.\n\nKeys: x, y. Initial: x=0, y=0. Every written value is unique per key.\nT1  start=1  commit=6  r(x)=0  w(y)=1\nT2  start=2  commit=5  r(y)=0  w(x)=1",
+  "expected_certificate": {
+    "module": "M1",
+    "verdict": "valid",
+    "reads_from": {
+      "T1.op1": "init",
+      "T2.op1": "init"
+    },
+    "violations": [],
+    "derivation": [
+      "1. T1 started at 1 and committed at 6.",
+      "  op1 r(x): no earlier own write, so it reads the snapshot at start=1. Latest version of x committed before 1: the initial value (0). Observed 0: matches.",
+      "2. T2 started at 2 and committed at 5.",
+      "  op1 r(y): no earlier own write, so it reads the snapshot at start=2. Latest version of y committed before 2: the initial value (0). Observed 0: matches.",
+      "3. No two overlapping committed transactions write a common key (first-committer-wins holds).",
+      "4. Conclusion: valid under snapshot isolation."
+    ]
+  },
+  "derivation": [
+    "1. T1 started at 1 and committed at 6.",
+    "  op1 r(x): no earlier own write, so it reads the snapshot at start=1. Latest version of x committed before 1: the initial value (0). Observed 0: matches.",
+    "2. T2 started at 2 and committed at 5.",
+    "  op1 r(y): no earlier own write, so it reads the snapshot at start=2. Latest version of y committed before 2: the initial value (0). Observed 0: matches.",
+    "3. No two overlapping committed transactions write a common key (first-committer-wins holds).",
+    "4. Conclusion: valid under snapshot isolation."
+  ],
+  "canonical_hash": "41b6fed44c5232bb794a460d07f690227dc17c477f638f2919285038f8b0def3",
+  "difficulty": {
+    "transactions": 2,
+    "keys": 2,
+    "operations": 4,
+    "reads": 2,
+    "writes": 2,
+    "prepared": 0,
+    "certificate_items": 0
+  },
+  "provenance": {
+    "source": "frozen-v1",
+    "seed": null,
+    "generator": "frozen-corpus",
+    "oracles": [
+      "evalkit.domain.oracle.reference",
+      "evalkit.domain.oracle.rules",
+      "evalkit.domain.oracle.o3"
+    ]
+  },
+  "control_relationship": {
+    "kind": "core",
+    "paired_with": null
+  }
 }

@@ -1,6 +1,6 @@
 title: "Transaction History Reasoning Eval"
 domain: computer-science
-modules: [M1, M2, M3]
+modules: [M1, M2, M3, M4]
 repetitions: 1
 failure_taxonomy:
   - wrong_verdict

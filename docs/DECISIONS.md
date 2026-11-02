@@ -7,3 +7,6 @@
 - 2026-11-01: Starter core built and tested: parser, O2 rules checker, O1 reference, 66 tests, 60,000-history
   differential run with zero disagreements. O1 and O2 share an author (see docs/DISCLOSURES.md).
 - TODO (owner): compare docs/MODELS.md with the Jepsen consistency pages and Kleppmann chapter 7; record differences here.
+- 2026-11-02: Approved full scope restores M4 linearizability and adds O3 using a pinned Z3 checker.
+- 2026-11-02: Approved backend target is Quart; approved frontend target is component-based React/Vite/TypeScript/Three.js.
+- 2026-11-02: SQLite remains the derived database because it preserves offline, clean-room reproducibility.

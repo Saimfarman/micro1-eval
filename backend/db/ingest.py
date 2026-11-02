@@ -1,0 +1,137 @@
+from __future__ import annotations
+
+import hashlib
+import json
+import sqlite3
+from pathlib import Path
+
+from evalkit.manifest import sha256, verify_attempt_hashes, verify_manifest
+from evalkit.tasks import load_tasks
+
+SCHEMA_VERSION = 1
+
+
+def _json(value: object) -> str:
+    return json.dumps(value, sort_keys=True, separators=(",", ":"))
+
+
+def _manifest_hash(root: Path) -> str:
+    manifest = root / "results" / "MANIFEST.json"
+    if not manifest.exists():
+        return ""
+    return sha256(manifest)
+
+
+def connect(path: Path) -> sqlite3.Connection:
+    path.parent.mkdir(parents=True, exist_ok=True)
+    connection = sqlite3.connect(path)
+    connection.row_factory = sqlite3.Row
+    connection.execute("PRAGMA journal_mode=WAL")
+    connection.execute("PRAGMA foreign_keys=ON")
+    return connection
+
+
+def _schema(connection: sqlite3.Connection, root: Path) -> None:
+    schema_path = root / "backend" / "db" / "schema.sql"
+    if not schema_path.exists():
+        schema_path = Path(__file__).with_name("schema.sql")
+    schema = schema_path.read_text(encoding="utf-8")
+    connection.executescript(schema)
+    connection.execute(
+        "INSERT OR REPLACE INTO schema_meta(key, value) VALUES('schema_version', ?)",
+        (str(SCHEMA_VERSION),),
+    )
+
+
+def _latest_run(root: Path) -> Path | None:
+    runs = sorted((root / "results" / "runs").glob("*"))
+    return runs[-1] if runs else None
+
+
+def ingest(root: Path, database: Path | None = None, require_integrity: bool = True) -> dict:
+    database = database or (root / "results" / "index.sqlite3")
+    integrity_errors = verify_manifest(root) + verify_attempt_hashes(root)
+    if require_integrity and integrity_errors:
+        raise ValueError("cannot ingest unverified evidence: " + "; ".join(integrity_errors))
+    connection = connect(database)
+    try:
+        _schema(connection, root)
+        connection.commit()
+        manifest_hash = _manifest_hash(root)
+        previous = connection.execute(
+            "SELECT value FROM schema_meta WHERE key='manifest_hash'"
+        ).fetchone()
+        if previous and previous["value"] == manifest_hash:
+            return {"database": str(database), "status": "unchanged",
+                    "manifest_hash": manifest_hash}
+        connection.execute("BEGIN")
+        for table in ("failure_tags", "grades", "attempts", "summaries", "runs", "models", "tasks"):
+            connection.execute(f"DELETE FROM {table}")
+        tasks = load_tasks(root / "tasks")
+        for task in tasks:
+            connection.execute(
+                "INSERT INTO tasks VALUES (?, ?, ?, ?, ?, ?, ?)",
+                (task["id"], task["module"], int(task["control"]), task.get("status", "final"),
+                 task["expected_verdict"], task["canonical_hash"], _json(task)),
+            )
+        models_path = root / "models.yaml"
+        if models_path.exists():
+            from evalkit.model_config import load_models
+            for model in load_models(models_path):
+                connection.execute(
+                    "INSERT INTO models VALUES (?, ?, ?)",
+                    (model["id"], model.get("provider", ""), _json(model)),
+                )
+        run = _latest_run(root)
+        attempt_count = grade_count = failure_count = 0
+        if run:
+            run_payload = json.loads((run / "run.json").read_text(encoding="utf-8"))
+            connection.execute(
+                "INSERT INTO runs VALUES (?, ?, ?)",
+                (run.name, run_payload.get("provider", ""), _json(run_payload)),
+            )
+            for path in sorted((run / "raw").glob("*.json")):
+                record = json.loads(path.read_text(encoding="utf-8"))
+                connection.execute(
+                    "INSERT INTO attempts VALUES (?, ?, ?, ?, ?)",
+                    (record["attempt_key"], run.name, record["task_id"],
+                     record["content_sha256"], _json(record)),
+                )
+                attempt_count += 1
+            grades_path = run / "grades.jsonl"
+            if grades_path.exists():
+                for line in grades_path.read_text(encoding="utf-8").splitlines():
+                    grade = json.loads(line)
+                    connection.execute(
+                        "INSERT INTO grades VALUES (?, ?, ?, ?)",
+                        (grade["attempt_key"], int(grade["passed"]), grade["score"], _json(grade)),
+                    )
+                    grade_count += 1
+            failures_path = run / "failures.json"
+            if failures_path.exists():
+                failures = json.loads(failures_path.read_text(encoding="utf-8")).get("failures", [])
+                for failure in failures:
+                    connection.execute(
+                        "INSERT INTO failure_tags(attempt_key, tag, payload_json) VALUES (?, ?, ?)",
+                        (failure.get("attempt_key"), failure.get("tag", "unknown"), _json(failure)),
+                    )
+                    failure_count += 1
+            summary_path = root / "results" / "summary.json"
+            if summary_path.exists():
+                connection.execute(
+                    "INSERT INTO summaries VALUES (?, ?)",
+                    (run.name, summary_path.read_text(encoding="utf-8")),
+                )
+        connection.execute(
+            "INSERT OR REPLACE INTO schema_meta(key, value) VALUES('manifest_hash', ?)",
+            (manifest_hash,),
+        )
+        connection.commit()
+        return {"database": str(database), "status": "rebuilt", "manifest_hash": manifest_hash,
+                "tasks": len(tasks), "attempts": attempt_count, "grades": grade_count,
+                "failures": failure_count}
+    except Exception:
+        connection.rollback()
+        raise
+    finally:
+        connection.close()

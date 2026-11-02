@@ -1,0 +1,52 @@
+{
+  "id": "T10",
+  "module": "M4",
+  "control": false,
+  "status": "final",
+  "control_relationship": {
+    "kind": "core",
+    "paired_with": null
+  },
+  "expected_verdict": "valid",
+  "expected_certificate": {
+    "module": "M4",
+    "verdict": "valid",
+    "order": [
+      "R1",
+      "R2",
+      "R3",
+      "R4"
+    ],
+    "derivation": [
+      "A total order respects real time and every register read is legal."
+    ]
+  },
+  "derivation": [
+    "A total order respects real time and every register read is legal."
+  ],
+  "verified_by": [
+    "evalkit.domain.oracle.reference",
+    "evalkit.domain.oracle.rules",
+    "evalkit.domain.oracle.o3"
+  ],
+  "canonical_hash": "0b511de4af30c6b4e9915c3add186670a62231d95c298ecf037c435b82c94a0a",
+  "difficulty": {
+    "operations": 4,
+    "reads": 1,
+    "writes": 3,
+    "search_space": 4,
+    "certificate_items": 4
+  },
+  "provenance": {
+    "source": "phase-2-frozen",
+    "seed": 410,
+    "generator": "evalkit.tasks.create_m4_frozen_tasks",
+    "oracles": [
+      "evalkit.domain.oracle.reference",
+      "evalkit.domain.oracle.rules",
+      "evalkit.domain.oracle.o3"
+    ]
+  },
+  "history": "Register: initial=0.\nR1  invoke=1  response=2  write=1\nR2  invoke=3  response=4  read=1\nR3  invoke=5  response=6  write=2\nR4  invoke=7  response=8  write=3",
+  "prompt": "Apply M4 to this history. Explain the decision and end with a fenced JSON object containing verdict valid, invalid, or undetermined.\n\nRegister: initial=0.\nR1  invoke=1  response=2  write=1\nR2  invoke=3  response=4  read=1\nR3  invoke=5  response=6  write=2\nR4  invoke=7  response=8  write=3"
+}

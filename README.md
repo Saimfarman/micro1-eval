@@ -36,7 +36,8 @@ python -m evalkit reproduce
 python -m backend.serve
 ```
 
-Open `http://127.0.0.1:5000`. The mock path needs no API key or network. An
+Run `python -m evalkit ingest` before serving indexed results, then open
+`http://127.0.0.1:5000`. The mock path needs no API key or network. An
 OpenAI-compatible live provider is opt-in through `.env` variables documented in
 `.env.example`; do not commit secrets.
 

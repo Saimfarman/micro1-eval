@@ -4,10 +4,53 @@
   "control": false,
   "status": "final",
   "verified_by": [
+    "evalkit.domain.oracle.reference",
     "evalkit.domain.oracle.rules",
-    "evalkit.domain.oracle.reference"
+    "evalkit.domain.oracle.o3"
   ],
   "history": "Keys: x, y. Initial: x=0, y=0. Every written value is unique per key.\nT1  start=1  commit=3  w(x)=1  r(x)=1",
   "expected_verdict": "valid",
-  "prompt": "Apply M1 to this transaction history and end with a fenced JSON object containing verdict valid, invalid, or undetermined.\n\nKeys: x, y. Initial: x=0, y=0. Every written value is unique per key.\nT1  start=1  commit=3  w(x)=1  r(x)=1"
+  "prompt": "Apply M1 to this history. Explain the decision and end with a fenced JSON object containing verdict valid, invalid, or undetermined.\n\nKeys: x, y. Initial: x=0, y=0. Every written value is unique per key.\nT1  start=1  commit=3  w(x)=1  r(x)=1",
+  "expected_certificate": {
+    "module": "M1",
+    "verdict": "valid",
+    "reads_from": {},
+    "violations": [],
+    "derivation": [
+      "1. T1 started at 1 and committed at 3.",
+      "  op2 r(x): T1 wrote x=1 earlier in the same transaction, so the read must return 1. Observed 1: matches.",
+      "2. No two overlapping committed transactions write a common key (first-committer-wins holds).",
+      "3. Conclusion: valid under snapshot isolation."
+    ]
+  },
+  "derivation": [
+    "1. T1 started at 1 and committed at 3.",
+    "  op2 r(x): T1 wrote x=1 earlier in the same transaction, so the read must return 1. Observed 1: matches.",
+    "2. No two overlapping committed transactions write a common key (first-committer-wins holds).",
+    "3. Conclusion: valid under snapshot isolation."
+  ],
+  "canonical_hash": "4ecf341f62c2b98ce2f3ea592b003027075dd51d09e83f3ca93f60f3f784b6ae",
+  "difficulty": {
+    "transactions": 1,
+    "keys": 2,
+    "operations": 2,
+    "reads": 1,
+    "writes": 1,
+    "prepared": 0,
+    "certificate_items": 0
+  },
+  "provenance": {
+    "source": "frozen-v1",
+    "seed": null,
+    "generator": "frozen-corpus",
+    "oracles": [
+      "evalkit.domain.oracle.reference",
+      "evalkit.domain.oracle.rules",
+      "evalkit.domain.oracle.o3"
+    ]
+  },
+  "control_relationship": {
+    "kind": "core",
+    "paired_with": null
+  }
 }

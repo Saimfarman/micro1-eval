@@ -1,6 +1,15 @@
-# Accessibility
+# Accessibility and frontend quality
 
-The shipped dashboard uses landmarks, a skip link, visible focus styles, semantic
-headings, text equivalents for metrics, and responsive layout down to 320 CSS
-pixels. Status is represented by text as well as color. Reduced motion is
-respected through `prefers-reduced-motion`.
+The dashboard targets WCAG 2.2 AA with semantic landmarks, one-page headings,
+keyboard-visible focus, a skip link, labelled controls, status/error
+announcements, responsive layouts, and a light/dark theme toggle. The browser
+does not receive provider credentials.
+
+The Failure Map is progressive enhancement: Three.js is optional, reduced
+motion disables the animated camera rotation, and every visualization has a
+2D navigation view plus a semantic data table. The table is the authoritative
+keyboard and screen-reader equivalent.
+
+`npm run accessibility` checks the required offline accessibility contract,
+`npm run typecheck` checks the strict TypeScript surface, and `npm run build`
+produces the static bundle.

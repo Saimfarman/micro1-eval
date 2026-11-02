@@ -4,10 +4,61 @@
   "control": false,
   "status": "final",
   "verified_by": [
+    "evalkit.domain.oracle.reference",
     "evalkit.domain.oracle.rules",
-    "evalkit.domain.oracle.reference"
+    "evalkit.domain.oracle.o3"
   ],
   "history": "Keys: x, y. Initial: x=0, y=0. Every written value is unique per key.\nT1  start=1  commit=3  w(x)=1  r(x)=0",
   "expected_verdict": "invalid",
-  "prompt": "Apply M1 to this transaction history and end with a fenced JSON object containing verdict valid, invalid, or undetermined.\n\nKeys: x, y. Initial: x=0, y=0. Every written value is unique per key.\nT1  start=1  commit=3  w(x)=1  r(x)=0"
+  "prompt": "Apply M1 to this history. Explain the decision and end with a fenced JSON object containing verdict valid, invalid, or undetermined.\n\nKeys: x, y. Initial: x=0, y=0. Every written value is unique per key.\nT1  start=1  commit=3  w(x)=1  r(x)=0",
+  "expected_certificate": {
+    "module": "M1",
+    "verdict": "invalid",
+    "reads_from": {},
+    "violations": [
+      {
+        "rule": "own-write",
+        "txn": "T1",
+        "op": 2,
+        "expected": 1,
+        "observed": 0
+      }
+    ],
+    "derivation": [
+      "1. T1 started at 1 and committed at 3.",
+      "  op2 r(x): T1 wrote x=1 earlier in the same transaction, so the read must return 1. Observed 0: VIOLATION (own-write).",
+      "2. No two overlapping committed transactions write a common key (first-committer-wins holds).",
+      "3. Conclusion: NOT valid under snapshot isolation. First violation: T1.op2 expected 1 but observed 0 (own-write)."
+    ]
+  },
+  "derivation": [
+    "1. T1 started at 1 and committed at 3.",
+    "  op2 r(x): T1 wrote x=1 earlier in the same transaction, so the read must return 1. Observed 0: VIOLATION (own-write).",
+    "2. No two overlapping committed transactions write a common key (first-committer-wins holds).",
+    "3. Conclusion: NOT valid under snapshot isolation. First violation: T1.op2 expected 1 but observed 0 (own-write)."
+  ],
+  "canonical_hash": "c7c28ad9e0c0064a6f4e6e7f736b05e8efe57620bc2eb3d48b7532feafea5484",
+  "difficulty": {
+    "transactions": 1,
+    "keys": 2,
+    "operations": 2,
+    "reads": 1,
+    "writes": 1,
+    "prepared": 0,
+    "certificate_items": 1
+  },
+  "provenance": {
+    "source": "frozen-v1",
+    "seed": null,
+    "generator": "frozen-corpus",
+    "oracles": [
+      "evalkit.domain.oracle.reference",
+      "evalkit.domain.oracle.rules",
+      "evalkit.domain.oracle.o3"
+    ]
+  },
+  "control_relationship": {
+    "kind": "core",
+    "paired_with": null
+  }
 }

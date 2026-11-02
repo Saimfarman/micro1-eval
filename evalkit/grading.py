@@ -6,7 +6,9 @@ import re
 from itertools import product
 
 from .domain.history import parse
+from .domain.linearizability import parse_register
 from .domain.oracle import rules
+from .domain.oracle.m4 import validate_linearization
 
 CRITICAL = {"verdict", "certificate"}
 
@@ -119,9 +121,32 @@ def _m3_certificate(history, answer) -> bool:
     return answer.get("verdict") == (verdicts.pop() if len(verdicts) == 1 else "undetermined")
 
 
+def _m4_certificate(history, answer, oracle) -> bool:
+    if answer.get("verdict") == "valid":
+        order = answer.get("linearization", answer.get("order"))
+        return isinstance(order, list) and validate_linearization(history, order)
+    violation = answer.get("violation")
+    if not isinstance(violation, dict):
+        return False
+    expected = oracle.get("violation", {})
+    return (
+        violation.get("reason") == expected.get("reason")
+        and sorted(violation.get("operations", [])) == sorted(expected.get("operations", []))
+    )
+
+
+CRITERION_WEIGHTS = {
+    "verdict": 0.4,
+    "certificate": 0.4,
+    "naming": 0.1,
+    "completeness": 0.1,
+}
+
+
 def grade(text: str, history_text: str, module: str, expected: str | None = None) -> dict:
     answer = extract_answer(text)
-    history = parse(history_text)
+    module = module.upper()
+    history = parse_register(history_text) if module == "M4" else parse(history_text)
     oracle = rules.check(history, module)
     expected = expected or oracle["verdict"]
     criteria = {"verdict": bool(answer and answer.get("verdict") == expected),
@@ -131,14 +156,18 @@ def grade(text: str, history_text: str, module: str, expected: str | None = None
             criteria["certificate"] = _m1_certificate(history, answer, oracle)
         elif module == "M2":
             criteria["certificate"] = _m2_certificate(history, answer, oracle)
-        else:
+        elif module == "M3":
             criteria["certificate"] = _m3_certificate(history, answer)
+            criteria["completeness"] = criteria["certificate"]
+        elif module == "M4":
+            criteria["certificate"] = _m4_certificate(history, answer, oracle)
             criteria["completeness"] = criteria["certificate"]
         if module == "M2" and answer.get("anomaly") and oracle.get("anomaly"):
             criteria["naming"] = answer["anomaly"] == oracle["anomaly"]
-    score = sum(int(value) for value in criteria.values()) / len(criteria)
+    score = sum(CRITERION_WEIGHTS[key] * int(value) for key, value in criteria.items())
     passed = criteria["verdict"] and criteria["certificate"] and criteria["completeness"]
-    return {"score": score, "passed": passed, "grader_method": "deterministic-certificate",
+    return {"score": score, "passed": passed, "grader_method": "deterministic-certificate-v2",
+            "criterion_weights": CRITERION_WEIGHTS,
             "criteria": criteria, "observed_verdict": answer.get("verdict") if answer else None,
             "expected_verdict": expected,
             "reason": "all critical criteria passed" if passed else "certificate or verdict failed"}

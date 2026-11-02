@@ -13,6 +13,8 @@ from collections import deque
 from itertools import product
 
 from ..history import History, HistoryError, Txn
+from ..linearizability import RegisterHistory
+from .m4 import check as check_m4
 
 EDGE_ORDER = {"ww": 0, "wr": 1, "rw": 2}
 
@@ -375,8 +377,12 @@ def check_indoubt(h: History) -> dict:
     return {"module": "M3", "verdict": verdict, "completions": rows}
 
 
-def check(h: History, module: str) -> dict:
+def check(h: History | RegisterHistory, module: str) -> dict:
     module = module.upper()
+    if module == "M4":
+        if not isinstance(h, RegisterHistory):
+            raise HistoryError("M4 requires a register history")
+        return check_m4(h)
     if module == "M1":
         return check_si(h)
     if module == "M2":

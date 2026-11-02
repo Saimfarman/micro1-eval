@@ -1,1 +1,1 @@
-"""Ground-truth checkers. rules.py is O2 (production), reference.py is O1 (slow reference)."""
+"""O1 reference, O2 rules, O3 constraints, and M4 linearizability checkers."""

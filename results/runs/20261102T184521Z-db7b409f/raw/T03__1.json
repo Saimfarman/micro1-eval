@@ -1,0 +1,23 @@
+{
+  "attempt_key": "20261102T184521Z-db7b409f/mock/T03/1",
+  "task_id": "T03",
+  "task_hash": "93bdfaf4c14420404dcd4ea9f18cb70ac0be23b0cfed8b909512982f5aa0348c",
+  "prompt_sent": "Apply M1 to this history. Explain the decision and end with a fenced JSON object containing verdict valid, invalid, or undetermined.\n\nKeys: x, y. Initial: x=0, y=0. Every written value is unique per key.\nT1  start=1  commit=6  r(x)=0  r(y)=2\nT2  start=2  commit=4  w(x)=1  w(y)=2",
+  "model_requested": "mock",
+  "model_returned": "mock",
+  "settings": {
+    "temperature": 0,
+    "max_tokens": 4096
+  },
+  "response_text": "{\"module\": \"M1\", \"verdict\": \"invalid\", \"reads_from\": {\"T1.op1\": \"init\", \"T1.op2\": \"init\"}, \"violations\": [{\"rule\": \"snapshot-read\", \"txn\": \"T1\", \"op\": 2, \"expected_source\": \"init\", \"expected\": 0, \"observed\": 2, \"name\": \"snapshot-read\"}], \"derivation\": [\"1. T1 started at 1 and committed at 6.\", \"  op1 r(x): no earlier own write, so it reads the snapshot at start=1. Latest version of x committed before 1: the initial value (0). Observed 0: matches.\", \"  op2 r(y): no earlier own write, so it reads the snapshot at start=1. Latest version of y committed before 1: the initial value (0). Observed 2: VIOLATION (snapshot-read).\", \"2. T2 started at 2 and committed at 4.\", \"3. No two overlapping committed transactions write a common key (first-committer-wins holds).\", \"4. Conclusion: NOT valid under snapshot isolation. First violation: T1.op2 expected 0 but observed 2 (snapshot-read).\"]}",
+  "finish_reason": "stop",
+  "usage": {
+    "input_tokens": 44,
+    "output_tokens": 128,
+    "total_tokens": 172
+  },
+  "latency_ms": 0,
+  "provider_response_id": "mock-T03",
+  "created_at": "2026-11-02T18:45:21.149359+00:00",
+  "content_sha256": "ae8de3fdca7ca1081a2f81a84374957f988d4f5affe44d8404b910240b6d6686"
+}

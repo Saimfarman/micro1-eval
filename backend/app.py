@@ -1,112 +1,215 @@
+"""Quart application factory for the read-only evaluation dashboard API."""
 from __future__ import annotations
 
 import json
 import mimetypes
-from http.server import BaseHTTPRequestHandler, ThreadingHTTPServer
+import sqlite3
+from dataclasses import dataclass
 from pathlib import Path
-from urllib.parse import urlparse
 
-ROOT = Path(__file__).resolve().parent.parent
+from quart import Quart, jsonify, request, send_file
 
-
-def payload() -> dict:
-    tasks = []
-    for path in sorted((ROOT / "tasks").glob("*.json")):
-        task = json.loads(path.read_text(encoding="utf-8"))
-        task.pop("prompt", None)
-        tasks.append(task)
-    return {"tasks": tasks, "integrity": (ROOT / "results" / "MANIFEST.json").exists()}
+from evalkit.manifest import verify_attempt_hashes, verify_manifest
+from evalkit.tasks import load_tasks
 
 
-def latest_run() -> Path | None:
-    runs = sorted((ROOT / "results" / "runs").glob("*"))
-    return runs[-1] if runs else None
+@dataclass(frozen=True)
+class Settings:
+    root: Path
+    database: Path | None = None
+    static_dir: Path | None = None
+    auto_ingest: bool = True
+
+    @property
+    def db_path(self) -> Path:
+        return self.database or self.root / "results" / "index.sqlite3"
+
+    @property
+    def frontend_dir(self) -> Path:
+        return self.static_dir or self.root / "frontend" / "dist"
 
 
-def grades() -> list[dict]:
-    run = latest_run()
-    if not run or not (run / "grades.jsonl").exists():
+def _problem(status: int, title: str, detail: str):
+    return jsonify({
+        "type": "about:blank",
+        "title": title,
+        "status": status,
+        "detail": detail,
+    }), status
+
+
+def _read_db(settings: Settings, sql: str, params: tuple = ()) -> list[dict]:
+    if not settings.db_path.exists():
         return []
-    return [json.loads(line) for line in (run / "grades.jsonl").read_text(encoding="utf-8").splitlines()]
+    connection = sqlite3.connect(settings.db_path)
+    connection.row_factory = sqlite3.Row
+    try:
+        return [dict(row) for row in connection.execute(sql, params).fetchall()]
+    finally:
+        connection.close()
 
 
-class Handler(BaseHTTPRequestHandler):
-    def do_GET(self):
-        parsed = urlparse(self.path)
-        if parsed.path == "/api/health":
-            body = {"status": "ok"}
-            self.send_json(body)
-            return
-        if parsed.path in {"/api/overview", "/api/tasks"}:
-            data = payload()
-            self.send_json(data if parsed.path.endswith("overview") else {"tasks": data["tasks"]})
-            return
-        if parsed.path == "/api/integrity":
-            from evalkit.manifest import verify_manifest
-            errors = verify_manifest(ROOT)
-            self.send_json({"ok": not errors, "errors": errors})
-            return
-        if parsed.path == "/api/meta":
-            self.send_json({"title": "Transaction History Reasoning Eval",
-                            "domain": "computer-science", "modules": ["M1", "M2", "M3"],
-                            "integrity": (ROOT / "results" / "MANIFEST.json").exists()})
-            return
-        if parsed.path == "/api/models":
-            self.send_json({"models": [{"id": "mock", "provider": "mock", "display_name": "Deterministic mock"}]})
-            return
-        if parsed.path == "/api/runs":
-            run = latest_run()
-            self.send_json({"runs": [json.loads((run / "run.json").read_text(encoding="utf-8"))] if run else []})
-            return
-        if parsed.path == "/api/results/summary":
-            summary = ROOT / "results" / "summary.json"
-            self.send_json(json.loads(summary.read_text(encoding="utf-8")) if summary.exists() else {})
-            return
-        if parsed.path == "/api/results/attempts":
-            self.send_json({"attempts": grades()})
-            return
-        if parsed.path == "/api/failures/breakdown":
-            failed = [row for row in grades() if not row.get("passed")]
-            self.send_json({"total": len(failed), "by_reason": {}})
-            return
-        if parsed.path == "/api/grader/reliability":
-            self.send_json({"method": "deterministic-certificate", "human_review": False,
-                            "note": "No human calibration labels are available."})
-            return
-        if parsed.path.startswith("/api/tasks/"):
-            task_id = parsed.path.rsplit("/", 1)[-1]
-            path = ROOT / "tasks" / f"{task_id}.json"
-            if path.exists():
-                self.send_json(json.loads(path.read_text(encoding="utf-8")))
-                return
-            self.send_json({"type": "about:blank", "title": "Task not found", "status": 404}, 404)
-            return
-        target = ROOT / "frontend" / "dist" / ("index.html" if parsed.path == "/" else parsed.path.lstrip("/"))
-        if not target.is_file():
-            target = ROOT / "frontend" / "dist" / "index.html"
-        self.send_response(200)
-        self.send_header("Content-Type", mimetypes.guess_type(str(target))[0] or "text/html")
-        self.send_header("Content-Security-Policy", "default-src 'self'; style-src 'self'")
-        self.send_header("X-Content-Type-Options", "nosniff")
-        self.send_header("Referrer-Policy", "no-referrer")
-        self.end_headers()
-        self.wfile.write(target.read_bytes())
+def _decode(rows: list[dict], key: str = "payload_json") -> list[dict]:
+    result = []
+    for row in rows:
+        payload = row.pop(key, None)
+        result.append(json.loads(payload) if payload else row)
+    return result
 
-    def send_json(self, value, status=200):
-        data = json.dumps(value).encode()
-        self.send_response(status)
-        self.send_header("Content-Type", "application/json")
-        self.send_header("Content-Length", str(len(data)))
-        self.end_headers()
-        self.wfile.write(data)
 
-    def log_message(self, *_):
-        return
+def _page_args() -> tuple[int, int] | tuple[None, None]:
+    try:
+        page = int(request.args.get("page", "1"))
+        per_page = int(request.args.get("per_page", "25"))
+    except ValueError:
+        return None, None
+    if page < 1 or per_page < 1 or per_page > 100:
+        return None, None
+    return page, per_page
+
+
+def create_app(settings: Settings | None = None) -> Quart:
+    settings = settings or Settings(Path(__file__).resolve().parent.parent)
+    app = Quart(__name__, static_folder=None)
+    app.config["SETTINGS"] = settings
+
+    @app.after_request
+    async def security_headers(response):
+        response.headers["Content-Security-Policy"] = "default-src 'self'; style-src 'self'"
+        response.headers["X-Content-Type-Options"] = "nosniff"
+        response.headers["Referrer-Policy"] = "no-referrer"
+        response.headers["Permissions-Policy"] = "camera=(), microphone=(), geolocation=()"
+        response.headers["Cache-Control"] = "no-store" if request.path.startswith("/api/") else "no-cache"
+        return response
+
+    @app.errorhandler(404)
+    async def not_found(_error):
+        return _problem(404, "Not found", "The requested resource does not exist.")
+
+    @app.errorhandler(500)
+    async def internal_error(_error):
+        return _problem(500, "Internal server error", "The request could not be completed.")
+
+    @app.get("/api/health")
+    async def health():
+        return jsonify({"status": "ok", "database": settings.db_path.exists()})
+
+    @app.get("/api/meta")
+    async def meta():
+        return jsonify({
+            "title": "Transaction History Reasoning Eval",
+            "domain": "computer-science",
+            "modules": ["M1", "M2", "M3", "M4"],
+            "integrity": not (verify_manifest(settings.root) + verify_attempt_hashes(settings.root)),
+        })
+
+    @app.get("/api/openapi.json")
+    async def openapi():
+        return jsonify({
+            "openapi": "3.0.3",
+            "info": {"title": "Transaction History Evaluation API", "version": "1.0.0"},
+            "paths": {path: {"get": {}} for path in (
+                "/api/health", "/api/meta", "/api/tasks", "/api/models", "/api/runs",
+                "/api/results/summary", "/api/results/attempts", "/api/failures/breakdown",
+                "/api/grader/reliability", "/api/integrity",
+            )},
+        })
+
+    @app.get("/api/integrity")
+    async def integrity():
+        errors = verify_manifest(settings.root) + verify_attempt_hashes(settings.root)
+        return jsonify({"ok": not errors, "errors": errors})
+
+    @app.get("/api/tasks")
+    async def tasks():
+        page, per_page = _page_args()
+        if page is None:
+            return _problem(400, "Invalid pagination", "page must be >= 1 and per_page must be 1..100.")
+        module = request.args.get("module")
+        control = request.args.get("control")
+        rows = _decode(_read_db(settings, "SELECT payload_json FROM tasks ORDER BY id"))
+        if not rows:
+            rows = [{key: value for key, value in task.items() if key != "_path"}
+                    for task in load_tasks(settings.root / "tasks")]
+        if module:
+            rows = [row for row in rows if row.get("module") == module.upper()]
+        if control in {"true", "false"}:
+            rows = [row for row in rows if bool(row.get("control")) == (control == "true")]
+        start = (page - 1) * per_page
+        return jsonify({"tasks": rows[start:start + per_page], "page": page,
+                        "per_page": per_page, "total": len(rows)})
+
+    @app.get("/api/tasks/<task_id>")
+    async def task_detail(task_id: str):
+        rows = _decode(_read_db(settings, "SELECT payload_json FROM tasks WHERE id=?", (task_id,)))
+        if rows:
+            return jsonify(rows[0])
+        path = settings.root / "tasks" / f"{task_id}.json"
+        if path.exists():
+            return jsonify(json.loads(path.read_text(encoding="utf-8")))
+        return _problem(404, "Task not found", f"No task exists with id {task_id}.")
+
+    @app.get("/api/models")
+    async def models():
+        return jsonify({"models": _decode(_read_db(settings, "SELECT payload_json FROM models ORDER BY id"))})
+
+    @app.get("/api/runs")
+    async def runs():
+        return jsonify({"runs": _decode(_read_db(settings, "SELECT payload_json FROM runs ORDER BY id DESC"))})
+
+    @app.get("/api/results/summary")
+    async def summary():
+        rows = _decode(_read_db(settings, "SELECT payload_json FROM summaries ORDER BY run_id DESC LIMIT 1"))
+        if rows:
+            return jsonify(rows[0])
+        path = settings.root / "results" / "summary.json"
+        return jsonify(json.loads(path.read_text(encoding="utf-8")) if path.exists() else {})
+
+    @app.get("/api/results/attempts")
+    async def attempts():
+        page, per_page = _page_args()
+        if page is None:
+            return _problem(400, "Invalid pagination", "page must be >= 1 and per_page must be 1..100.")
+        rows = _decode(_read_db(settings, "SELECT payload_json FROM grades ORDER BY attempt_key"))
+        start = (page - 1) * per_page
+        return jsonify({"attempts": rows[start:start + per_page], "page": page,
+                        "per_page": per_page, "total": len(rows)})
+
+    @app.get("/api/results/attempts/<attempt_key>")
+    async def attempt_detail(attempt_key: str):
+        rows = _decode(_read_db(
+            settings, "SELECT payload_json FROM attempts WHERE attempt_key=?",
+            (attempt_key,),
+        ))
+        if not rows:
+            return _problem(404, "Attempt not found", "No attempt exists with that key.")
+        return jsonify(rows[0])
+
+    @app.get("/api/failures")
+    async def failure_rows():
+        return jsonify({"failures": _decode(_read_db(
+            settings, "SELECT payload_json FROM failure_tags ORDER BY id"
+        ))})
+
+    @app.get("/api/failures/breakdown")
+    async def failures():
+        rows = _read_db(settings, "SELECT tag, COUNT(*) AS count FROM failure_tags GROUP BY tag ORDER BY tag")
+        return jsonify({"total": sum(row["count"] for row in rows), "by_reason": {row["tag"]: row["count"] for row in rows},
+                        "human_review": {"status": "not_requested", "reviewed": False}})
+
+    @app.get("/api/grader/reliability")
+    async def reliability():
+        return jsonify({"method": "deterministic-certificate-v2", "human_review": False,
+                        "note": "No human calibration labels are available."})
+
+    @app.get("/")
+    async def index():
+        target = settings.frontend_dir / "index.html"
+        return await send_file(target) if target.exists() else _problem(404, "Frontend missing", "No frontend build is available.")
+
+    return app
 
 
 def create_server(host="127.0.0.1", port=5000):
-    return ThreadingHTTPServer((host, port), Handler)
-
-
-if __name__ == "__main__":
-    create_server().serve_forever()
+    """Compatibility entry point; the Quart app is the supported server."""
+    return create_app()

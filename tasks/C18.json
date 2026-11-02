@@ -1,0 +1,55 @@
+{
+  "id": "C18",
+  "module": "M4",
+  "control": true,
+  "status": "final",
+  "control_relationship": {
+    "kind": "matched",
+    "paired_with": "T10"
+  },
+  "expected_verdict": "invalid",
+  "expected_certificate": {
+    "module": "M4",
+    "verdict": "invalid",
+    "violation": {
+      "operations": [
+        "R1",
+        "R2",
+        "R3",
+        "R4"
+      ],
+      "reason": "no real-time-respecting legal linearization exists"
+    },
+    "derivation": [
+      "Exhaustive search found no legal order respecting real time."
+    ]
+  },
+  "derivation": [
+    "Exhaustive search found no legal order respecting real time."
+  ],
+  "verified_by": [
+    "evalkit.domain.oracle.reference",
+    "evalkit.domain.oracle.rules",
+    "evalkit.domain.oracle.o3"
+  ],
+  "canonical_hash": "40a9ce4947ded846e51e380294146c81e708ac26758a9d179408ac0fa5d85a0e",
+  "difficulty": {
+    "operations": 4,
+    "reads": 1,
+    "writes": 3,
+    "search_space": 4,
+    "certificate_items": 4
+  },
+  "provenance": {
+    "source": "phase-2-frozen",
+    "seed": 410,
+    "generator": "evalkit.tasks.create_m4_frozen_tasks",
+    "oracles": [
+      "evalkit.domain.oracle.reference",
+      "evalkit.domain.oracle.rules",
+      "evalkit.domain.oracle.o3"
+    ]
+  },
+  "history": "Register: initial=0.\nR1  invoke=1  response=2  write=1\nR2  invoke=3  response=4  read=1003\nR3  invoke=5  response=6  write=2\nR4  invoke=7  response=8  write=3",
+  "prompt": "Apply M4 to this history. Explain the decision and end with a fenced JSON object containing verdict valid, invalid, or undetermined.\n\nRegister: initial=0.\nR1  invoke=1  response=2  write=1\nR2  invoke=3  response=4  read=1003\nR3  invoke=5  response=6  write=2\nR4  invoke=7  response=8  write=3"
+}
