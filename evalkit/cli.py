@@ -18,6 +18,9 @@ def main(argv=None) -> int:
     for name in ("validate-tasks", "estimate", "run", "grade", "replay", "report",
                  "verify", "reproduce", "preflight", "package", "ingest", "generate"):
         sub.add_parser(name)
+    sub.choices["run"].add_argument("--provider", choices=("mock", "groq", "gemini", "openrouter"),
+                                    default="mock")
+    sub.choices["run"].add_argument("--repetitions", type=int, default=1)
     sub.choices["generate"].add_argument("--module", choices=("M1", "M2", "M3"), required=True)
     sub.choices["generate"].add_argument("--n", type=int, default=10)
     sub.choices["generate"].add_argument("--seed", type=int, required=True)
@@ -36,7 +39,7 @@ def main(argv=None) -> int:
                           "created": [str(path.relative_to(ROOT)) for path in paths]}, indent=2))
         return 0
     if args.command == "run":
-        print(run(ROOT))
+        print(run(ROOT, provider=args.provider, repetitions=args.repetitions))
         return 0
     if args.command == "report":
         print(json.dumps(write_report(ROOT), indent=2))

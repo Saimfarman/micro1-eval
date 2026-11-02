@@ -1,19 +1,19 @@
 {
-  "run_id": "20261102T174510Z-eec14e62",
+  "run_id": "20261102T180943Z-eec14e62",
   "runs": 1,
   "attempts": 17,
-  "passed": 17,
-  "pass_at_1": 1.0,
+  "passed": 2,
+  "pass_at_1": 0.11764705882352941,
   "scopes": {
     "control": {
       "attempts": 8,
-      "passed": 8,
-      "pass_at_1": 1.0
+      "passed": 2,
+      "pass_at_1": 0.25
     },
     "core": {
       "attempts": 9,
-      "passed": 9,
-      "pass_at_1": 1.0
+      "passed": 0,
+      "pass_at_1": 0.0
     }
   }
 }

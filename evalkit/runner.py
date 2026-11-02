@@ -5,7 +5,7 @@ from datetime import datetime, timezone
 from pathlib import Path
 from .grading import grade
 from .manifest import write_manifest
-from .providers import mock_complete, openai_compatible_complete
+from .providers import mock_complete, provider_complete
 from .tasks import load_tasks
 
 def run(root: Path, provider: str = "mock", repetitions: int = 1) -> str:
@@ -18,7 +18,7 @@ def run(root: Path, provider: str = "mock", repetitions: int = 1) -> str:
     grades = []
     for task in tasks:
         for rep in range(1, repetitions + 1):
-            text = mock_complete(task) if provider == "mock" else openai_compatible_complete(task)
+            text = mock_complete(task) if provider == "mock" else provider_complete(task, provider, root)
             record = {"attempt_key": f"{run_id}/{provider}/{task['id']}/{rep}",
                 "task_id": task["id"],
                 "task_hash": hashlib.sha256(Path(task["_path"]).read_bytes()).hexdigest(),
