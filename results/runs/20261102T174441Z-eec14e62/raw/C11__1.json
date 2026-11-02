@@ -1,0 +1,20 @@
+{
+  "attempt_key": "20261102T174441Z-eec14e62/mock/C11/1",
+  "task_id": "C11",
+  "task_hash": "33b3702a39d719afe771c404cb30f9151995c40fb73ca88bb27cf297b52cb7ea",
+  "prompt_sent": "Apply M2 to this transaction history and end with a fenced JSON object containing verdict valid, invalid, or undetermined.\n\nKeys: x, y. Initial: x=0, y=0. Every written value is unique per key.\nT1  commit=4  r(x)=0  w(x)=1\nT2  commit=5  r(x)=0  w(x)=2",
+  "model_requested": "mock",
+  "model_returned": "mock",
+  "settings": {
+    "temperature": 0,
+    "max_tokens": 4096
+  },
+  "response_text": "{\"module\": \"M2\", \"edges\": [{\"from\": \"T1\", \"to\": \"T2\", \"edge\": \"ww\", \"key\": \"x\"}, {\"from\": \"T2\", \"to\": \"T1\", \"edge\": \"rw\", \"key\": \"x\"}], \"violations\": [], \"versions\": {\"x\": [\"init\", \"T1\", \"T2\"], \"y\": [\"init\"]}, \"cycle\": [{\"from\": \"T1\", \"to\": \"T2\", \"edge\": \"ww\", \"key\": \"x\"}, {\"from\": \"T2\", \"to\": \"T1\", \"edge\": \"rw\", \"key\": \"x\"}], \"anomaly\": \"G-single\", \"verdict\": \"invalid\", \"derivation\": [\"1. Version order of x: initial (0), then T1's value 1 (commit 4), then T2's value 2 (commit 5).\", \"2. Version order of y: initial (0).\", \"3. T1 and T2 install consecutive versions of x, so T1 must come before T2. Edge: T1 -> T2, type ww, key x.\", \"4. T2 read a version of x whose next version is written by T1, so T2 must come before T1. Edge: T2 -> T1, type rw, key x.\", \"5. The graph has a cycle: T1 -ww(x)-> T2 -rw(x)-> T1. It has 1 rw edge(s) (class G-single), so no serial order can satisfy every edge.\", \"6. Conclusion: NOT serializable.\"]}",
+  "finish_reason": "stop",
+  "usage": {
+    "input_tokens": 0,
+    "output_tokens": 157
+  },
+  "created_at": "2026-11-02T17:44:41.848512+00:00",
+  "content_sha256": "dfa5c67af1a734033d267d43b5cd286cb503cc84c1d9a7c8de5ff3e9fb18c1f2"
+}

@@ -1,0 +1,20 @@
+{
+  "attempt_key": "20261102T174441Z-eec14e62/mock/C13/1",
+  "task_id": "C13",
+  "task_hash": "f93eae37d0542dca966656178d3086f32568cd1450fba5647aa3f087d78728bf",
+  "prompt_sent": "Apply M2 to this transaction history and end with a fenced JSON object containing verdict valid, invalid, or undetermined.\n\nKeys: x, y. Initial: x=0, y=0. Every written value is unique per key.\nT1  commit=3  w(x)=1\nT2  commit=4  r(x)=0",
+  "model_requested": "mock",
+  "model_returned": "mock",
+  "settings": {
+    "temperature": 0,
+    "max_tokens": 4096
+  },
+  "response_text": "{\"module\": \"M2\", \"edges\": [{\"from\": \"T2\", \"to\": \"T1\", \"edge\": \"rw\", \"key\": \"x\"}], \"violations\": [], \"versions\": {\"x\": [\"init\", \"T1\"], \"y\": [\"init\"]}, \"verdict\": \"valid\", \"serial_order\": [\"T2\", \"T1\"], \"derivation\": [\"1. Version order of x: initial (0), then T1's value 1 (commit 3).\", \"2. Version order of y: initial (0).\", \"3. T2 read a version of x whose next version is written by T1, so T2 must come before T1. Edge: T2 -> T1, type rw, key x.\", \"4. The graph is acyclic. A serial order that respects every edge: T2, T1. Conclusion: serializable.\"]}",
+  "finish_reason": "stop",
+  "usage": {
+    "input_tokens": 0,
+    "output_tokens": 89
+  },
+  "created_at": "2026-11-02T17:44:41.850513+00:00",
+  "content_sha256": "4a2e9e4e365f3769abb2a62f3a63bba7543a60f6ebbf3d12cbf6108fb6fa1ccc"
+}

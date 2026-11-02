@@ -10,6 +10,7 @@ __pycache__/
 .coverage
 htmlcov/
 results/live/
+generated-tasks/
 *.sqlite
 *.sqlite3
 *.db

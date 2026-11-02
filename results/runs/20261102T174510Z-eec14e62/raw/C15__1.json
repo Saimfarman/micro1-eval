@@ -1,0 +1,20 @@
+{
+  "attempt_key": "20261102T174510Z-eec14e62/mock/C15/1",
+  "task_id": "C15",
+  "task_hash": "d3a93ed3caaed66148acd345b0107450867c204f0b72c2f44922d72c1ba0fc76",
+  "prompt_sent": "Apply M2 to this transaction history and end with a fenced JSON object containing verdict valid, invalid, or undetermined.\n\nKeys: x, y. Initial: x=0, y=0. Every written value is unique per key.\nT1  commit=4  w(x)=1  w(x)=2\nT2  commit=6  r(x)=1",
+  "model_requested": "mock",
+  "model_returned": "mock",
+  "settings": {
+    "temperature": 0,
+    "max_tokens": 4096
+  },
+  "response_text": "{\"module\": \"M2\", \"edges\": [], \"violations\": [{\"rule\": \"intermediate-read\", \"reader\": \"T2\", \"writer\": \"T1\", \"key\": \"x\", \"op\": 1}], \"versions\": {\"x\": [\"init\", \"T1\"], \"y\": [\"init\"]}, \"verdict\": \"invalid\", \"derivation\": [\"1. Version order of x: initial (0), then T1's value 2 (commit 4).\", \"2. Version order of y: initial (0).\", \"3. VIOLATION (intermediate-read): {'rule': 'intermediate-read', 'reader': 'T2', 'writer': 'T1', 'key': 'x', 'op': 1}\", \"4. Conclusion: NOT serializable.\"]}",
+  "finish_reason": "stop",
+  "usage": {
+    "input_tokens": 0,
+    "output_tokens": 61
+  },
+  "created_at": "2026-11-02T17:45:10.559429+00:00",
+  "content_sha256": "f86269cea01a1418167ac0fcecbf0988198974e6ffae3e7bf253d99f32369b16"
+}

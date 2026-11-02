@@ -27,9 +27,13 @@ def run(root: Path, provider: str = "mock", repetitions: int = 1) -> str:
                 "response_text": text, "finish_reason": "stop",
                 "usage": {"input_tokens": 0, "output_tokens": len(text.split())},
                 "created_at": datetime.now(timezone.utc).isoformat()}
+            record["content_sha256"] = hashlib.sha256(
+                json.dumps(record, sort_keys=True).encode("utf-8")
+            ).hexdigest()
             (raw_dir / f"{task['id']}__{rep}.json").write_text(
                 json.dumps(record, indent=2) + "\n", encoding="utf-8")
-            grades.append({**grade(text, task["expected_verdict"]),
+            grades.append({**grade(text, task["history"], task["module"],
+                                    task["expected_verdict"]),
                            "attempt_key": record["attempt_key"], "task_id": task["id"]})
     (out / "run.json").write_text(json.dumps({"run_id": run_id, "provider": provider,
         "repetitions": repetitions}, indent=2) + "\n", encoding="utf-8")

@@ -13,6 +13,9 @@ def build_manifest(root: Path) -> dict:
             for path in base.rglob("*"):
                 if path.is_file() and path.name != "MANIFEST.json":
                     files[str(path.relative_to(root)).replace("\\", "/")] = sha256(path)
+    for path in (root / "eval.config.yaml", root / "models.yaml"):
+        if path.exists():
+            files[path.name] = sha256(path)
     return {"version": 1, "files": dict(sorted(files.items()))}
 
 def write_manifest(root: Path) -> Path:
@@ -27,10 +30,13 @@ def verify_manifest(root: Path) -> list[str]:
         return ["results/MANIFEST.json is missing"]
     expected = json.loads(path.read_text(encoding="utf-8")).get("files", {})
     errors = []
+    actual = build_manifest(root)["files"]
+    for name in sorted(set(actual) - set(expected)):
+        errors.append(f"unlisted: {name}")
+    for name in sorted(set(expected) - set(actual)):
+        errors.append(f"missing: {name}")
     for name, digest in expected.items():
         target = root / name
-        if not target.exists():
-            errors.append(f"missing: {name}")
-        elif sha256(target) != digest:
+        if target.exists() and sha256(target) != digest:
             errors.append(f"hash mismatch: {name}")
     return errors

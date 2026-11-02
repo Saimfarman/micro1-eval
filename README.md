@@ -4,7 +4,8 @@
 
 This is an offline-first evaluation of model reasoning about database transaction
 histories. It covers snapshot isolation (M1), serializability (M2), and in-doubt
-transactions (M3), with independent O1 and O2 checkers and immutable raw records.
+transactions (M3), with two differently implemented checkers and immutable raw
+records. Both checkers were produced with AI assistance by the same author.
 The bundled mock run is a reproducibility fixture, not a commercial-model claim.
 
 ## 2. Video walkthrough link
@@ -47,9 +48,11 @@ commercial model result is fabricated here.
 
 ## 7. Failure analysis
 
-The deterministic grader records wrong verdict, wrong certificate, calculation
-error, format violation, incomplete answer, and refusal categories. Raw outputs
-are stored under `results/runs/`; replay grades them without contacting a model.
+The deterministic grader verifies certificates, not only verdict text. It records
+wrong verdict, wrong certificate, calculation error, format violation,
+incomplete answer, and refusal categories. Raw outputs are stored under
+`results/runs/`; replay grades them without contacting a model. No human review
+was available, so no human-confirmed failure analysis is claimed.
 
 ## 8. Prior work and sources
 
@@ -62,11 +65,13 @@ integration work. See [docs/DISCLOSURES.md](docs/DISCLOSURES.md).
 
 The bundled mock provider is only a pipeline fixture. A real study requires
 owner-supplied provider keys, a frozen model/date table, repetitions, and human
-review of failure tags.
+review of failure tags. For a $0 pilot, prefer Groq, Google Gemini, and
+OpenRouter, subject to the limits shown in their consoles on the run date.
+Their keys remain local in `.env`; the browser never receives them.
 
 ## Repository map
 
-- `evalkit/domain/`: parser and independent checkers
+- `evalkit/domain/`: parser and differently implemented checkers
 - `evalkit/`: tasks, provider interface, grading, runner, manifest, replay, CLI
 - `tasks/`: oracle-derived frozen task instances
 - `backend/`: dependency-free read-only API and static server
