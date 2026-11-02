@@ -1,0 +1,23 @@
+{
+  "attempt_key": "20261102T190851Z-db7b409f/mock/C18/1",
+  "task_id": "C18",
+  "task_hash": "e566e046c71f5a94b4aa4884af1d52badf2066ac7571ed816704b54351e6705e",
+  "prompt_sent": "Apply M4 to this history. Explain the decision and end with a fenced JSON object containing verdict valid, invalid, or undetermined.\n\nRegister: initial=0.\nR1  invoke=1  response=2  write=1\nR2  invoke=3  response=4  read=1003\nR3  invoke=5  response=6  write=2\nR4  invoke=7  response=8  write=3",
+  "model_requested": "mock",
+  "model_returned": "mock",
+  "settings": {
+    "temperature": 0,
+    "max_tokens": 4096
+  },
+  "response_text": "{\"module\": \"M4\", \"verdict\": \"invalid\", \"violation\": {\"operations\": [\"R1\", \"R2\", \"R3\", \"R4\"], \"reason\": \"no real-time-respecting legal linearization exists\"}, \"derivation\": [\"Exhaustive search found no legal order respecting real time.\"]}",
+  "finish_reason": "stop",
+  "usage": {
+    "input_tokens": 39,
+    "output_tokens": 26,
+    "total_tokens": 65
+  },
+  "latency_ms": 0,
+  "provider_response_id": "mock-C18",
+  "created_at": "2026-11-02T19:08:51.391364+00:00",
+  "content_sha256": "b8ed9680cb891b21bc05cef45be89e5ce59c90eb1a6b968f7297dfa84cf944ae"
+}

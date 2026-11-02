@@ -1,0 +1,23 @@
+{
+  "attempt_key": "20261102T191035Z-db7b409f/mock/C14/1",
+  "task_id": "C14",
+  "task_hash": "6dfb369fe3ccc68ff68d552612f89814322f5e2ea2d0d75c3896ec4498b8477d",
+  "prompt_sent": "Apply M2 to this history. Explain the decision and end with a fenced JSON object containing verdict valid, invalid, or undetermined.\n\nKeys: x, y. Initial: x=0, y=0. Every written value is unique per key.\nT1  abort  w(x)=1\nT2  commit=4  r(x)=1",
+  "model_requested": "mock",
+  "model_returned": "mock",
+  "settings": {
+    "temperature": 0,
+    "max_tokens": 4096
+  },
+  "response_text": "{\"module\": \"M2\", \"edges\": [], \"violations\": [{\"rule\": \"aborted-read\", \"reader\": \"T2\", \"writer\": \"T1\", \"key\": \"x\", \"op\": 1}], \"versions\": {\"x\": [\"init\"], \"y\": [\"init\"]}, \"verdict\": \"invalid\", \"derivation\": [\"1. Version order of x: initial (0).\", \"2. Version order of y: initial (0).\", \"3. VIOLATION (aborted-read): {'rule': 'aborted-read', 'reader': 'T2', 'writer': 'T1', 'key': 'x', 'op': 1}\", \"4. Conclusion: NOT serializable.\"]}",
+  "finish_reason": "stop",
+  "usage": {
+    "input_tokens": 40,
+    "output_tokens": 54,
+    "total_tokens": 94
+  },
+  "latency_ms": 0,
+  "provider_response_id": "mock-C14",
+  "created_at": "2026-11-02T19:10:35.087539+00:00",
+  "content_sha256": "eb04104ccf55a7c4cc4e84dad72dbcba3ef6106cf12336a6e046cee8756c8bd4"
+}

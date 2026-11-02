@@ -207,6 +207,15 @@ def create_app(settings: Settings | None = None) -> Quart:
         target = settings.frontend_dir / "index.html"
         return await send_file(target) if target.exists() else _problem(404, "Frontend missing", "No frontend build is available.")
 
+    @app.get("/<path:asset_path>")
+    async def frontend_asset(asset_path: str):
+        """Serve the Vite bundle while keeping API paths handled above."""
+        frontend_dir = settings.frontend_dir.resolve()
+        target = (frontend_dir / asset_path).resolve()
+        if not target.is_relative_to(frontend_dir) or not target.is_file():
+            return _problem(404, "Asset not found", "The requested frontend asset does not exist.")
+        return await send_file(target)
+
     return app
 
 

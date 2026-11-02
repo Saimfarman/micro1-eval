@@ -1,0 +1,8 @@
+{
+  "run_id": "20261102T190851Z-db7b409f",
+  "provider": "mock",
+  "repetitions": 1,
+  "resumable": true,
+  "max_retries": 2,
+  "spend_cap_usd": null
+}

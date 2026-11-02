@@ -1,0 +1,23 @@
+{
+  "attempt_key": "20261102T190851Z-db7b409f/mock/T01/1",
+  "task_id": "T01",
+  "task_hash": "44bafa07e076a4c8b9a80182e66b6cac1afcdcdfd39b5b6074f8d479d5c20bd2",
+  "prompt_sent": "Apply M1 to this history. Explain the decision and end with a fenced JSON object containing verdict valid, invalid, or undetermined.\n\nKeys: x, y. Initial: x=0, y=0. Every written value is unique per key.\nT1  start=1  commit=6  r(x)=0  w(y)=1\nT2  start=2  commit=5  r(y)=0  w(x)=1",
+  "model_requested": "mock",
+  "model_returned": "mock",
+  "settings": {
+    "temperature": 0,
+    "max_tokens": 4096
+  },
+  "response_text": "{\"module\": \"M1\", \"verdict\": \"valid\", \"reads_from\": {\"T1.op1\": \"init\", \"T2.op1\": \"init\"}, \"violations\": [], \"derivation\": [\"1. T1 started at 1 and committed at 6.\", \"  op1 r(x): no earlier own write, so it reads the snapshot at start=1. Latest version of x committed before 1: the initial value (0). Observed 0: matches.\", \"2. T2 started at 2 and committed at 5.\", \"  op1 r(y): no earlier own write, so it reads the snapshot at start=2. Latest version of y committed before 2: the initial value (0). Observed 0: matches.\", \"3. No two overlapping committed transactions write a common key (first-committer-wins holds).\", \"4. Conclusion: valid under snapshot isolation.\"]}",
+  "finish_reason": "stop",
+  "usage": {
+    "input_tokens": 44,
+    "output_tokens": 104,
+    "total_tokens": 148
+  },
+  "latency_ms": 0,
+  "provider_response_id": "mock-T01",
+  "created_at": "2026-11-02T19:08:51.392554+00:00",
+  "content_sha256": "fd23c6ddc187fe892558ab4fa1a7ffcd954c37f08f156bd9faa12c0b66f3b920"
+}
