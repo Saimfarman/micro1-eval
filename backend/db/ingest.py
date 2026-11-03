@@ -3,12 +3,14 @@ from __future__ import annotations
 import hashlib
 import json
 import sqlite3
+from datetime import datetime, timezone
 from pathlib import Path
 
 from evalkit.manifest import sha256, verify_attempt_hashes, verify_manifest
 from evalkit.tasks import load_tasks
+from .migrate import migration_lock, migrate
 
-SCHEMA_VERSION = 1
+SCHEMA_VERSION = 4
 
 
 def _json(value: object) -> str:
@@ -53,8 +55,10 @@ def ingest(root: Path, database: Path | None = None, require_integrity: bool = T
     integrity_errors = verify_manifest(root) + verify_attempt_hashes(root)
     if require_integrity and integrity_errors:
         raise ValueError("cannot ingest unverified evidence: " + "; ".join(integrity_errors))
-    connection = connect(database)
+    with migration_lock(database):
+        connection = connect(database)
     try:
+        migrate(connection)
         _schema(connection, root)
         connection.commit()
         manifest_hash = _manifest_hash(root)
@@ -65,30 +69,51 @@ def ingest(root: Path, database: Path | None = None, require_integrity: bool = T
             return {"database": str(database), "status": "unchanged",
                     "manifest_hash": manifest_hash}
         connection.execute("BEGIN")
-        for table in ("failure_tags", "grades", "attempts", "summaries", "runs", "models", "tasks"):
+        for table in ("live_run_events", "failure_tags", "grades", "attempts",
+                      "summaries", "runs", "models", "tasks", "modules", "providers",
+                      "manifests"):
             connection.execute(f"DELETE FROM {table}")
         tasks = load_tasks(root / "tasks")
+        modules = sorted({task["module"] for task in tasks})
+        for module in modules:
+            connection.execute(
+                "INSERT INTO modules VALUES (?, ?, ?)",
+                (module, f"Evaluation module {module}", _json({"id": module})),
+            )
+        providers = {"mock"}
+        models_path = root / "models.yaml"
+        if models_path.exists():
+            from evalkit.model_config import load_models
+            model_rows = load_models(models_path)
+            providers.update(model.get("provider", "") for model in model_rows if model.get("provider"))
+        else:
+            model_rows = []
+        for provider in sorted(providers):
+            connection.execute("INSERT INTO providers VALUES (?, ?)",
+                               (provider, _json({"id": provider})))
         for task in tasks:
             connection.execute(
                 "INSERT INTO tasks VALUES (?, ?, ?, ?, ?, ?, ?)",
                 (task["id"], task["module"], int(task["control"]), task.get("status", "final"),
                  task["expected_verdict"], task["canonical_hash"], _json(task)),
             )
-        models_path = root / "models.yaml"
-        if models_path.exists():
-            from evalkit.model_config import load_models
-            for model in load_models(models_path):
-                connection.execute(
+        for model in model_rows:
+            connection.execute(
                     "INSERT INTO models VALUES (?, ?, ?)",
                     (model["id"], model.get("provider", ""), _json(model)),
                 )
-        run = _latest_run(root)
+        runs = sorted((root / "results" / "runs").glob("*"))
         attempt_count = grade_count = failure_count = 0
-        if run:
+        for run in runs:
+            if not (run / "run.json").exists():
+                continue
             run_payload = json.loads((run / "run.json").read_text(encoding="utf-8"))
+            provider = run_payload.get("provider", "mock")
+            connection.execute("INSERT OR IGNORE INTO providers VALUES (?, ?)",
+                               (provider, _json({"id": provider})))
             connection.execute(
                 "INSERT INTO runs VALUES (?, ?, ?)",
-                (run.name, run_payload.get("provider", ""), _json(run_payload)),
+                (run.name, provider, _json(run_payload)),
             )
             for path in sorted((run / "raw").glob("*.json")):
                 record = json.loads(path.read_text(encoding="utf-8"))
@@ -116,12 +141,28 @@ def ingest(root: Path, database: Path | None = None, require_integrity: bool = T
                         (failure.get("attempt_key"), failure.get("tag", "unknown"), _json(failure)),
                     )
                     failure_count += 1
-            summary_path = root / "results" / "summary.json"
+            summary_path = run / "summary.json"
+            if not summary_path.exists():
+                summary_path = root / "results" / "summary.json"
             if summary_path.exists():
-                connection.execute(
-                    "INSERT INTO summaries VALUES (?, ?)",
-                    (run.name, summary_path.read_text(encoding="utf-8")),
-                )
+                connection.execute("INSERT INTO summaries VALUES (?, ?)",
+                                   (run.name, summary_path.read_text(encoding="utf-8")))
+            for event_path in sorted(run.glob("events*.jsonl")):
+                for line in event_path.read_text(encoding="utf-8").splitlines():
+                    if line.strip():
+                        event = json.loads(line)
+                        connection.execute(
+                            "INSERT INTO live_run_events(run_id, event_type, event_json, created_at) "
+                            "VALUES (?, ?, ?, ?)",
+                            (run.name, event.get("type", "message"), _json(event),
+                             event.get("created_at", datetime.now(timezone.utc).isoformat())),
+                        )
+        if manifest_hash:
+            manifest_path = root / "results" / "MANIFEST.json"
+            connection.execute(
+                "INSERT INTO manifests VALUES (?, ?, ?)",
+                (manifest_hash, str(manifest_path.relative_to(root)), manifest_path.read_text(encoding="utf-8")),
+            )
         connection.execute(
             "INSERT OR REPLACE INTO schema_meta(key, value) VALUES('manifest_hash', ?)",
             (manifest_hash,),

@@ -13,3 +13,9 @@ keyboard and screen-reader equivalent.
 `npm run accessibility` checks the required offline accessibility contract,
 `npm run typecheck` checks the strict TypeScript surface, and `npm run build`
 produces the static bundle.
+
+All dashboard routes are hash-addressable and unknown routes render an explicit
+not-found state. Live progress is announced through an `aria-live` region, and
+the table view exposes every map item to keyboard and assistive-technology
+users. A browser audit has not been claimed unless the command is run for the
+release artifact.

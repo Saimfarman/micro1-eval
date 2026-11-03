@@ -37,7 +37,10 @@ def verify_results(root: Path) -> list[str]:
     if not runs:
         return ["no run is present"]
     latest = runs[-1]
-    stored = [json.loads(line) for line in (latest / "grades.jsonl").read_text(encoding="utf-8").splitlines()]
+    grades_path = latest / "grades.jsonl"
+    if not grades_path.exists():
+        return ["grades.jsonl is missing"]
+    stored = [json.loads(line) for line in grades_path.read_text(encoding="utf-8").splitlines() if line.strip()]
     actual = []
     for path in sorted((latest / "raw").glob("*.json")):
         record = json.loads(path.read_text(encoding="utf-8"))

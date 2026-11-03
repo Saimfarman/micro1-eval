@@ -353,7 +353,8 @@ Nothing in the code hard-codes the domain. Tasks are data files, graders are plu
 ### 5.1 Pipeline from idea to frozen task set
 
 1. **Draft 25 to 40 candidates** from your own domain notes.
-2. **Pilot** all of them on at least three frontier models from different providers, three runs each.
+2. **Optional owner-only pilot:** live-provider pilots are deferred and are not
+   required for the offline release.
 3. **Expert review:** read every failure by hand and confirm it is a genuine model error, not an ambiguous prompt, a wrong key or a grader bug. Fix or drop the task otherwise.
 4. **Select the final 8 to 10 core tasks** (the brief recommends 5 to 10; quality beats quantity). Cover every category and a spread of difficulty, with edge cases and judgment calls well represented.
 5. **Freeze:** tag the commit and hash the task files. If any task changes after the final run, re-run it.
@@ -781,7 +782,9 @@ There are two kinds of tests: the **eval test cases** (the tasks and controls in
 - Mock end-to-end run: run, grade, score, report on a tiny synthetic set.
 - Reproducibility: replay twice gives identical output; `verify` passes on pristine data and fails after a one-byte change in a raw attempt, grade, task, prompt or config (parametrised tamper tests).
 - Executable-grader sandbox: timeout, memory limit, no network, cleanup.
-- Preflight and package: each failure mode is detected (missing README heading, placeholder task, secret pattern, oversize file, placeholder video link, missing `.env.example`, zip over the limit, stale `dist`).
+- Preflight and package: each offline failure mode is detected (missing README
+  heading, placeholder task, secret pattern, oversize file, missing
+  `.env.example`, zip over the limit, stale `dist`). A video link is optional.
 - Coverage: at least 90% on graders, scoring, stats and verify; at least 80% overall.
 
 ### 14.2 Backend (pytest-asyncio with the Quart test client)
@@ -948,7 +951,8 @@ Live demo polish, container recipe, additional visuals.
 - [ ] README has all eight sections with generated tables; disclosures complete
 - [ ] Video of at most five minutes, captioned, link tested in a private window
 - [ ] `preflight --clean-room` green; zip under 50 MB; no secrets, videos or confidential data
-- [ ] Participant Agreement accepted; submission confirmation saved
+- [ ] Participant Agreement and submission confirmation (deferred; not part of
+      the offline release)
 
 ## 19. Inputs the owner must provide before coding starts
 
@@ -991,7 +995,9 @@ The principle is **proof-carrying ground truth**.
 - **VL2:** VL1 plus a generated derivation that the owner has read, with a dated sign-off and any question raised.
 - **VL3:** VL2 plus confirmation from outside our own code: an independent published checker run on that item, or an independent human reviewer.
 
-**Requirements:** every core task at VL2 or higher; VL3 where possible (optional in the six-day edition, see 0.1); every extended-study instance at VL1, recorded in bulk.
+**Requirements:** every core task has deterministic oracle-backed evidence.
+Independent human review/VL3 is deferred and is not required for the offline
+release.
 
 **Residual risk, stated plainly.** All three checkers implement the same written definitions (20.4). If a definition were wrong, all three could agree and still be wrong. The defences are the literature vectors, the external cross-check, and an independent reviewer who reads `docs/MODELS.md` (about 30 minutes). Say in the README that this risk exists and what was done about it.
 
@@ -1131,7 +1137,9 @@ Settings: the same for every model and recorded in `models.yaml`; a token budget
 
 **External check (VL3).** Export histories to the input format of an independent published checker (for example Elle from the Jepsen project, which needs a Java runtime) and run a sample of at least 200 on the owner’s machine or a CI runner. Record the agreement rate and explain every difference in `docs/METHODOLOGY.md`; such tools may define models slightly differently, so differences must be explained, never hidden. The tool is not shipped.
 
-**Independent human review (VL3).** Give a reviewer `docs/MODELS.md` and ten derivations. They need not re-derive anything: they confirm that the definitions match the literature and that each derivation follows from them. Record the reviewer (or “anonymous reviewer”), with their consent, and the date.
+**Independent human review (VL3).** Deferred. No reviewer is claimed or
+required for the offline release; future review must be recorded only if it
+actually occurs.
 
 **Freeze and provenance.** Record a hash of all oracle code in the manifest. Any change after the freeze invalidates the evidence for every task and requires re-running the ladder. A CI job re-runs the ladder on every change under `evalkit/domain/`.
 

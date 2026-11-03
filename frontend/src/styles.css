@@ -55,6 +55,7 @@ h3 { font-size: 1.1rem; }
 .filters { align-items: end; background: var(--surface); border: 1px solid var(--line); display: flex; gap: 1.5rem; margin-bottom: 1.5rem; padding: 1rem; }
 label { color: var(--muted); display: grid; font-size: .8rem; gap: .4rem; }
 select { background: var(--surface-raised); border: 1px solid var(--line); color: inherit; padding: .55rem; }
+input { background: var(--surface-raised); border: 1px solid var(--line); color: inherit; padding: .55rem; }
 .checkbox { align-items: center; display: flex; grid-template-columns: auto auto; }
 .filter-count { color: var(--accent); margin-left: auto; }
 .back-link { display: inline-block; margin-bottom: 2rem; }
@@ -100,6 +101,9 @@ ol { color: var(--muted); line-height: 1.7; padding-left: 1.25rem; }
   .filter-count { margin-left: 0; }
   .shell { padding-top: 2rem; }
   .map-canvas, .map-2d { height: 360px; }
+}
+@media (prefers-reduced-motion: reduce) {
+  *, *::before, *::after { scroll-behavior: auto !important; transition-duration: .01ms !important; animation-duration: .01ms !important; }
 }
 @media (prefers-reduced-motion: reduce) {
   *, *::before, *::after { scroll-behavior: auto !important; transition-duration: .01ms !important; }

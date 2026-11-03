@@ -13,8 +13,12 @@ from .domain.oracle import o3, reference, rules
 from .domain.oracle.m4 import linearization
 from .domain.linearizability import parse_register
 from .domain.history import parse
+from .domain.strict_serializability import (
+    check as check_m5,
+    reference_check as reference_m5,
+)
 
-MODULES = frozenset({"M1", "M2", "M3", "M4"})
+MODULES = frozenset({"M1", "M2", "M3", "M4", "M5"})
 ORACLES = (
     "evalkit.domain.oracle.reference",
     "evalkit.domain.oracle.rules",
@@ -41,6 +45,23 @@ def _difficulty(history: History | RegisterHistory, result: dict) -> dict:
             "search_space": len(history.operations),
             "certificate_items": len(result.get("order", result.get("violation", {}).get("operations", []))),
         }
+    if result.get("module") == "M5":
+        certificate = result.get("certificate", {})
+        return {
+            "transactions": len(history.txns),
+            "keys": len(history.keys),
+            "operations": sum(len(txn.ops) for txn in history.txns),
+            "reads": sum(op.kind == "r" for txn in history.txns for op in txn.ops),
+            "writes": sum(op.kind == "w" for txn in history.txns for op in txn.ops),
+            "prepared": sum(txn.outcome == "prepared" for txn in history.txns),
+            "real_time_edges": sum(
+                left.end < right.start
+                for left in history.txns
+                for right in history.txns
+                if left.id != right.id and left.end is not None and right.start is not None
+            ),
+            "certificate_items": len(certificate.get("serial_order", [])),
+        }
     reads = sum(op.kind == "r" for txn in history.txns for op in txn.ops)
     writes = sum(op.kind == "w" for txn in history.txns for op in txn.ops)
     return {
@@ -60,6 +81,13 @@ def _canonical_hash(module: str, history: History | RegisterHistory) -> str:
 
 
 def _oracle_result(module: str, history: History | RegisterHistory) -> tuple[str, dict]:
+    if module == "M5":
+        results = check_m5(history, "all")
+        verdicts = {result["verdict"] for result in results.values()}
+        if len(verdicts) != 1:
+            raise ValueError(f"oracle disagreement for M5: {sorted(verdicts)}")
+        result = results["rules"]
+        return next(iter(verdicts)), result
     reference_verdict = reference.ref_verdict(history, module)
     rules_result = rules.check(history, module)
     o3_result = o3.check(history, module)
@@ -90,7 +118,12 @@ def _metadata(
     task["expected_verdict"] = verdict
     task["expected_certificate"] = rules_result
     task["derivation"] = rules_result.get("derivation", [])
-    task["verified_by"] = list(ORACLES)
+    task["verified_by"] = (
+        ["evalkit.domain.strict_serializability.reference_check",
+         "evalkit.domain.strict_serializability.rules_check",
+         "evalkit.domain.strict_serializability.constraint_check"]
+        if task["module"] == "M5" else list(ORACLES)
+    )
     task["canonical_hash"] = _canonical_hash(task["module"], history)
     task["difficulty"] = _difficulty(history, rules_result)
     task["provenance"] = {
@@ -98,6 +131,13 @@ def _metadata(
         "seed": seed,
         "generator": generator,
         "oracles": list(ORACLES),
+    }
+    task["schema_version"] = 2
+    task["verification_level"] = "VL1"
+    task["rubric"] = {
+        "verdict": {"weight": 3, "critical": True},
+        "certificate": {"weight": 4, "critical": True},
+        "naming": {"weight": 1, "critical": False},
     }
     task["history"] = _canonical_history(history)
     task["prompt"] = _prompt(task["module"], task["history"])
@@ -107,13 +147,15 @@ def _metadata(
 def load_tasks(directory: Path) -> list[dict]:
     tasks = []
     for path in sorted(directory.glob("*.json")):
+        if path.name == "SELECTION.json":
+            continue
         item = json.loads(path.read_text(encoding="utf-8"))
         item["_path"] = str(path)
         tasks.append(item)
     return tasks
 
 
-def validate_tasks(directory: Path) -> list[str]:
+def validate_tasks(directory: Path, *, strict: bool = False) -> list[str]:
     errors = []
     seen_hashes: dict[str, str] = {}
     task_ids = {task.get("id") for task in load_tasks(directory)}
@@ -127,6 +169,21 @@ def validate_tasks(directory: Path) -> list[str]:
         for field in required:
             if field not in task:
                 errors.append(f"{path}: missing {field}")
+        if strict:
+            for field in ("schema_version", "rubric", "verification_level",
+                          "control_relationship"):
+                if field not in task:
+                    errors.append(f"{path}: missing {field} in strict mode")
+            if task.get("schema_version") != 2:
+                errors.append(f"{task.get('id')}: unsupported schema_version")
+            if task.get("verification_level") not in {"VL1", "VL2", "VL3"}:
+                errors.append(f"{task.get('id')}: invalid verification_level")
+            if not isinstance(task.get("rubric"), dict) or not task.get("rubric"):
+                errors.append(f"{task.get('id')}: rubric must be non-empty")
+            if any(token in str(task.get(field, "")).lower()
+                   for field in ("prompt", "history", "derivation")
+                   for token in ("todo", "placeholder", "tbd")):
+                errors.append(f"{task.get('id')}: placeholder content")
         if task.get("status", "final") in {"draft", "placeholder"}:
             errors.append(f"{task.get('id')}: unfinished status")
         relationship = task.get("control_relationship")
@@ -143,8 +200,14 @@ def validate_tasks(directory: Path) -> list[str]:
         try:
             history = _history_for(module, task["history"])
             verdict, rules_result = _oracle_result(module, history)
-            if tuple(task["verified_by"]) != ORACLES:
-                errors.append(f"{task['id']}: verified_by must list all three oracles")
+            expected_verifiers = (
+                ["evalkit.domain.strict_serializability.reference_check",
+                 "evalkit.domain.strict_serializability.rules_check",
+                 "evalkit.domain.strict_serializability.constraint_check"]
+                if module == "M5" else list(ORACLES)
+            )
+            if tuple(task["verified_by"]) != tuple(expected_verifiers):
+                errors.append(f"{task['id']}: verified_by must list all three checkers")
             if task["expected_verdict"] != verdict:
                 errors.append(f"{task['id']}: expected_verdict is not oracle-derived")
             if task["expected_certificate"] != rules_result:
@@ -204,6 +267,17 @@ def generate_tasks(directory: Path, module: str, count: int, seed: int) -> list[
         if module == "M4":
             history = _register_history(rng, rng.randint(3, 6), bool(index % 2))
             text = print_register(history)
+        elif module == "M5":
+            from .domain.history import Op, Txn
+
+            value = index
+            valid = bool(index % 2)
+            txns = (
+                Txn("T1", (Op("w", "x", value),), "commit", 1, 4),
+                Txn("T2", (Op("r", "x", value if valid else 0),), "commit", 5, 8),
+            )
+            history = History("timed", ("x",), {"x": 0}, txns)
+            text = print_history(history)
         else:
             history = random_history(rng, module, n=5, nkeys=2, fault=0.5)
             text = print_history(history)
@@ -218,6 +292,7 @@ def generate_tasks(directory: Path, module: str, count: int, seed: int) -> list[
             "module": module,
             "control": False,
             "status": "generated",
+            "control_relationship": {"kind": "core", "paired_with": None},
         }
         _metadata(task, history, verdict, rules_result, source="seeded-generator",
                   seed=seed, generator="evalkit.tasks.generate_tasks")

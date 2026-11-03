@@ -40,8 +40,14 @@ def aggregate_grades(rows: list[dict], tasks: dict[str, dict], seed: int = 20261
             "pass_at_1": _mean([float(value) for value in passed]),
             "mean_score": _mean(scores),
             "bootstrap_95": _bootstrap(passed, seed),
+            "consistency": _mean([
+                int(item.get("criteria", {}).get("certificate", item["passed"]))
+                for item in items
+            ]),
         }
 
+    core = summarize(scopes["core"])
+    control = summarize(scopes["control"])
     return {
         "attempts": len(rows),
         "passed": sum(int(row["passed"]) for row in rows),
@@ -49,5 +55,10 @@ def aggregate_grades(rows: list[dict], tasks: dict[str, dict], seed: int = 20261
         "mean_score": _mean([float(row["score"]) for row in rows]),
         "scopes": {name: summarize(items) for name, items in sorted(scopes.items())},
         "modules": {name: summarize(items) for name, items in sorted(modules.items())},
+        "control_vs_core": {
+            "core_pass_at_1": core["pass_at_1"],
+            "control_pass_at_1": control["pass_at_1"],
+            "difference": control["pass_at_1"] - core["pass_at_1"],
+        },
         "seed": seed,
     }

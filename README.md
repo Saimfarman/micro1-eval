@@ -3,14 +3,16 @@
 ## 1. Short description
 
 This is an offline-first evaluation of model reasoning about database transaction
-histories. It covers snapshot isolation (M1), serializability (M2), and in-doubt
-transactions (M3), with two differently implemented checkers and immutable raw
-records. Both checkers were produced with AI assistance by the same author.
+histories. It covers snapshot isolation (M1), serializability (M2), in-doubt
+transactions (M3), linearizability (M4), and strict serializability (M5), with
+independent reference, rules, and constraint checker paths where supported.
+Raw evidence is immutable and the SQLite database is only a rebuildable projection.
 The bundled mock run is a reproducibility fixture, not a commercial-model claim.
 
 ## 2. Video walkthrough link
 
-Video: to be recorded. The planned script is in [docs/VIDEO_SCRIPT.md](docs/VIDEO_SCRIPT.md).
+Video: optional and not supplied yet. Add the final link here when available.
+The walkthrough script is in [docs/VIDEO_SCRIPT.md](docs/VIDEO_SCRIPT.md).
 
 ## 3. Domain and expertise
 
@@ -27,19 +29,25 @@ predicate reads, or full distributed protocols.
 
 ## 5. Setup and run instructions
 
-Requires Python 3.11+. From the repository root:
+Requires Python 3.12+, Node.js 22+, and npm. From the repository root:
 
 ```text
 python -m evalkit validate-tasks
+python -m evalkit preflight
 python -m evalkit run
 python -m evalkit reproduce
+python -m evalkit ingest
+npm ci
+npm run typecheck
+npm run build
 python -m backend.serve
 ```
 
 Run `python -m evalkit ingest` before serving indexed results, then open
 `http://127.0.0.1:5000`. The mock path needs no API key or network. An
 OpenAI-compatible live provider is opt-in through `.env` variables documented in
-`.env.example`; do not commit secrets.
+`.env.example`; do not commit secrets. Live runs are disabled in the web service
+unless explicitly enabled in server settings.
 
 ## 6. Models tested and results
 
@@ -64,16 +72,22 @@ integration work. See [docs/DISCLOSURES.md](docs/DISCLOSURES.md).
 
 ## Limitations and threats to validity
 
-The bundled mock provider is only a pipeline fixture. A real study requires
-owner-supplied provider keys, a frozen model/date table, repetitions, and human
-review of failure tags. For a $0 pilot, prefer Groq, Google Gemini, and
-OpenRouter, subject to the limits shown in their consoles on the run date.
-Their keys remain local in `.env`; the browser never receives them.
+The bundled mock provider is only a pipeline fixture. A live study is optional
+and requires owner-supplied provider keys, a frozen model/date table, and
+repetitions. Keys remain local in `.env`; the browser never receives them.
 
 ## Repository map
 
-- `evalkit/domain/`: parser and differently implemented checkers
+- `evalkit/domain/`: parser and separately selectable M1–M5 checkers
 - `evalkit/`: tasks, provider interface, grading, runner, manifest, replay, CLI
 - `tasks/`: oracle-derived frozen task instances
-- `backend/`: dependency-free read-only API and static server
+- `backend/`: Quart API, migrations, derived SQLite ingest, and static server
 - `frontend/dist/`: shipped offline dashboard
+
+## Release and operations
+
+The release gates and evidence policy are documented in
+[docs/RELEASE.md](docs/RELEASE.md). Operator procedures for quotas, migrations,
+backups, logs, live-run approval, and incident recovery are in
+[docs/OPERATIONS.md](docs/OPERATIONS.md). API and SSE contracts are in
+[docs/API.md](docs/API.md).

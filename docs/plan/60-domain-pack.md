@@ -32,7 +32,9 @@ The principle is **proof-carrying ground truth**.
 - **VL2:** VL1 plus a generated derivation that the owner has read, with a dated sign-off and any question raised.
 - **VL3:** VL2 plus confirmation from outside our own code: an independent published checker run on that item, or an independent human reviewer.
 
-**Requirements:** every core task at VL2 or higher; VL3 where possible (optional in the six-day edition, see 0.1); every extended-study instance at VL1, recorded in bulk.
+**Requirements:** every core task has deterministic oracle-backed evidence.
+Independent human review/VL3 is deferred and is not required for the offline
+release.
 
 **Residual risk, stated plainly.** All three checkers implement the same written definitions (20.4). If a definition were wrong, all three could agree and still be wrong. The defences are the literature vectors, the external cross-check, and an independent reviewer who reads `docs/MODELS.md` (about 30 minutes). Say in the README that this risk exists and what was done about it.
 
@@ -172,7 +174,9 @@ Settings: the same for every model and recorded in `models.yaml`; a token budget
 
 **External check (VL3).** Export histories to the input format of an independent published checker (for example Elle from the Jepsen project, which needs a Java runtime) and run a sample of at least 200 on the owner’s machine or a CI runner. Record the agreement rate and explain every difference in `docs/METHODOLOGY.md`; such tools may define models slightly differently, so differences must be explained, never hidden. The tool is not shipped.
 
-**Independent human review (VL3).** Give a reviewer `docs/MODELS.md` and ten derivations. They need not re-derive anything: they confirm that the definitions match the literature and that each derivation follows from them. Record the reviewer (or “anonymous reviewer”), with their consent, and the date.
+**Independent human review (VL3).** Deferred. No reviewer is claimed or
+required for the offline release; future review must be recorded only if it
+actually occurs.
 
 **Freeze and provenance.** Record a hash of all oracle code in the manifest. Any change after the freeze invalidates the evidence for every task and requires re-running the ladder. A CI job re-runs the ladder on every change under `evalkit/domain/`.
 

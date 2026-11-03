@@ -2,11 +2,16 @@ import { useState, type ReactNode } from "react";
 
 const links = [
   ["Overview", "#/"],
+  ["Modules", "#/modules"],
   ["Tasks", "#/tasks"],
+  ["Runs", "#/runs"],
   ["Results", "#/results"],
   ["Failures", "#/failures"],
-  ["Task map", "#/failure-map"],
+  ["Providers", "#/providers"],
+  ["Live run", "#/live-run"],
   ["Method", "#/method"],
+  ["Learn", "#/learn"],
+  ["Settings", "#/settings"],
   ["Accessibility", "#/accessibility"],
 ];
 

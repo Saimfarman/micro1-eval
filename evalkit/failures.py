@@ -7,7 +7,7 @@ def classify_failure(record: dict, grade: dict) -> dict:
     if not record.get("response_text", "").strip():
         tag, suggestion = "empty-response", "Return one final JSON answer."
     elif grade.get("observed_verdict") is None:
-        tag, suggestion = "malformed-json", "Return a parseable fenced JSON object."
+        tag, suggestion = "format-error", "Return one parseable JSON object in the required format."
     elif not grade["criteria"].get("verdict"):
         tag, suggestion = "wrong-verdict", "Recheck the formal module definition."
     elif not grade["criteria"].get("certificate"):

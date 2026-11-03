@@ -137,7 +137,9 @@ There are two kinds of tests: the **eval test cases** (the tasks and controls in
 - Mock end-to-end run: run, grade, score, report on a tiny synthetic set.
 - Reproducibility: replay twice gives identical output; `verify` passes on pristine data and fails after a one-byte change in a raw attempt, grade, task, prompt or config (parametrised tamper tests).
 - Executable-grader sandbox: timeout, memory limit, no network, cleanup.
-- Preflight and package: each failure mode is detected (missing README heading, placeholder task, secret pattern, oversize file, placeholder video link, missing `.env.example`, zip over the limit, stale `dist`).
+- Preflight and package: each offline failure mode is detected (missing README
+  heading, placeholder task, secret pattern, oversize file, missing
+  `.env.example`, zip over the limit, stale `dist`). A video link is optional.
 - Coverage: at least 90% on graders, scoring, stats and verify; at least 80% overall.
 
 ### 14.2 Backend (pytest-asyncio with the Quart test client)

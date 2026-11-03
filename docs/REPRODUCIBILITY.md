@@ -10,6 +10,13 @@ grades, and any stored summary.
 Reports can therefore be regenerated from the evidence files in a clean
 environment without API keys.
 
+The rebuildable SQLite projection is created with `python -m evalkit ingest`;
+schema migrations are applied automatically and never replace source files.
+`python -m evalkit preflight` checks the offline release contract, and
+`python -m evalkit package` creates a clean-room archive without keys, caches,
+databases, or prior archives. The package can be unpacked in a fresh
+environment and run through the mock workflow without network access.
+
 Failed attempts receive conservative machine-derived tags such as
 `malformed-json`, `wrong-verdict`, and `invalid-certificate`, plus a suggestion
 and a `human_review` object. The default status is `not_requested` or

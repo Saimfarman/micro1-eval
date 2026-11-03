@@ -142,7 +142,8 @@ Live demo polish, container recipe, additional visuals.
 - [ ] README has all eight sections with generated tables; disclosures complete
 - [ ] Video of at most five minutes, captioned, link tested in a private window
 - [ ] `preflight --clean-room` green; zip under 50 MB; no secrets, videos or confidential data
-- [ ] Participant Agreement accepted; submission confirmation saved
+- [ ] Participant Agreement and submission confirmation (deferred; not part of
+      the offline release)
 
 ## 19. Inputs the owner must provide before coding starts
 

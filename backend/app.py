@@ -4,6 +4,9 @@ from __future__ import annotations
 import json
 import mimetypes
 import sqlite3
+import uuid
+import asyncio
+import time
 from dataclasses import dataclass
 from pathlib import Path
 
@@ -11,6 +14,7 @@ from quart import Quart, jsonify, request, send_file
 
 from evalkit.manifest import verify_attempt_hashes, verify_manifest
 from evalkit.tasks import load_tasks
+from backend.live_runs import read_events
 
 
 @dataclass(frozen=True)
@@ -19,6 +23,9 @@ class Settings:
     database: Path | None = None
     static_dir: Path | None = None
     auto_ingest: bool = True
+    live_runs_enabled: bool = False
+    live_run_token: str | None = None
+    live_run_rate_limit: int = 30
 
     @property
     def db_path(self) -> Path:
@@ -72,14 +79,17 @@ def create_app(settings: Settings | None = None) -> Quart:
     settings = settings or Settings(Path(__file__).resolve().parent.parent)
     app = Quart(__name__, static_folder=None)
     app.config["SETTINGS"] = settings
+    live_requests: dict[str, list[float]] = {}
 
     @app.after_request
     async def security_headers(response):
+        response.headers["X-Request-ID"] = request.headers.get("X-Request-ID", str(uuid.uuid4()))
         response.headers["Content-Security-Policy"] = "default-src 'self'; style-src 'self'"
         response.headers["X-Content-Type-Options"] = "nosniff"
         response.headers["Referrer-Policy"] = "no-referrer"
         response.headers["Permissions-Policy"] = "camera=(), microphone=(), geolocation=()"
         response.headers["Cache-Control"] = "no-store" if request.path.startswith("/api/") else "no-cache"
+        response.headers["X-Frame-Options"] = "DENY"
         return response
 
     @app.errorhandler(404)
@@ -99,7 +109,7 @@ def create_app(settings: Settings | None = None) -> Quart:
         return jsonify({
             "title": "Transaction History Reasoning Eval",
             "domain": "computer-science",
-            "modules": ["M1", "M2", "M3", "M4"],
+            "modules": ["M1", "M2", "M3", "M4", "M5"],
             "integrity": not (verify_manifest(settings.root) + verify_attempt_hashes(settings.root)),
         })
 
@@ -107,11 +117,16 @@ def create_app(settings: Settings | None = None) -> Quart:
     async def openapi():
         return jsonify({
             "openapi": "3.0.3",
-            "info": {"title": "Transaction History Evaluation API", "version": "1.0.0"},
-            "paths": {path: {"get": {}} for path in (
+            "info": {"title": "Transaction History Evaluation API", "version": "2.0.0"},
+            "components": {"schemas": {
+                "Problem": {"type": "object", "required": ["title", "status", "detail"]},
+                "Page": {"type": "object", "required": ["page", "per_page", "total"]},
+            }},
+            "paths": {path: {"get": {"responses": {"200": {"description": "Successful response"}}}} for path in (
                 "/api/health", "/api/meta", "/api/tasks", "/api/models", "/api/runs",
                 "/api/results/summary", "/api/results/attempts", "/api/failures/breakdown",
-                "/api/grader/reliability", "/api/integrity",
+                "/api/grader/reliability", "/api/integrity", "/api/modules",
+                "/api/providers", "/api/manifests", "/api/migrations",
             )},
         })
 
@@ -153,9 +168,110 @@ def create_app(settings: Settings | None = None) -> Quart:
     async def models():
         return jsonify({"models": _decode(_read_db(settings, "SELECT payload_json FROM models ORDER BY id"))})
 
+    @app.get("/api/modules")
+    async def modules():
+        return jsonify({"modules": _decode(_read_db(settings, "SELECT payload_json FROM modules ORDER BY id"))})
+
+    @app.get("/api/providers")
+    async def providers():
+        return jsonify({"providers": _decode(_read_db(settings, "SELECT payload_json FROM providers ORDER BY id"))})
+
     @app.get("/api/runs")
     async def runs():
         return jsonify({"runs": _decode(_read_db(settings, "SELECT payload_json FROM runs ORDER BY id DESC"))})
+
+    @app.get("/api/manifests")
+    async def manifests():
+        return jsonify({"manifests": _decode(_read_db(settings, "SELECT payload_json FROM manifests ORDER BY digest DESC"))})
+
+    @app.get("/api/migrations")
+    async def migrations():
+        rows = _read_db(settings, "SELECT value FROM schema_meta WHERE key='schema_version'")
+        return jsonify({"schema_version": int(rows[0]["value"]) if rows else 0})
+
+    @app.post("/api/runs")
+    async def create_live_run():
+        if not settings.live_runs_enabled:
+            return _problem(403, "Live runs disabled",
+                            "Live-run creation is disabled unless an explicit server authorization gate is configured.")
+        if settings.live_run_token and request.headers.get("Authorization") != f"Bearer {settings.live_run_token}":
+            return _problem(401, "Unauthorized", "A valid live-run authorization token is required.")
+        now = time.monotonic()
+        client = request.remote or "unknown"
+        live_requests[client] = [stamp for stamp in live_requests.get(client, []) if now - stamp < 60]
+        if len(live_requests[client]) >= settings.live_run_rate_limit:
+            return _problem(429, "Rate limit exceeded", "Too many live-run requests.")
+        live_requests[client].append(now)
+        body = await request.get_json(silent=True) or {}
+        run_id = str(body.get("run_id") or uuid.uuid4())
+        provider = str(body.get("provider") or "mock")
+        connection = sqlite3.connect(settings.db_path)
+        try:
+            connection.execute(
+                "INSERT OR IGNORE INTO providers(id, payload_json) VALUES (?, ?)",
+                (provider, json.dumps({"id": provider})),
+            )
+            connection.execute(
+                "INSERT INTO runs(id, provider, payload_json) VALUES (?, ?, ?)",
+                (run_id, provider, json.dumps({"run_id": run_id, "provider": provider, "status": "queued"})),
+            )
+            from backend.live_runs import append_event
+            append_event(connection, run_id, "run-created", {"provider": provider})
+            append_event(connection, run_id, "queued", {})
+        finally:
+            connection.close()
+        return jsonify({"run_id": run_id, "status": "queued"}), 202
+
+    @app.post("/api/runs/<run_id>/cancel")
+    async def cancel_live_run(run_id: str):
+        if not settings.live_runs_enabled:
+            return _problem(403, "Live runs disabled", f"Live-run cancellation is disabled for {run_id}.")
+        if settings.live_run_token and request.headers.get("Authorization") != f"Bearer {settings.live_run_token}":
+            return _problem(401, "Unauthorized", "A valid live-run authorization token is required.")
+        connection = sqlite3.connect(settings.db_path)
+        try:
+            from backend.live_runs import append_event
+            if not connection.execute("SELECT 1 FROM runs WHERE id=?", (run_id,)).fetchone():
+                return _problem(404, "Run not found", f"No live run exists with id {run_id}.")
+            append_event(connection, run_id, "cancelled", {})
+        finally:
+            connection.close()
+        return jsonify({"run_id": run_id, "status": "cancelled"})
+
+    @app.get("/api/runs/<run_id>/events")
+    async def run_events(run_id: str):
+        if not settings.live_runs_enabled:
+            return _problem(403, "Live runs disabled", "Live-run streaming is disabled.")
+        if settings.live_run_token and request.headers.get("Authorization") != f"Bearer {settings.live_run_token}":
+            return _problem(401, "Unauthorized", "A valid live-run authorization token is required.")
+        try:
+            after = max(0, int(request.headers.get("Last-Event-ID", request.args.get("after", "0"))))
+            limit = min(1000, max(1, int(request.args.get("limit", "100"))))
+        except ValueError:
+            return _problem(400, "Invalid replay position", "Replay position and limit must be integers.")
+
+        async def stream():
+            connection = sqlite3.connect(settings.db_path)
+            try:
+                cursor, idle = after, 0
+                while idle < 10:
+                    events = read_events(connection, run_id, cursor, limit)
+                    if events:
+                        for sequence, event in events:
+                            cursor = sequence
+                            yield f"id: {sequence}\nevent: {event['type']}\ndata: {json.dumps(event, sort_keys=True)}\n\n"
+                        idle = 0
+                    else:
+                        yield ": heartbeat\n\n"
+                        idle += 1
+                    await asyncio.sleep(0.1)
+            finally:
+                connection.close()
+
+        return app.response_class(
+            stream(), content_type="text/event-stream",
+            headers={"Cache-Control": "no-cache", "X-Accel-Buffering": "no"},
+        )
 
     @app.get("/api/results/summary")
     async def summary():

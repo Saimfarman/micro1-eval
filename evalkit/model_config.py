@@ -46,7 +46,12 @@ def estimate(models: list[dict], task_count: int, repetitions: int = 1,
             "calls": calls,
             "estimated_tokens": total_tokens,
             "quota_days": calls / rpd if rpd else None,
+            "quota_days_by_tokens": total_tokens / model.get("tokens_per_day", total_tokens)
+            if model.get("tokens_per_day", total_tokens) else None,
             "runtime_minutes": calls / rpm if rpm else None,
+            "estimated_cost_usd": round(
+                total_tokens / 1_000_000 * float(model.get("price_per_million_tokens", 0)), 6
+            ),
             "enabled": model.get("enabled", False),
         })
     return {"tasks": task_count, "repetitions": repetitions, "models": result}

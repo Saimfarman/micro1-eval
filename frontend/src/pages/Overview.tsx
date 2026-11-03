@@ -26,7 +26,7 @@ export function Overview() {
       </section>
       <section className="metric-grid" aria-label="Evaluation summary">
         <article className="metric"><strong>{tasks.length}</strong><span>frozen tasks</span></article>
-        <article className="metric"><strong>4</strong><span>formal modules</span></article>
+        <article className="metric"><strong>5</strong><span>formal modules</span></article>
         <article className="metric"><strong>{summary.pass_at_1 == null ? "—" : `${Math.round(summary.pass_at_1 * 100)}%`}</strong><span>latest pass@1</span></article>
         <article className="metric"><strong>{integrity == null ? "…" : integrity ? "OK" : "CHECK"}</strong><span>evidence integrity</span></article>
       </section>

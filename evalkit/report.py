@@ -11,12 +11,18 @@ def build_report(root: Path) -> dict:
     if not runs:
         return {"runs": 0, "attempts": 0, "passed": 0, "pass_at_1": 0}
     latest = runs[-1]
-    rows = [json.loads(line) for line in (latest / "grades.jsonl").read_text(encoding="utf-8").splitlines()]
+    grades_path = latest / "grades.jsonl"
+    if not grades_path.exists():
+        return {"run_id": latest.name, "runs": 1, "attempts": 0, "passed": 0,
+                "pass_at_1": 0, "human_review": {"status": "not_requested", "reviewed": False}}
+    rows = [json.loads(line) for line in grades_path.read_text(encoding="utf-8").splitlines() if line.strip()]
     tasks = {
         path.stem: json.loads(path.read_text(encoding="utf-8"))
         for path in (root / "tasks").glob("*.json")
     }
-    return {"run_id": latest.name, "runs": 1, **aggregate_grades(rows, tasks)}
+    return {"run_id": latest.name, "runs": 1, "human_review": {
+        "status": "not_requested", "reviewed": False,
+    }, **aggregate_grades(rows, tasks)}
 
 
 def write_report(root: Path) -> dict:

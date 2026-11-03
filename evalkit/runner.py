@@ -28,6 +28,8 @@ def _record(run_id: str, provider: str, task: dict, repetition: int,
         "usage": response.usage,
         "latency_ms": response.latency_ms,
         "provider_response_id": response.provider_response_id,
+        "request_metadata": response.request_metadata,
+        "run_date": datetime.now(timezone.utc).date().isoformat(),
         "created_at": datetime.now(timezone.utc).isoformat(),
     }
     record["content_sha256"] = hashlib.sha256(
@@ -48,8 +50,23 @@ def run(root: Path, provider: str = "mock", repetitions: int = 1,
     grades = []
     failures = []
     quota = Quota(spend_cap_usd=spend_cap_usd)
+    checkpoint_path = out / "checkpoint.json"
+    checkpoint = json.loads(checkpoint_path.read_text(encoding="utf-8")) if checkpoint_path.exists() else {
+        "completed": [], "status": "running", "quota_paused": False
+    }
+    completed = set(checkpoint.get("completed", []))
+    grades_path = out / "grades.jsonl"
+    if resume and grades_path.exists():
+        grades = [
+            json.loads(line) for line in grades_path.read_text(encoding="utf-8").splitlines()
+            if line.strip()
+        ]
+    quota_paused = False
     for task in tasks:
         for repetition in range(1, repetitions + 1):
+            attempt_key = f"{run_id}/{provider}/{task['id']}/{repetition}"
+            if attempt_key in completed:
+                continue
             path = raw_dir / f"{task['id']}__{repetition}.json"
             if resume and path.exists():
                 record = json.loads(path.read_text(encoding="utf-8"))
@@ -57,10 +74,23 @@ def run(root: Path, provider: str = "mock", repetitions: int = 1,
                     record["response_text"], record["model_returned"],
                     record["finish_reason"], record.get("usage", {}),
                     record.get("latency_ms", 0), record.get("provider_response_id"),
+                    record.get("request_metadata", {}),
                 )
             else:
-                response = provider_response(task, provider, root, quota, max_retries)
+                try:
+                    response = provider_response(task, provider, root, quota, max_retries)
+                except RuntimeError as exc:
+                    if "quota" in str(exc) or "spend cap" in str(exc):
+                        quota_paused = True
+                        checkpoint.update({"status": "quota-paused", "quota_paused": True,
+                                           "completed": sorted(completed),
+                                           "reason": str(exc)})
+                        checkpoint_path.write_text(json.dumps(checkpoint, indent=2) + "\n")
+                        break
+                    raise
                 record = _record(run_id, provider, task, repetition, response)
+                if path.exists():
+                    raise RuntimeError(f"refusing to overwrite immutable attempt: {path}")
                 path.write_text(json.dumps(record, indent=2) + "\n", encoding="utf-8")
             grade_result = {
                 **grade(response.text, task["history"], task["module"], task["expected_verdict"]),
@@ -70,10 +100,18 @@ def run(root: Path, provider: str = "mock", repetitions: int = 1,
             grades.append(grade_result)
             if not grade_result["passed"]:
                 failures.append(classify_failure(record, grade_result))
+            completed.add(attempt_key)
+            checkpoint.update({"status": "running", "quota_paused": False,
+                               "completed": sorted(completed)})
+            checkpoint_path.write_text(json.dumps(checkpoint, indent=2) + "\n")
+        if quota_paused:
+            break
     (out / "run.json").write_text(json.dumps({
         "run_id": run_id, "provider": provider, "repetitions": repetitions,
         "resumable": True, "max_retries": max_retries,
         "spend_cap_usd": spend_cap_usd,
+        "status": "quota-paused" if quota_paused else "completed",
+        "completed_attempts": len(completed),
     }, indent=2) + "\n", encoding="utf-8")
     (out / "grades.jsonl").write_text(
         "".join(json.dumps(grade_row) + "\n" for grade_row in grades), encoding="utf-8"

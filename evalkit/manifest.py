@@ -12,12 +12,23 @@ def build_manifest(root: Path) -> dict:
         if base.exists():
             for path in base.rglob("*"):
                 if (path.is_file() and path.name != "MANIFEST.json"
+                        and not path.name.endswith(".migrate.lock")
                         and path.suffix not in {".sqlite", ".sqlite3", ".db"}):
                     files[str(path.relative_to(root)).replace("\\", "/")] = sha256(path)
     for path in (root / "eval.config.yaml", root / "models.yaml"):
         if path.exists():
             files[path.name] = sha256(path)
-    return {"version": 1, "files": dict(sorted(files.items()))}
+    for path in (root / "requirements.txt", root / "requirements-dev.txt",
+                 root / "pyproject.toml"):
+        if path.exists():
+            files[str(path.relative_to(root)).replace("\\", "/")] = sha256(path)
+    for base in (root / "evalkit" / "domain" / "oracle",
+                 root / "frontend" / "dist"):
+        if base.exists():
+            for path in base.rglob("*"):
+                if path.is_file():
+                    files[str(path.relative_to(root)).replace("\\", "/")] = sha256(path)
+    return {"version": 2, "files": dict(sorted(files.items()))}
 
 def write_manifest(root: Path) -> Path:
     path = root / "results" / "MANIFEST.json"

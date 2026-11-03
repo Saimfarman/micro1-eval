@@ -19,7 +19,7 @@ export function Tasks() {
     <>
       <div className="page-heading"><p className="eyebrow">CORPUS / TASKS</p><h1>Task catalogue</h1><p className="lede">Every expected answer is recomputed from the oracle implementations.</p></div>
       <div className="filters" aria-label="Task filters">
-        <label>Module<select value={module} onChange={event => setModule(event.target.value as ModuleName | "all")}><option value="all">All modules</option>{(["M1", "M2", "M3", "M4"] as ModuleName[]).map(item => <option key={item}>{item}</option>)}</select></label>
+        <label>Module<select value={module} onChange={event => setModule(event.target.value as ModuleName | "all")}><option value="all">All modules</option>{(["M1", "M2", "M3", "M4", "M5"] as ModuleName[]).map(item => <option key={item}>{item}</option>)}</select></label>
         <label className="checkbox"><input type="checkbox" checked={showControls} onChange={event => setShowControls(event.target.checked)} /> Include controls</label>
         <span className="filter-count">{filtered.length} tasks</span>
       </div>

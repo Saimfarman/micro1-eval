@@ -22,7 +22,7 @@ and draft tasks are never eligible.
 
 ## Balance and controls
 
-Selection is balanced across M1-M4 and valid/invalid/undetermined verdicts
+Selection is balanced across M1-M5 and valid/invalid/undetermined verdicts
 whenever the available corpus supports the category. Controls are retained
 separately from core tasks and are never silently substituted for core tasks.
 Matched controls carry a `control_relationship` with their paired core ID.

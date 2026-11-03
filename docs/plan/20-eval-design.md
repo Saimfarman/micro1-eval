@@ -5,7 +5,8 @@
 ### 5.1 Pipeline from idea to frozen task set
 
 1. **Draft 25 to 40 candidates** from your own domain notes.
-2. **Pilot** all of them on at least three frontier models from different providers, three runs each.
+2. **Optional owner-only pilot:** live-provider pilots are deferred and are not
+   required for the offline release.
 3. **Expert review:** read every failure by hand and confirm it is a genuine model error, not an ambiguous prompt, a wrong key or a grader bug. Fix or drop the task otherwise.
 4. **Select the final 8 to 10 core tasks** (the brief recommends 5 to 10; quality beats quantity). Cover every category and a spread of difficulty, with edge cases and judgment calls well represented.
 5. **Freeze:** tag the commit and hash the task files. If any task changes after the final run, re-run it.

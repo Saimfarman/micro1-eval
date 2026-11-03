@@ -9,6 +9,7 @@ from .domain.history import parse
 from .domain.linearizability import parse_register
 from .domain.oracle import rules
 from .domain.oracle.m4 import validate_linearization
+from .domain.strict_serializability import verify_certificate as verify_m5_certificate
 
 CRITICAL = {"verdict", "certificate"}
 
@@ -135,6 +136,22 @@ def _m4_certificate(history, answer, oracle) -> bool:
     )
 
 
+def _m5_certificate(history, answer, expected: str) -> bool:
+    if expected == "valid":
+        certificate = answer.get("certificate", {})
+        return verify_m5_certificate(history, {
+            "module": "M5",
+            "verdict": answer.get("verdict"),
+            "certificate": {"serial_order": answer.get(
+                "serial_order", certificate.get("serial_order")
+            )},
+        })
+    return answer.get("verdict") == "invalid" and (
+        answer.get("certificate", {}).get("kind") == "no-strict-serial-order"
+        or answer.get("reason") == "no-strict-serial-order"
+    )
+
+
 CRITERION_WEIGHTS = {
     "verdict": 0.4,
     "certificate": 0.4,
@@ -147,7 +164,11 @@ def grade(text: str, history_text: str, module: str, expected: str | None = None
     answer = extract_answer(text)
     module = module.upper()
     history = parse_register(history_text) if module == "M4" else parse(history_text)
-    oracle = rules.check(history, module)
+    if module == "M5":
+        from .domain.strict_serializability import check as m5_check
+        oracle = m5_check(history, "rules")
+    else:
+        oracle = rules.check(history, module)
     expected = expected or oracle["verdict"]
     criteria = {"verdict": bool(answer and answer.get("verdict") == expected),
                 "certificate": False, "naming": True, "completeness": True}
@@ -161,6 +182,9 @@ def grade(text: str, history_text: str, module: str, expected: str | None = None
             criteria["completeness"] = criteria["certificate"]
         elif module == "M4":
             criteria["certificate"] = _m4_certificate(history, answer, oracle)
+            criteria["completeness"] = criteria["certificate"]
+        elif module == "M5":
+            criteria["certificate"] = _m5_certificate(history, answer, expected)
             criteria["completeness"] = criteria["certificate"]
         if module == "M2" and answer.get("anomaly") and oracle.get("anomaly"):
             criteria["naming"] = answer["anomaly"] == oracle["anomaly"]
