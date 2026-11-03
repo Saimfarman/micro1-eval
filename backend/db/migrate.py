@@ -4,7 +4,7 @@ import sqlite3
 from contextlib import contextmanager
 from pathlib import Path
 
-LATEST_VERSION = 4
+LATEST_VERSION = 5
 
 
 @contextmanager

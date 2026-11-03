@@ -13,7 +13,7 @@ from pathlib import Path
 from quart import Quart, jsonify, request, send_file
 
 from evalkit.manifest import verify_attempt_hashes, verify_manifest
-from evalkit.tasks import load_tasks
+from evalkit.tasks import MODULES, load_tasks
 from backend.live_runs import read_events
 
 
@@ -109,7 +109,7 @@ def create_app(settings: Settings | None = None) -> Quart:
         return jsonify({
             "title": "Transaction History Reasoning Eval",
             "domain": "computer-science",
-            "modules": ["M1", "M2", "M3", "M4", "M5"],
+            "modules": sorted(MODULES),
             "integrity": not (verify_manifest(settings.root) + verify_attempt_hashes(settings.root)),
         })
 

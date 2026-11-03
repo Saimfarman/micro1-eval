@@ -1,13 +1,50 @@
 import type { Task } from "../types";
-import { StatusBadge } from "./StatusBadge";
+import { moduleColor } from "../visualization/layout";
 
 export function TaskCard({ task }: { task: Task }) {
+  const ops = task.difficulty?.operations ?? 1;
+  const keys = task.difficulty?.keys ?? 1;
+
   return (
-    <a className="task-card" href={`#/tasks/${encodeURIComponent(task.id)}`}>
-      <div className="task-card-head"><span>{task.id}</span><StatusBadge value={task.module} /></div>
-      <h3>{task.control ? "Matched control" : "Core task"}</h3>
-      <p className="muted">Oracle verdict: <strong>{task.expected_verdict}</strong></p>
-      <div className="task-card-foot"><span>{task.status}</span><span aria-hidden="true">→</span></div>
+    <a
+      className="task-card panel"
+      href={`#/tasks/${encodeURIComponent(task.id)}`}
+      style={{ borderLeftColor: moduleColor(task.module) }}
+    >
+      <div className="task-card-head">
+        <div className="task-id-group">
+          <span className="task-id">{task.id}</span>
+          <span
+            className="module-pill"
+            style={{
+              borderColor: moduleColor(task.module),
+              background: `${moduleColor(task.module)}20`,
+              color: moduleColor(task.module),
+            }}
+          >
+            {task.module}
+          </span>
+        </div>
+        <span className={`verdict-pill ${task.expected_verdict}`}>
+          {task.expected_verdict}
+        </span>
+      </div>
+
+      <div className="task-card-body">
+        <h3>{task.control ? "Matched Metamorphic Control" : "Core Benchmark Task"}</h3>
+        <p className="task-preview-desc">
+          {ops} operations · {keys} keys accessed · {task.difficulty?.reads ?? 0} reads / {task.difficulty?.writes ?? 0} writes
+        </p>
+      </div>
+
+      <div className="task-card-foot">
+        <span className="task-tier-tag">
+          {task.control ? "Metamorphic Pair" : "Stratified Core"}
+        </span>
+        <span className="task-arrow-link" aria-hidden="true">
+          Inspect Derivation →
+        </span>
+      </div>
     </a>
   );
 }

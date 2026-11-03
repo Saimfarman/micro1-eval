@@ -10,7 +10,7 @@ from evalkit.manifest import sha256, verify_attempt_hashes, verify_manifest
 from evalkit.tasks import load_tasks
 from .migrate import migration_lock, migrate
 
-SCHEMA_VERSION = 4
+SCHEMA_VERSION = 5
 
 
 def _json(value: object) -> str:
