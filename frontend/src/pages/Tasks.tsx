@@ -41,6 +41,13 @@ export function Tasks() {
   const coreCount = tasks.filter(t => !t.control).length;
   const controlCount = tasks.filter(t => t.control).length;
 
+  const resetFilters = () => {
+    setModule("all");
+    setSetType("all");
+    setVerdictFilter("all");
+    setSearch("");
+  };
+
   return (
     <div className="tasks-page">
       <div className="page-heading">
@@ -58,79 +65,92 @@ export function Tasks() {
         </p>
       </div>
 
-      {/* Filter Toolbar */}
+      {/* Filter Toolbar Panel */}
       <div className="filters panel" aria-label="Task filters">
-        <label>
-          Filter Module
-          <select
-            value={module}
-            onChange={event => setModule(event.target.value as ModuleName | "all")}
-          >
-            <option value="all">All Modules (M1–M5)</option>
-            {(["M1", "M2", "M3", "M4", "M5"] as ModuleName[]).map(item => (
-              <option key={item}>{item}</option>
-            ))}
-          </select>
-        </label>
+        <div className="filters-row">
+          <div className="filter-item">
+            <label htmlFor="filter-module">Filter Module</label>
+            <select
+              id="filter-module"
+              value={module}
+              onChange={event => setModule(event.target.value as ModuleName | "all")}
+            >
+              <option value="all">All Modules (M1–M5)</option>
+              {(["M1", "M2", "M3", "M4", "M5"] as ModuleName[]).map(item => (
+                <option key={item}>{item}</option>
+              ))}
+            </select>
+          </div>
 
-        <label>
-          Set Stratum
-          <select
-            value={setType}
-            onChange={event => setSetType(event.target.value as typeof setType)}
-          >
-            <option value="all">Core + Controls ({tasks.length})</option>
-            <option value="core">Core Tasks Only ({coreCount})</option>
-            <option value="control">Matched Controls Only ({controlCount})</option>
-          </select>
-        </label>
+          <div className="filter-item">
+            <label htmlFor="filter-stratum">Set Stratum</label>
+            <select
+              id="filter-stratum"
+              value={setType}
+              onChange={event => setSetType(event.target.value as typeof setType)}
+            >
+              <option value="all">Core + Controls ({tasks.length})</option>
+              <option value="core">Core Tasks Only ({coreCount})</option>
+              <option value="control">Matched Controls Only ({controlCount})</option>
+            </select>
+          </div>
 
-        <label>
-          Expected Verdict
-          <select
-            value={verdictFilter}
-            onChange={event => setVerdictFilter(event.target.value as typeof verdictFilter)}
-          >
-            <option value="all">All Verdicts</option>
-            <option value="valid">Valid only</option>
-            <option value="invalid">Invalid only</option>
-          </select>
-        </label>
+          <div className="filter-item">
+            <label htmlFor="filter-verdict">Expected Verdict</label>
+            <select
+              id="filter-verdict"
+              value={verdictFilter}
+              onChange={event => setVerdictFilter(event.target.value as typeof verdictFilter)}
+            >
+              <option value="all">All Verdicts</option>
+              <option value="valid">Valid only</option>
+              <option value="invalid">Invalid only</option>
+            </select>
+          </div>
 
-        <label className="search-label">
-          Search Tasks
-          <input
-            type="search"
-            placeholder="Search by ID or key (e.g. T01, w(x)...)"
-            value={search}
-            onChange={e => setSearch(e.target.value)}
-          />
-        </label>
+          <div className="filter-item search-filter-item">
+            <label htmlFor="filter-search">Search Tasks</label>
+            <input
+              id="filter-search"
+              type="search"
+              placeholder="Search by ID or key (e.g. T01, w(x)...)"
+              value={search}
+              onChange={e => setSearch(e.target.value)}
+            />
+          </div>
+        </div>
 
-        <span className="filter-count">
-          Showing <strong>{filtered.length}</strong> of {tasks.length} tasks
-        </span>
+        <div className="filters-footer">
+          <span className="filter-count">
+            Showing <strong>{filtered.length}</strong> of {tasks.length} tasks
+          </span>
+          {(module !== "all" || setType !== "all" || verdictFilter !== "all" || search.trim() !== "") && (
+            <button
+              type="button"
+              className="button button-sm button-secondary"
+              onClick={resetFilters}
+            >
+              Reset Filters
+            </button>
+          )}
+        </div>
       </div>
 
       {/* Task Grid */}
       {filtered.length === 0 ? (
         <div className="empty-panel panel">
-          <p>No tasks match the active filter criteria.</p>
+          <h3>No Matching Tasks</h3>
+          <p className="muted">No evaluation tasks match the active filter criteria.</p>
           <button
             type="button"
-            className="button button-sm button-secondary"
-            onClick={() => {
-              setModule("all");
-              setSetType("all");
-              setVerdictFilter("all");
-              setSearch("");
-            }}
+            className="button button-sm button-primary"
+            onClick={resetFilters}
           >
             Reset Filters
           </button>
         </div>
       ) : (
-        <div className="task-grid">
+        <div className="task-grid tasks-grid">
           {filtered.map(task => (
             <TaskCard task={task} key={task.id} />
           ))}

@@ -291,11 +291,22 @@ def create_app(settings: Settings | None = None) -> Quart:
         return jsonify({"attempts": rows[start:start + per_page], "page": page,
                         "per_page": per_page, "total": len(rows)})
 
-    @app.get("/api/results/attempts/<attempt_key>")
+    @app.get("/api/results/attempts/<path:attempt_key>")
     async def attempt_detail(attempt_key: str):
         rows = _decode(_read_db(
             settings, "SELECT payload_json FROM attempts WHERE attempt_key=?",
             (attempt_key,),
+        ))
+        if not rows:
+            return _problem(404, "Attempt not found", "No attempt exists with that key.")
+        return jsonify(rows[0])
+
+    @app.get("/api/results/attempt")
+    async def attempt_by_query():
+        key = request.args.get("key", "")
+        rows = _decode(_read_db(
+            settings, "SELECT payload_json FROM attempts WHERE attempt_key=?",
+            (key,),
         ))
         if not rows:
             return _problem(404, "Attempt not found", "No attempt exists with that key.")
@@ -317,6 +328,18 @@ def create_app(settings: Settings | None = None) -> Quart:
     async def reliability():
         return jsonify({"method": "deterministic-certificate-v2", "human_review": False,
                         "note": "No human calibration labels are available."})
+
+    @app.get("/favicon.ico")
+    async def favicon():
+        for candidate in (
+            settings.frontend_dir / "favicon.ico",
+            settings.frontend_dir / "favicon.svg",
+            settings.root / "frontend" / "public" / "favicon.ico",
+            settings.root / "frontend" / "public" / "favicon.svg",
+        ):
+            if candidate.exists():
+                return await send_file(candidate)
+        return "", 204
 
     @app.get("/")
     async def index():

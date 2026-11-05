@@ -57,13 +57,13 @@ export function LiveRun() {
       </div>
 
       {/* Safety Policy Notice */}
-      <section className="security-banner-card">
+      <section className="security-banner-card panel">
         <div className="shield-icon" aria-hidden="true">
-          🔒
+          🛡️
         </div>
         <div>
           <h3>Safety Policy: Web-Initiated Live Runs Are Protected</h3>
-          <p>
+          <p className="muted">
             In accordance with hackathon reproducibility rules, live model requests cannot be dispatched directly from
             an unauthenticated web client. Live runs are triggered through the CLI (<code>python -m evalkit run</code>)
             or an authorized token header.
@@ -73,19 +73,23 @@ export function LiveRun() {
 
       {/* Connection Panel */}
       <div className="live-controls-card panel">
-        <div className="controls-row">
-          <label className="flex-1">
-            Active Run ID
+        <div className="live-form-grid">
+          <div className="live-input-group">
+            <label htmlFor="active-run-id-input" className="live-input-label">
+              Active Run ID
+            </label>
             <input
+              id="active-run-id-input"
               type="text"
+              className="text-input"
               value={runId}
               onChange={e => setRunId(e.target.value)}
               placeholder="e.g. 20261102T191035Z-db7b409f"
             />
-          </label>
+          </div>
           <button
             type="button"
-            className={`button ${isStreaming ? "button-danger" : "button-primary"}`}
+            className={`button ${isStreaming ? "button-danger" : "button-primary"} live-stream-button`}
             onClick={() => (isStreaming ? setIsStreaming(false) : handleStartStream())}
           >
             {isStreaming ? "⏹ Disconnect Stream" : "▶ Listen to Run Events"}
@@ -94,20 +98,22 @@ export function LiveRun() {
 
         {runs.length > 0 && (
           <div className="quick-runs-bar">
-            <span className="muted">Recent runs:</span>
-            {runs.map(r => {
-              const id = r.run_id ?? r.id ?? "";
-              return (
-                <button
-                  key={id}
-                  type="button"
-                  className={`run-chip ${runId === id ? "active" : ""}`}
-                  onClick={() => setRunId(id)}
-                >
-                  {id}
-                </button>
-              );
-            })}
+            <span className="quick-runs-label">Recent runs:</span>
+            <div className="quick-runs-list">
+              {runs.map(r => {
+                const id = r.run_id ?? r.id ?? "";
+                return (
+                  <button
+                    key={id}
+                    type="button"
+                    className={`run-chip ${runId === id ? "active" : ""}`}
+                    onClick={() => setRunId(id)}
+                  >
+                    {id}
+                  </button>
+                );
+              })}
+            </div>
           </div>
         )}
       </div>

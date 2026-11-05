@@ -1,6 +1,6 @@
 import { useEffect, useState } from "react";
-import { getModules, getTasks } from "../api";
-import type { ModuleInfo, Task } from "../types";
+import { getTasks } from "../api";
+import type { Task } from "../types";
 import { ErrorState, LoadingState } from "../components/LoadingState";
 import { moduleColor } from "../visualization/layout";
 
@@ -144,9 +144,14 @@ export function Modules() {
       </div>
 
       {/* Syntax Guide Panel */}
-      <section className="syntax-guide-card">
-        <h3>Transaction History Notation Grammar</h3>
-        <p>Every transaction history evaluated by the benchmark follows this strict, unambiguous syntax:</p>
+      <section className="syntax-guide-card panel">
+        <div className="syntax-head">
+          <span className="syntax-badge">SPECIFICATION GRAMMAR</span>
+          <h3>Transaction History Notation Grammar</h3>
+        </div>
+        <p className="muted">
+          Every transaction history evaluated by the benchmark follows this strict, unambiguous syntax:
+        </p>
         <div className="grammar-example">
           <code>
             Keys: x, y. Initial: x=0, y=0. Every written value is unique per key.
@@ -157,20 +162,25 @@ export function Modules() {
           </code>
         </div>
         <div className="grammar-breakdown">
-          <div>
-            <strong>T1, T2:</strong> Distinct transaction identifiers.
+          <div className="grammar-item">
+            <strong>T1, T2:</strong>
+            <span>Distinct transaction identifiers.</span>
           </div>
-          <div>
-            <strong>start=t, commit=t:</strong> Distinct integer timestamps on a linear real-time scale.
+          <div className="grammar-item">
+            <strong>start=t, commit=t:</strong>
+            <span>Distinct integer timestamps on a linear real-time scale.</span>
           </div>
-          <div>
-            <strong>r(k)=v:</strong> Read key k returning value v.
+          <div className="grammar-item">
+            <strong>r(k)=v:</strong>
+            <span>Read key k returning value v.</span>
           </div>
-          <div>
-            <strong>w(k)=v:</strong> Write unique value v to key k.
+          <div className="grammar-item">
+            <strong>w(k)=v:</strong>
+            <span>Write unique value v to key k.</span>
           </div>
-          <div>
-            <strong>prepared:</strong> In-doubt transaction awaiting 2PC completion (M3).
+          <div className="grammar-item">
+            <strong>prepared:</strong>
+            <span>In-doubt transaction awaiting 2PC completion (M3).</span>
           </div>
         </div>
       </section>
@@ -179,13 +189,14 @@ export function Modules() {
       <div className="modules-list">
         {MODULE_SPECS.map((spec) => {
           const modTasks = tasks.filter(t => t.module === spec.id);
+          const color = moduleColor(spec.id);
           return (
-            <article key={spec.id} className="module-detail-panel" style={{ borderLeftColor: moduleColor(spec.id) }}>
+            <article key={spec.id} className="module-detail-panel panel" style={{ borderLeft: `4px solid ${color}` }}>
               <div className="panel-top">
                 <div className="panel-title-group">
                   <span
                     className="module-pill-large"
-                    style={{ background: moduleColor(spec.id), color: "#000" }}
+                    style={{ background: color, color: "#042f2e" }}
                   >
                     {spec.id}
                   </span>
@@ -228,15 +239,13 @@ export function Modules() {
               {/* Linked Tasks */}
               {modTasks.length > 0 && (
                 <div className="linked-tasks-section">
-                  <h4>Corpus Tasks Implementing {spec.id}</h4>
-                  <div className="linked-tasks-pills">
+                  <h4>Associated Evaluation Tasks</h4>
+                  <div className="linked-tasks-grid">
                     {modTasks.map(t => (
-                      <a
-                        key={t.id}
-                        href={`#/tasks/${encodeURIComponent(t.id)}`}
-                        className={`task-link-pill ${t.control ? "control" : "core"}`}
-                      >
-                        {t.id} ({t.expected_verdict}) {t.control ? "· control" : ""}
+                      <a key={t.id} href={`#/tasks/${t.id}`} className="linked-task-chip">
+                        <strong>{t.id}</strong>
+                        <span className="task-verdict-dot" style={{ background: t.expected_verdict === "valid" ? "var(--pass)" : "var(--fail)" }} />
+                        <span>{t.expected_verdict}</span>
                       </a>
                     ))}
                   </div>

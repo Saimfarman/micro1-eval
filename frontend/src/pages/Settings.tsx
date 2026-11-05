@@ -1,27 +1,33 @@
 import { useEffect, useState } from "react";
 import { getHealth } from "../api";
+import { applyTheme, getInitialTheme, type Theme } from "../theme";
 
 export function Settings() {
   const [health, setHealth] = useState<{ status: string; database: boolean } | null>(null);
-  const [isLight, setIsLight] = useState(() => localStorage.getItem("theme") === "light");
+  const [theme, setTheme] = useState<Theme>(getInitialTheme);
 
   useEffect(() => {
     getHealth()
       .then(setHealth)
       .catch(() => setHealth({ status: "offline", database: false }));
+
+    const handleThemeChange = (evt: Event) => {
+      const customEvt = evt as CustomEvent<{ theme: Theme }>;
+      if (customEvt.detail?.theme) {
+        setTheme(customEvt.detail.theme);
+      }
+    };
+
+    window.addEventListener("themechange", handleThemeChange);
+    return () => window.removeEventListener("themechange", handleThemeChange);
   }, []);
 
-  const handleThemeChange = (light: boolean) => {
-    setIsLight(light);
-    localStorage.setItem("theme", light ? "light" : "dark");
-    if (light) {
-      document.querySelector(".app-shell")?.classList.add("theme-light");
-      document.querySelector(".app-shell")?.classList.remove("theme-dark");
-    } else {
-      document.querySelector(".app-shell")?.classList.add("theme-dark");
-      document.querySelector(".app-shell")?.classList.remove("theme-light");
-    }
+  const handleSelectTheme = (newTheme: Theme) => {
+    setTheme(newTheme);
+    applyTheme(newTheme);
   };
+
+  const isLight = theme === "light";
 
   return (
     <div className="settings-page">
@@ -43,19 +49,19 @@ export function Settings() {
         {/* Visual Appearance Panel */}
         <section className="settings-card panel">
           <h3>Display Theme</h3>
-          <p className="muted">Choose between the high-contrast Dark theme or clinical Light theme.</p>
+          <p className="muted">Choose between the high-contrast Dark Obsidian theme or the clean Clinical Light theme.</p>
           <div className="theme-toggle-row">
             <button
               type="button"
               className={`button ${!isLight ? "button-primary" : "button-secondary"}`}
-              onClick={() => handleThemeChange(false)}
+              onClick={() => handleSelectTheme("dark")}
             >
               🌙 Dark Obsidian (Default)
             </button>
             <button
               type="button"
               className={`button ${isLight ? "button-primary" : "button-secondary"}`}
-              onClick={() => handleThemeChange(true)}
+              onClick={() => handleSelectTheme("light")}
             >
               ☀️ Clinical Light
             </button>
@@ -67,24 +73,24 @@ export function Settings() {
           <h3>Runtime Diagnostics</h3>
           <div className="diagnostics-list">
             <div className="diag-row">
-              <span>Quart API Status:</span>
-              <span className="status-tag pass">
+              <span className="diag-label">Quart API Status:</span>
+              <span className={`status-tag ${health?.status === "ok" ? "pass" : "fail"}`}>
                 {health?.status === "ok" ? "✓ ONLINE (HTTP 200)" : "OFFLINE"}
               </span>
             </div>
             <div className="diag-row">
-              <span>SQLite Projection:</span>
-              <span className="status-tag pass">
+              <span className="diag-label">SQLite Projection:</span>
+              <span className={`status-tag ${health?.database ? "pass" : "fail"}`}>
                 {health?.database ? "✓ CONNECTED (index.sqlite3)" : "NOT CONNECTED"}
               </span>
             </div>
             <div className="diag-row">
-              <span>Database Schema Version:</span>
-              <strong>v4 (WAL Mode Enabled)</strong>
+              <span className="diag-label">Database Schema Version:</span>
+              <strong className="diag-val">v4 (WAL Mode Enabled)</strong>
             </div>
             <div className="diag-row">
-              <span>Security Boundary:</span>
-              <strong>Zero Secret Leakage (Keys restricted to .env)</strong>
+              <span className="diag-label">Security Boundary:</span>
+              <strong className="diag-val">Zero Secret Leakage (Keys restricted to server-side .env)</strong>
             </div>
           </div>
         </section>
@@ -92,11 +98,13 @@ export function Settings() {
         {/* Information Panel */}
         <section className="settings-card panel">
           <h3>Evidence Storage Policy</h3>
-          <p>
+          <p className="muted">
             This dashboard operates as a read-only projection over immutable evidence files stored in the repository.
             The SQLite database is completely disposable and can be rebuilt at any time using:
           </p>
-          <code>python -m evalkit ingest</code>
+          <pre className="code-block">
+            <code>python -m evalkit ingest</code>
+          </pre>
         </section>
       </div>
     </div>

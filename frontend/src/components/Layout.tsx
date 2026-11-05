@@ -1,5 +1,6 @@
 import { useEffect, useState, type ReactNode } from "react";
 import { getIntegrity } from "../api";
+import { applyTheme, getInitialTheme, type Theme } from "../theme";
 
 export interface NavItem {
   id: string;
@@ -196,7 +197,7 @@ const navSections: { category: string; items: NavItem[] }[] = [
 ];
 
 export function Layout({ children }: { children: ReactNode }) {
-  const [light, setLight] = useState(() => localStorage.getItem("theme") === "light");
+  const [theme, setTheme] = useState<Theme>(getInitialTheme);
   const [integrityOk, setIntegrityOk] = useState<boolean | null>(null);
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
   const [currentHash, setCurrentHash] = useState(() => window.location.hash || "#/");
@@ -206,17 +207,30 @@ export function Layout({ children }: { children: ReactNode }) {
       setCurrentHash(window.location.hash || "#/");
       setMobileMenuOpen(false);
     };
+    const handleThemeChange = (evt: Event) => {
+      const customEvt = evt as CustomEvent<{ theme: Theme }>;
+      if (customEvt.detail?.theme) {
+        setTheme(customEvt.detail.theme);
+      }
+    };
+
     window.addEventListener("hashchange", handleHash);
+    window.addEventListener("themechange", handleThemeChange);
+
     getIntegrity()
       .then(res => setIntegrityOk(res.ok))
       .catch(() => setIntegrityOk(false));
-    return () => window.removeEventListener("hashchange", handleHash);
+
+    return () => {
+      window.removeEventListener("hashchange", handleHash);
+      window.removeEventListener("themechange", handleThemeChange);
+    };
   }, []);
 
   const toggleTheme = () => {
-    const next = !light;
-    setLight(next);
-    localStorage.setItem("theme", next ? "light" : "dark");
+    const next: Theme = theme === "light" ? "dark" : "light";
+    setTheme(next);
+    applyTheme(next);
   };
 
   const isCurrentActive = (href: string) => {
@@ -226,8 +240,10 @@ export function Layout({ children }: { children: ReactNode }) {
     return currentHash.startsWith(href);
   };
 
+  const isLight = theme === "light";
+
   return (
-    <div className={`app-shell ${light ? "theme-light" : "theme-dark"}`}>
+    <div className={`app-shell ${isLight ? "theme-light" : "theme-dark"}`}>
       <a className="skip-link" href="#main">
         Skip to content
       </a>
@@ -238,7 +254,7 @@ export function Layout({ children }: { children: ReactNode }) {
           <div className="brand-group">
             <a href="#/" className="brand-link" aria-label="Transaction History Eval Home">
               <span className="brand-logo" aria-hidden="true">
-                <span className="brand-symbol">◈</span>
+                <span className="brand-symbol">▲</span>
               </span>
               <div className="brand-text">
                 <span className="brand-title">TRANSACTION / EVAL</span>
@@ -263,9 +279,10 @@ export function Layout({ children }: { children: ReactNode }) {
               type="button"
               className="theme-toggle"
               onClick={toggleTheme}
-              aria-label={`Switch to ${light ? "dark" : "light"} theme`}
+              aria-label={`Switch to ${isLight ? "dark" : "light"} theme`}
+              title={`Switch to ${isLight ? "dark" : "light"} theme`}
             >
-              {light ? (
+              {isLight ? (
                 <svg viewBox="0 0 20 20" fill="currentColor" width="16" height="16">
                   <path d="M17.293 13.293A8 8 0 016.707 2.707a8.001 8.001 0 1010.586 10.586z" />
                 </svg>
@@ -278,7 +295,7 @@ export function Layout({ children }: { children: ReactNode }) {
                   />
                 </svg>
               )}
-              <span className="theme-text">{light ? "Dark theme" : "Light theme"}</span>
+              <span className="theme-text">{isLight ? "Dark theme" : "Light theme"}</span>
             </button>
 
             <button

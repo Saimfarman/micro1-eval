@@ -19,7 +19,7 @@ export function Accessibility() {
       <div className="a11y-cards-grid">
         <section className="a11y-card panel">
           <h3>1. Keyboard Operability</h3>
-          <p>
+          <p className="a11y-desc">
             Every interactive element—including navigation tabs, task cards, modal inspectors, filter selects, and 3D
             view toggles—is fully operable using only a keyboard.
           </p>
@@ -32,7 +32,7 @@ export function Accessibility() {
 
         <section className="a11y-card panel">
           <h3>2. Authoritative 2D & Table Equivalents</h3>
-          <p>
+          <p className="a11y-desc">
             3D graphics are never the sole method of accessing information. Every 3D visualization has a fully
             accessible equivalent:
           </p>
@@ -45,19 +45,19 @@ export function Accessibility() {
 
         <section className="a11y-card panel">
           <h3>3. Color Contrast & Multi-Modal Encoding</h3>
-          <p>
+          <p className="a11y-desc">
             Information is never conveyed by color alone:
           </p>
           <ul className="a11y-list">
             <li>Text contrast ratios exceed 4.5:1 against surfaces in both dark and light themes.</li>
-            <li>Status badges combine color with explicit text labels (e.g. "✓ PASSED", "✗ FAILED").</li>
+            <li>Status badges combine color with explicit text labels (e.g. "✓ PASSED", "✕ FAILED").</li>
             <li>Module indicators combine color hues with distinct alphanumeric codes (M1, M2, M3, M4, M5).</li>
           </ul>
         </section>
 
         <section className="a11y-card panel">
           <h3>4. Reduced Motion (prefers-reduced-motion)</h3>
-          <p>
+          <p className="a11y-desc">
             Respects the user's operating system animation preferences:
           </p>
           <ul className="a11y-list">

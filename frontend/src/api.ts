@@ -69,7 +69,7 @@ export async function getAttempts(page = 1, perPage = 50): Promise<{ attempts: A
 }
 
 export function getAttemptDetail(attemptKey: string): Promise<AttemptDetail> {
-  return request<AttemptDetail>(`/api/results/attempts/${encodeURIComponent(attemptKey)}`);
+  return request<AttemptDetail>(`/api/results/attempt?key=${encodeURIComponent(attemptKey)}`);
 }
 
 export async function getFailures(): Promise<FailureItem[]> {

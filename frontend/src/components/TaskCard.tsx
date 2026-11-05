@@ -4,6 +4,8 @@ import { moduleColor } from "../visualization/layout";
 export function TaskCard({ task }: { task: Task }) {
   const ops = task.difficulty?.operations ?? 1;
   const keys = task.difficulty?.keys ?? 1;
+  const reads = task.difficulty?.reads ?? 0;
+  const writes = task.difficulty?.writes ?? 0;
 
   return (
     <a
@@ -31,9 +33,9 @@ export function TaskCard({ task }: { task: Task }) {
       </div>
 
       <div className="task-card-body">
-        <h3>{task.control ? "Matched Metamorphic Control" : "Core Benchmark Task"}</h3>
+        <h3 className="task-card-title">{task.control ? "Matched Metamorphic Control" : "Core Benchmark Task"}</h3>
         <p className="task-preview-desc">
-          {ops} operations · {keys} keys accessed · {task.difficulty?.reads ?? 0} reads / {task.difficulty?.writes ?? 0} writes
+          {ops} operations · {keys} keys accessed · {reads} reads / {writes} writes
         </p>
       </div>
 
@@ -42,7 +44,8 @@ export function TaskCard({ task }: { task: Task }) {
           {task.control ? "Metamorphic Pair" : "Stratified Core"}
         </span>
         <span className="task-arrow-link" aria-hidden="true">
-          Inspect Derivation →
+          <span>Inspect Derivation</span>
+          <span>→</span>
         </span>
       </div>
     </a>

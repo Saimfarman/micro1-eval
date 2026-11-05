@@ -1,6 +1,7 @@
 import { useEffect, useRef, useState } from "react";
 import * as THREE from "three";
 import { moduleColor } from "../visualization/layout";
+import { getInitialTheme } from "../theme";
 
 interface HeroNode {
   id: string;
@@ -36,8 +37,8 @@ const EDGES: [number, number, "ww" | "wr" | "rw"][] = [
 ];
 
 const EDGE_COLORS = {
-  ww: "#f6c177", // amber
-  wr: "#70e1c4", // teal
+  ww: "#f59e0b", // amber
+  wr: "#0d9488", // teal
   rw: "#ef4444", // red (anomaly cycle)
 };
 
@@ -47,6 +48,7 @@ export function Hero3D() {
   const [selectedNode, setSelectedNode] = useState<HeroNode | null>(null);
   const [hoveredNode, setHoveredNode] = useState<HeroNode | null>(null);
   const [webglError, setWebglError] = useState(false);
+
   const pausedRef = useRef(paused);
   pausedRef.current = paused;
 
@@ -56,13 +58,16 @@ export function Hero3D() {
 
     let renderer: THREE.WebGLRenderer;
     try {
-      renderer = new THREE.WebGLRenderer({ antialias: true, alpha: true, powerPreference: "high-performance" });
+      renderer = new THREE.WebGLRenderer({
+        antialias: true,
+        alpha: true,
+        powerPreference: "high-performance",
+      });
     } catch {
       setWebglError(true);
       return;
     }
 
-    const prefersReducedMotion = window.matchMedia("(prefers-reduced-motion: reduce)").matches;
     const scene = new THREE.Scene();
     const camera = new THREE.PerspectiveCamera(45, container.clientWidth / container.clientHeight, 0.1, 100);
     camera.position.set(0, 0, 10.5);
@@ -76,25 +81,26 @@ export function Hero3D() {
     const worldGroup = new THREE.Group();
     scene.add(worldGroup);
 
-    // Ambient & Directional Lighting
-    const ambient = new THREE.AmbientLight(0xffffff, 0.9);
-    scene.add(ambient);
+    // Lighting setup adapted for both themes
+    const ambientLight = new THREE.AmbientLight(0xffffff, 0.95);
+    scene.add(ambientLight);
 
-    const dirLight = new THREE.DirectionalLight(0x70e1c4, 1.2);
-    dirLight.position.set(5, 8, 7);
-    scene.add(dirLight);
+    const dirLight1 = new THREE.DirectionalLight(0x70e1c4, 1.1);
+    dirLight1.position.set(5, 8, 7);
+    scene.add(dirLight1);
 
-    const dirLight2 = new THREE.DirectionalLight(0x8eb8ff, 0.8);
+    const dirLight2 = new THREE.DirectionalLight(0x93c5fd, 0.7);
     dirLight2.position.set(-6, -4, -4);
     scene.add(dirLight2);
 
-    // Create wireframe lattice sphere
+    // Lattice wireframe sphere
     const latticeGeom = new THREE.IcosahedronGeometry(4.8, 1);
+    const isInitialLight = getInitialTheme() === "light";
     const latticeMat = new THREE.MeshBasicMaterial({
-      color: 0x22364a,
+      color: isInitialLight ? 0x94a3b8 : 0x22364a,
       wireframe: true,
       transparent: true,
-      opacity: 0.35,
+      opacity: isInitialLight ? 0.35 : 0.4,
     });
     const latticeMesh = new THREE.Mesh(latticeGeom, latticeMat);
     worldGroup.add(latticeMesh);
@@ -103,20 +109,20 @@ export function Hero3D() {
     const nodeMeshes: THREE.Mesh[] = [];
     DEMO_NODES.forEach((node) => {
       const col = new THREE.Color(moduleColor(node.module));
-      const sphereGeom = new THREE.SphereGeometry(0.38, 20, 20);
+      const sphereGeom = new THREE.SphereGeometry(0.38, 24, 24);
       const sphereMat = new THREE.MeshStandardMaterial({
         color: col,
         roughness: 0.2,
-        metalness: 0.3,
+        metalness: 0.25,
         emissive: col,
-        emissiveIntensity: 0.3,
+        emissiveIntensity: 0.35,
       });
       const mesh = new THREE.Mesh(sphereGeom, sphereMat);
       mesh.position.set(...node.pos);
       mesh.userData = { node };
 
       // Outer glow halo ring
-      const ringGeom = new THREE.RingGeometry(0.48, 0.54, 24);
+      const ringGeom = new THREE.RingGeometry(0.48, 0.54, 32);
       const ringMat = new THREE.MeshBasicMaterial({
         color: col,
         side: THREE.DoubleSide,
@@ -135,8 +141,7 @@ export function Hero3D() {
       const fromPos = new THREE.Vector3(...DEMO_NODES[fromIdx].pos);
       const toPos = new THREE.Vector3(...DEMO_NODES[toIdx].pos);
       const mid = new THREE.Vector3().addVectors(fromPos, toPos).multiplyScalar(0.5);
-      // Lift midpoint outward for curved arch
-      mid.normalize().multiplyScalar(fromPos.length() * 0.9);
+      mid.normalize().multiplyScalar(fromPos.length() * 0.92);
 
       const curve = new THREE.QuadraticBezierCurve3(fromPos, mid, toPos);
       const points = curve.getPoints(24);
@@ -144,113 +149,182 @@ export function Hero3D() {
       const mat = new THREE.LineBasicMaterial({
         color: new THREE.Color(EDGE_COLORS[type]),
         transparent: true,
-        opacity: type === "rw" ? 0.75 : 0.4,
-        linewidth: 1,
+        opacity: type === "rw" ? 0.85 : 0.5,
+        linewidth: 1.5,
       });
       const line = new THREE.Line(geom, mat);
       worldGroup.add(line);
     });
 
+    // Theme listener to update 3D elements dynamically
+    const onThemeChange = (evt: Event) => {
+      const customEvt = evt as CustomEvent<{ theme: string }>;
+      const isLightNow = customEvt.detail?.theme === "light";
+      latticeMat.color.setHex(isLightNow ? 0x94a3b8 : 0x22364a);
+      latticeMat.opacity = isLightNow ? 0.35 : 0.4;
+      ambientLight.intensity = isLightNow ? 1.1 : 0.95;
+    };
+    window.addEventListener("themechange", onThemeChange);
+
     // Raycaster for mouse interaction
     const raycaster = new THREE.Raycaster();
     const mouse = new THREE.Vector2(-999, -999);
+
+    // Interaction physics state
+    let isDragging = false;
+    let dragDistance = 0;
+    let prevMouseX = 0;
+    let prevMouseY = 0;
+    let velX = 0;
+    let velY = 0;
+    let isHoveringNode = false;
+    let lastInteractionTime = 0;
+
+    // Distinct, continuous automatic rotation speed (visible and smooth)
+    const AUTO_ROT_SPEED_Y = 0.0055;
+    const AUTO_ROT_SPEED_X = 0.001;
 
     const onPointerMove = (evt: PointerEvent) => {
       const rect = renderer.domElement.getBoundingClientRect();
       mouse.x = ((evt.clientX - rect.left) / rect.width) * 2 - 1;
       mouse.y = -((evt.clientY - rect.top) / rect.height) * 2 + 1;
-    };
 
-    const onClick = () => {
-      raycaster.setFromCamera(mouse, camera);
-      const hits = raycaster.intersectObjects(nodeMeshes);
-      if (hits.length > 0) {
-        setSelectedNode(hits[0].object.userData.node as HeroNode);
+      if (isDragging) {
+        const dx = evt.clientX - prevMouseX;
+        const dy = evt.clientY - prevMouseY;
+        dragDistance += Math.hypot(dx, dy);
+
+        worldGroup.rotation.y += dx * 0.006;
+        worldGroup.rotation.x += dy * 0.006;
+
+        velX = dx * 0.003;
+        velY = dy * 0.003;
+
+        prevMouseX = evt.clientX;
+        prevMouseY = evt.clientY;
+        lastInteractionTime = performance.now();
       }
     };
 
-    renderer.domElement.addEventListener("pointermove", onPointerMove);
-    renderer.domElement.addEventListener("click", onClick);
-
-    // Mouse drag interaction for rotating the sphere
-    let isDragging = false;
-    let prevMouseX = 0;
-    let prevMouseY = 0;
-    let velX = 0.0018;
-    let velY = 0.0006;
-
     const onPointerDown = (evt: PointerEvent) => {
       isDragging = true;
+      dragDistance = 0;
       prevMouseX = evt.clientX;
       prevMouseY = evt.clientY;
+      velX = 0;
+      velY = 0;
+      lastInteractionTime = performance.now();
+      renderer.domElement.setPointerCapture(evt.pointerId);
     };
 
-    const onPointerUp = () => {
+    const onPointerUp = (evt: PointerEvent) => {
+      if (isDragging) {
+        isDragging = false;
+        try {
+          renderer.domElement.releasePointerCapture(evt.pointerId);
+        } catch {
+          // ignore capture release errors
+        }
+
+        // If drag was minimal, treat as a click to select the node
+        if (dragDistance < 6) {
+          raycaster.setFromCamera(mouse, camera);
+          const hits = raycaster.intersectObjects(nodeMeshes);
+          if (hits.length > 0) {
+            const hitNode = hits[0].object.userData.node as HeroNode;
+            setSelectedNode(hitNode);
+          }
+        }
+      }
+    };
+
+    const onPointerCancel = () => {
       isDragging = false;
     };
 
-    const onWindowPointerMove = (evt: PointerEvent) => {
-      if (!isDragging) return;
-      const dx = evt.clientX - prevMouseX;
-      const dy = evt.clientY - prevMouseY;
-      worldGroup.rotation.y += dx * 0.007;
-      worldGroup.rotation.x += dy * 0.007;
-      velX = dx * 0.0005;
-      velY = dy * 0.0005;
-      prevMouseX = evt.clientX;
-      prevMouseY = evt.clientY;
-    };
-
-    renderer.domElement.addEventListener("pointerdown", onPointerDown);
-    window.addEventListener("pointerup", onPointerUp);
-    window.addEventListener("pointermove", onWindowPointerMove);
+    const dom = renderer.domElement;
+    dom.style.touchAction = "none";
+    dom.addEventListener("pointermove", onPointerMove);
+    dom.addEventListener("pointerdown", onPointerDown);
+    dom.addEventListener("pointerup", onPointerUp);
+    dom.addEventListener("pointercancel", onPointerCancel);
 
     // Resize handler
     const onResize = () => {
       if (!container) return;
       const w = container.clientWidth;
       const h = container.clientHeight;
-      camera.aspect = w / h;
-      camera.updateProjectionMatrix();
-      renderer.setSize(w, h);
+      if (w > 0 && h > 0) {
+        camera.aspect = w / h;
+        camera.updateProjectionMatrix();
+        renderer.setSize(w, h);
+      }
     };
     const observer = new ResizeObserver(onResize);
     observer.observe(container);
 
     let reqId = 0;
+    const clock = new THREE.Clock();
+
     const animate = () => {
       reqId = requestAnimationFrame(animate);
 
-      if (!pausedRef.current && !prefersReducedMotion && !isDragging) {
-        worldGroup.rotation.y += velX;
-        worldGroup.rotation.x += velY;
-        velX = THREE.MathUtils.lerp(velX, 0.0018, 0.02);
-        velY = THREE.MathUtils.lerp(velY, 0.0004, 0.02);
-      }
+      const delta = clock.getDelta();
+      const now = performance.now();
+      const timeSinceInteraction = now - lastInteractionTime;
 
-      // Check hovered node
+      // Handle raycasting for hover highlight
       raycaster.setFromCamera(mouse, camera);
       const intersects = raycaster.intersectObjects(nodeMeshes);
-      if (intersects.length > 0) {
+
+      if (intersects.length > 0 && !isDragging) {
         const topHit = intersects[0].object as THREE.Mesh;
-        setHoveredNode(topHit.userData.node as HeroNode);
+        const hitNode = topHit.userData.node as HeroNode;
+        setHoveredNode(hitNode);
+        isHoveringNode = true;
+
         nodeMeshes.forEach((mesh) => {
           const mat = mesh.material as THREE.MeshStandardMaterial;
           if (mesh === topHit) {
-            mat.emissiveIntensity = 0.9;
-            mesh.scale.set(1.25, 1.25, 1.25);
+            mat.emissiveIntensity = 0.95;
+            mesh.scale.set(1.28, 1.28, 1.28);
           } else {
-            mat.emissiveIntensity = 0.25;
+            mat.emissiveIntensity = 0.2;
             mesh.scale.set(1, 1, 1);
           }
         });
       } else {
         setHoveredNode(null);
+        isHoveringNode = false;
         nodeMeshes.forEach((mesh) => {
           const mat = mesh.material as THREE.MeshStandardMaterial;
-          mat.emissiveIntensity = 0.3;
+          mat.emissiveIntensity = 0.35;
           mesh.scale.set(1, 1, 1);
         });
+      }
+
+      // Smooth physics and automatic rotation
+      if (!pausedRef.current) {
+        if (isDragging) {
+          // Manual drag rotation takes full control
+        } else {
+          // Apply momentum with damping after release
+          if (Math.abs(velX) > 0.0001 || Math.abs(velY) > 0.0001) {
+            worldGroup.rotation.y += velX;
+            worldGroup.rotation.x += velY;
+            velX *= 0.92;
+            velY *= 0.92;
+          }
+
+          // Active continuous automatic rotation (enabled by default)
+          if (timeSinceInteraction > 350) {
+            // When hovering directly over a node, slow down to 15% speed for effortless inspection
+            const speedFactor = isHoveringNode ? 0.15 : 1.0;
+            const deltaScale = Math.min(delta * 60, 2.0); // normalize around 60fps
+            worldGroup.rotation.y += AUTO_ROT_SPEED_Y * speedFactor * deltaScale;
+            worldGroup.rotation.x += AUTO_ROT_SPEED_X * speedFactor * deltaScale * Math.sin(now * 0.001);
+          }
+        }
       }
 
       renderer.render(scene, camera);
@@ -261,11 +335,11 @@ export function Hero3D() {
     return () => {
       cancelAnimationFrame(reqId);
       observer.disconnect();
-      renderer.domElement.removeEventListener("pointermove", onPointerMove);
-      renderer.domElement.removeEventListener("click", onClick);
-      renderer.domElement.removeEventListener("pointerdown", onPointerDown);
-      window.removeEventListener("pointerup", onPointerUp);
-      window.removeEventListener("pointermove", onWindowPointerMove);
+      window.removeEventListener("themechange", onThemeChange);
+      dom.removeEventListener("pointermove", onPointerMove);
+      dom.removeEventListener("pointerdown", onPointerDown);
+      dom.removeEventListener("pointerup", onPointerUp);
+      dom.removeEventListener("pointercancel", onPointerCancel);
       renderer.dispose();
       latticeGeom.dispose();
       latticeMat.dispose();
@@ -310,7 +384,7 @@ export function Hero3D() {
             </div>
             {hoveredNode.anomaly && (
               <div className="tooltip-anomaly">
-                <span>⚠ Anomaly:</span> {hoveredNode.anomaly}
+                <span>⚠️ Anomaly:</span> {hoveredNode.anomaly}
               </div>
             )}
           </div>
@@ -334,7 +408,7 @@ export function Hero3D() {
               onClick={() => setSelectedNode(null)}
               aria-label="Close details"
             >
-              ×
+              ✕
             </button>
           </div>
           <div className="selected-content">
@@ -355,7 +429,7 @@ export function Hero3D() {
                 </div>
               )}
             </div>
-            <a href="#/tasks" className="button button-sm">
+            <a href="#/tasks" className="button button-sm button-primary">
               View Matching Tasks in Catalogue →
             </a>
           </div>

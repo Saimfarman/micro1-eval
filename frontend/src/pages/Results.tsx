@@ -11,9 +11,11 @@ export function Results() {
   const [page, setPage] = useState(1);
   const [selectedAttempt, setSelectedAttempt] = useState<AttemptDetail | null>(null);
   const [loadingAttempt, setLoadingAttempt] = useState(false);
-  const [filterModule, setFilterModule] = useState("all");
+  const [attemptError, setAttemptError] = useState<string | null>(null);
+  const [activeAttemptKey, setActiveAttemptKey] = useState<string | null>(null);
   const [filterPassed, setFilterPassed] = useState("all");
   const [error, setError] = useState<string | null>(null);
+  const [copiedRaw, setCopiedRaw] = useState(false);
 
   useEffect(() => {
     Promise.all([getSummary(), getAttempts(page, 50)])
@@ -25,23 +27,52 @@ export function Results() {
       .catch((err: Error) => setError(err.message));
   }, [page]);
 
+  // Handle escape key to close modal
+  useEffect(() => {
+    const handleKeyDown = (e: KeyboardEvent) => {
+      if (e.key === "Escape") {
+        setSelectedAttempt(null);
+        setActiveAttemptKey(null);
+        setAttemptError(null);
+      }
+    };
+    window.addEventListener("keydown", handleKeyDown);
+    return () => window.removeEventListener("keydown", handleKeyDown);
+  }, []);
+
   const viewAttemptDetail = async (key: string) => {
+    setActiveAttemptKey(key);
     setLoadingAttempt(true);
+    setAttemptError(null);
+    setCopiedRaw(false);
     try {
       const detail = await getAttemptDetail(key);
       setSelectedAttempt(detail);
-    } catch {
-      // fallback
+    } catch (err: unknown) {
+      setAttemptError(err instanceof Error ? err.message : "Failed to load raw attempt record.");
     } finally {
       setLoadingAttempt(false);
     }
+  };
+
+  const closeModal = () => {
+    setSelectedAttempt(null);
+    setActiveAttemptKey(null);
+    setAttemptError(null);
+  };
+
+  const copyRawResponse = () => {
+    if (!selectedAttempt?.response_text) return;
+    navigator.clipboard.writeText(selectedAttempt.response_text).then(() => {
+      setCopiedRaw(true);
+      setTimeout(() => setCopiedRaw(false), 2000);
+    });
   };
 
   if (error) return <ErrorState message={error} />;
   if (!summary) return <LoadingState />;
 
   const filteredAttempts = attempts.filter((att) => {
-    const taskModule = att.task_id.startsWith("T") || att.task_id.startsWith("C") ? att.task_id : "";
     if (filterPassed === "pass" && !att.passed) return false;
     if (filterPassed === "fail" && att.passed) return false;
     return true;
@@ -65,7 +96,7 @@ export function Results() {
       </div>
 
       {/* KPI Cards */}
-      <section className="metric-grid">
+      <section className="metric-grid" aria-label="Summary KPI metrics">
         <article className="metric-card highlight">
           <div className="metric-header">
             <span className="metric-label">GLOBAL PASS@1</span>
@@ -79,7 +110,7 @@ export function Results() {
 
         <article className="metric-card">
           <div className="metric-header">
-            <span className="metric-label">CORE STRATA PASS@1</span>
+            <span className="metric-label">CORE BENCHMARK</span>
             <span className="metric-tag">T01–T10</span>
           </div>
           <strong className="metric-value">
@@ -88,8 +119,7 @@ export function Results() {
               : "100%"}
           </strong>
           <span className="metric-desc">
-            Bootstrap 95% CI: [{summary.scopes?.core?.bootstrap_95?.low.toFixed(2) ?? "1.00"},{" "}
-            {summary.scopes?.core?.bootstrap_95?.high.toFixed(2) ?? "1.00"}]
+            {summary.scopes?.core?.passed ?? 10} of {summary.scopes?.core?.attempts ?? 10} verified
           </span>
         </article>
 
@@ -104,51 +134,49 @@ export function Results() {
               : "100%"}
           </strong>
           <span className="metric-desc">
-            Bootstrap 95% CI: [{summary.scopes?.control?.bootstrap_95?.low.toFixed(2) ?? "1.00"},{" "}
-            {summary.scopes?.control?.bootstrap_95?.high.toFixed(2) ?? "1.00"}]
+            {summary.scopes?.control?.passed ?? 9} of {summary.scopes?.control?.attempts ?? 9} verified
           </span>
         </article>
 
         <article className="metric-card">
           <div className="metric-header">
             <span className="metric-label">TOTAL ATTEMPTS</span>
-            <span className="metric-tag">SQLite Projection</span>
+            <span className="metric-tag">Audited</span>
           </div>
-          <strong className="metric-value">{totalAttempts || summary.attempts || 57}</strong>
-          <span className="metric-desc">Across all historical execution runs & repetitions</span>
+          <strong className="metric-value">{totalAttempts}</strong>
+          <span className="metric-desc">Full replayed execution corpus</span>
         </article>
       </section>
 
-      {/* Scope Breakdown Table */}
-      <section className="dashboard-section">
-        <div className="section-head">
-          <div>
-            <p className="eyebrow">STATISTICAL SCOPES</p>
-            <h2>Core vs Control Metamorphic Comparison</h2>
+      {/* Scope Comparison Table */}
+      {summary.scopes && (
+        <section className="dashboard-section">
+          <div className="section-head">
+            <div>
+              <p className="eyebrow">STRATIFIED COHORTS</p>
+              <h2>Scope Comparison: Core vs Controls</h2>
+            </div>
           </div>
-        </div>
-
-        <div className="panel map-table-wrap">
-          <table className="map-table">
-            <thead>
-              <tr>
-                <th>Scope</th>
-                <th>Attempts</th>
-                <th>Passed</th>
-                <th>Pass@1</th>
-                <th>Mean Score</th>
-                <th>Bootstrap 95% CI</th>
-                <th>Consistency</th>
-              </tr>
-            </thead>
-            <tbody>
-              {summary.scopes &&
-                Object.entries(summary.scopes).map(([name, sc]) => {
+          <div className="panel map-table-wrap">
+            <table className="map-table data-table">
+              <thead>
+                <tr>
+                  <th scope="col">Evaluation Scope</th>
+                  <th scope="col">Total Attempts</th>
+                  <th scope="col">Passed</th>
+                  <th scope="col">Pass@1</th>
+                  <th scope="col">Mean Score</th>
+                  <th scope="col">Consistency</th>
+                  <th scope="col">Bootstrap 95% CI</th>
+                </tr>
+              </thead>
+              <tbody>
+                {Object.entries(summary.scopes).map(([name, sc]) => {
                   if (!sc) return null;
                   return (
                     <tr key={name}>
                       <td>
-                        <strong>{name === "core" ? "Core Benchmark (T01–T10)" : "Matched Controls (C10–C18)"}</strong>
+                        <strong>{name === "core" ? "Stratified Core (T01–T10)" : "Matched Controls (C10–C18)"}</strong>
                       </td>
                       <td>{sc.attempts}</td>
                       <td>{sc.passed}</td>
@@ -156,39 +184,39 @@ export function Results() {
                         <span className="badge success">{Math.round(sc.pass_at_1 * 100)}%</span>
                       </td>
                       <td>{sc.mean_score.toFixed(2)}</td>
+                      <td>{sc.consistency != null ? `${Math.round(sc.consistency * 100)}%` : "100%"}</td>
                       <td>
                         [{sc.bootstrap_95?.low.toFixed(2)}, {sc.bootstrap_95?.high.toFixed(2)}]
                       </td>
-                      <td>{sc.consistency != null ? sc.consistency.toFixed(2) : "1.00"}</td>
                     </tr>
                   );
                 })}
-            </tbody>
-          </table>
-        </div>
-      </section>
+              </tbody>
+            </table>
+          </div>
+        </section>
+      )}
 
-      {/* Per Module Breakdown Table */}
+      {/* Per-Module Breakdown */}
       {summary.modules && (
         <section className="dashboard-section">
           <div className="section-head">
             <div>
-              <p className="eyebrow">MODULE MATRIX</p>
-              <h2>Consistency Breakdown by Module</h2>
+              <p className="eyebrow">CONSISTENCY DIMENSIONS</p>
+              <h2>Per-Module Reasoning Breakdown</h2>
             </div>
           </div>
-
           <div className="panel map-table-wrap">
-            <table className="map-table">
+            <table className="map-table data-table">
               <thead>
                 <tr>
-                  <th>Module</th>
-                  <th>Description</th>
-                  <th>Attempts</th>
-                  <th>Passed</th>
-                  <th>Pass@1</th>
-                  <th>Mean Score</th>
-                  <th>Bootstrap 95% CI</th>
+                  <th scope="col">Module</th>
+                  <th scope="col">Description</th>
+                  <th scope="col">Attempts</th>
+                  <th scope="col">Passed</th>
+                  <th scope="col">Pass@1</th>
+                  <th scope="col">Mean Score</th>
+                  <th scope="col">Bootstrap 95% CI</th>
                 </tr>
               </thead>
               <tbody>
@@ -243,7 +271,7 @@ export function Results() {
           </div>
           <div className="filter-pill-group">
             <label className="filter-inline">
-              Filter Status:
+              <span>Filter Status:</span>
               <select value={filterPassed} onChange={e => setFilterPassed(e.target.value)}>
                 <option value="all">All outcomes</option>
                 <option value="pass">Passed only</option>
@@ -254,17 +282,17 @@ export function Results() {
         </div>
 
         <div className="panel map-table-wrap">
-          <table className="map-table">
+          <table className="map-table data-table">
             <thead>
               <tr>
-                <th>Attempt Key</th>
-                <th>Task ID</th>
-                <th>Expected Verdict</th>
-                <th>Observed Verdict</th>
-                <th>Score</th>
-                <th>Status</th>
-                <th>Grader Method</th>
-                <th>Action</th>
+                <th scope="col">Attempt Key</th>
+                <th scope="col">Task ID</th>
+                <th scope="col">Expected Verdict</th>
+                <th scope="col">Observed Verdict</th>
+                <th scope="col">Score</th>
+                <th scope="col">Status</th>
+                <th scope="col">Grader Method</th>
+                <th scope="col">Action</th>
               </tr>
             </thead>
             <tbody>
@@ -275,7 +303,7 @@ export function Results() {
                   </td>
                   <td>
                     <a href={`#/tasks/${encodeURIComponent(att.task_id)}`} className="table-link">
-                      {att.task_id}
+                      <strong>{att.task_id}</strong>
                     </a>
                   </td>
                   <td>
@@ -287,7 +315,7 @@ export function Results() {
                   <td>{att.score.toFixed(2)}</td>
                   <td>
                     <span className={`status-tag ${att.passed ? "pass" : "fail"}`}>
-                      {att.passed ? "✓ PASSED" : "✗ FAILED"}
+                      {att.passed ? "✓ PASSED" : "✕ FAILED"}
                     </span>
                   </td>
                   <td>
@@ -296,7 +324,7 @@ export function Results() {
                   <td>
                     <button
                       type="button"
-                      className="button button-xs button-secondary"
+                      className="button button-sm button-secondary inspect-btn"
                       onClick={() => viewAttemptDetail(att.attempt_key)}
                     >
                       Inspect Raw Output
@@ -309,49 +337,97 @@ export function Results() {
         </div>
       </section>
 
-      {/* Raw Attempt Inspection Modal */}
-      {selectedAttempt && (
-        <div className="modal-backdrop" onClick={() => setSelectedAttempt(null)}>
-          <div className="modal-card" onClick={e => e.stopPropagation()}>
-            <div className="modal-header">
+      {/* Raw Attempt Inspection Modal Dialog */}
+      {(selectedAttempt || loadingAttempt || attemptError) && (
+        <div className="modal-overlay modal-backdrop" onClick={closeModal} role="dialog" aria-modal="true">
+          <div className="modal-content modal-card" onClick={e => e.stopPropagation()}>
+            <div className="modal-head modal-header">
               <div>
                 <p className="eyebrow">RAW EXECUTION RECORD</p>
-                <h3>Attempt: {selectedAttempt.task_id}</h3>
-                <code className="muted">{selectedAttempt.attempt_key}</code>
+                <h3>
+                  {loadingAttempt
+                    ? "Loading Output..."
+                    : selectedAttempt
+                    ? `Attempt: ${selectedAttempt.task_id}`
+                    : "Attempt Record"}
+                </h3>
+                {activeAttemptKey && <code className="muted">{activeAttemptKey}</code>}
               </div>
               <button
                 type="button"
-                className="selected-close"
-                onClick={() => setSelectedAttempt(null)}
-                aria-label="Close modal"
+                className="modal-close selected-close"
+                onClick={closeModal}
+                aria-label="Close modal (Esc)"
               >
-                ×
+                ✕
               </button>
             </div>
 
             <div className="modal-body">
-              <div className="meta-pill-row">
-                <span className="badge">Model: {selectedAttempt.model_returned ?? "mock"}</span>
-                <span className="badge">Finish Reason: {selectedAttempt.finish_reason ?? "stop"}</span>
-                <span className="badge">Tokens: {selectedAttempt.usage?.total_tokens ?? 0}</span>
-                <span className="badge">Latency: {selectedAttempt.latency_ms ?? 0} ms</span>
-                <span className="badge">SHA: {selectedAttempt.content_sha256?.slice(0, 10)}…</span>
-              </div>
+              {loadingAttempt ? (
+                <div className="modal-loading-state">
+                  <div className="spinner" />
+                  <p className="muted">Fetching raw execution telemetry from backend SQLite store...</p>
+                </div>
+              ) : attemptError ? (
+                <div className="modal-error-state panel">
+                  <h4>Unable to load attempt record</h4>
+                  <p className="muted">{attemptError}</p>
+                  <p className="muted">Key: <code>{activeAttemptKey}</code></p>
+                </div>
+              ) : selectedAttempt ? (
+                <>
+                  <div className="meta-pill-row">
+                    <span className="badge">Model: {selectedAttempt.model_returned ?? selectedAttempt.model_requested ?? "mock"}</span>
+                    <span className="badge">Finish Reason: {selectedAttempt.finish_reason ?? "stop"}</span>
+                    <span className="badge">Tokens: {selectedAttempt.usage?.total_tokens ?? 0}</span>
+                    <span className="badge">Latency: {selectedAttempt.latency_ms ?? 0} ms</span>
+                    {selectedAttempt.content_sha256 && (
+                      <span className="badge">SHA: {selectedAttempt.content_sha256.slice(0, 10)}…</span>
+                    )}
+                  </div>
 
-              <h4>Prompt Sent to Model</h4>
-              <pre className="code-block prompt-block">{selectedAttempt.prompt_sent}</pre>
+                  <div className="modal-section">
+                    <div className="modal-section-head">
+                      <h4>Raw Model Response Text</h4>
+                      <button
+                        type="button"
+                        className="button button-sm button-secondary"
+                        onClick={copyRawResponse}
+                      >
+                        {copiedRaw ? "✓ Copied!" : "Copy Response"}
+                      </button>
+                    </div>
+                    <pre className="code-block response-block">
+                      <code>{selectedAttempt.response_text || "No response text captured."}</code>
+                    </pre>
+                  </div>
 
-              <h4>Raw Model Response Text</h4>
-              <pre className="code-block response-block">{selectedAttempt.response_text}</pre>
+                  <div className="modal-section">
+                    <div className="modal-section-head">
+                      <h4>Prompt Sent to Model</h4>
+                    </div>
+                    <pre className="code-block prompt-block">
+                      <code>{selectedAttempt.prompt_sent || "No prompt record captured."}</code>
+                    </pre>
+                  </div>
+                </>
+              ) : null}
             </div>
 
             <div className="modal-footer">
-              <button type="button" className="button button-secondary" onClick={() => setSelectedAttempt(null)}>
-                Close Inspector
+              <button type="button" className="button button-secondary" onClick={closeModal}>
+                Close Inspector (Esc)
               </button>
-              <a href={`#/tasks/${encodeURIComponent(selectedAttempt.task_id)}`} className="button button-primary">
-                View Task Derivation →
-              </a>
+              {selectedAttempt && (
+                <a
+                  href={`#/tasks/${encodeURIComponent(selectedAttempt.task_id)}`}
+                  className="button button-primary"
+                  onClick={closeModal}
+                >
+                  View Task Derivation →
+                </a>
+              )}
             </div>
           </div>
         </div>

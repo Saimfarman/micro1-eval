@@ -31,7 +31,7 @@ export function Method() {
             <div className="oracle-badge">ORACLE 1 (O1)</div>
             <h3>Reference State Simulator</h3>
             <p className="code-ref"><code>evalkit/domain/oracle/reference.py</code></p>
-            <p>
+            <p className="muted">
               An operational step-by-step state-machine simulator. Maintains versioned key stores, advances time steps,
               and simulates read/write operations sequentially to observe whether transaction reads see legal snapshots.
             </p>
@@ -41,7 +41,7 @@ export function Method() {
             <div className="oracle-badge primary">ORACLE 2 (O2)</div>
             <h3>Rule & Dependency Graph Checker</h3>
             <p className="code-ref"><code>evalkit/domain/oracle/rules.py</code></p>
-            <p>
+            <p className="muted">
               Builds explicit directed multi-graphs over transactions with ww, wr, and rw edges. Employs Tarjan's strongly
               connected components and cycle analysis to detect Adya (1999) consistency anomalies (G1a, G1b, G1c, G-single, G2-item).
             </p>
@@ -51,7 +51,7 @@ export function Method() {
             <div className="oracle-badge">ORACLE 3 (O3)</div>
             <h3>Z3 SMT Constraint Solver</h3>
             <p className="code-ref"><code>evalkit/domain/oracle/o3.py</code></p>
-            <p>
+            <p className="muted">
               Encodes transaction execution histories into First-Order Logic constraints and SMT formulas. Solves for
               the existence of a total order satisfying consistency axioms using the Microsoft Z3 theorem prover.
             </p>
@@ -72,10 +72,10 @@ export function Method() {
           <div className="level-card panel">
             <div className="level-tag">VL1 Standard</div>
             <h3>Automated Multi-Oracle Consensus</h3>
-            <p>
+            <p className="muted">
               A task achieves Verification Level 1 (VL1) only when:
             </p>
-            <ul>
+            <ul className="evidence-list">
               <li>O1, O2, and O3 reach identical valid/invalid verdicts.</li>
               <li>Passes all published vectors in <code>docs/VECTORS.md</code> (V1–V33).</li>
               <li>Passes metamorphic perturbation tests without non-determinism.</li>
@@ -86,10 +86,10 @@ export function Method() {
           <div className="level-card panel highlight">
             <div className="level-tag success">VL2 Standard (Core Benchmark)</div>
             <h3>Audited Formal Derivation</h3>
-            <p>
+            <p className="muted">
               Every task included in the official benchmark (T01–T10) meets VL2:
             </p>
-            <ul>
+            <ul className="evidence-list">
               <li>Satisfies all VL1 multi-oracle requirements.</li>
               <li>Accompanied by an operation-by-operation mathematical derivation.</li>
               <li>Contains a paired metamorphic control instance (C10–C18).</li>
@@ -114,7 +114,7 @@ export function Method() {
             <strong>In Scope:</strong> Formal symbolic reasoning, rule application, dependency cycle detection, 2PC
             uncertainty reasoning, and certificate generation on database histories.
           </p>
-          <p>
+          <p className="muted">
             <strong>Out of Scope:</strong> Database throughput, SQL query optimization, distributed consensus network
             latency (e.g. Raft/Paxos wire protocols), vendor-specific configuration flags, or human subjectivity.
           </p>

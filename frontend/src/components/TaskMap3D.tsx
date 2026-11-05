@@ -2,6 +2,7 @@ import { useEffect, useRef, useState } from "react";
 import * as THREE from "three";
 import type { MapPoint } from "../visualization/layout";
 import { moduleColor, qualityForPointCount } from "../visualization/layout";
+import { getInitialTheme } from "../theme";
 
 export function TaskMap3D({
   points,
@@ -40,13 +41,19 @@ export function TaskMap3D({
     const group = new THREE.Group();
     scene.add(group);
 
-    // Grid Floor Helper for spatial depth
-    const gridHelper = new THREE.GridHelper(16, 16, 0x22364a, 0x14202d);
+    // Grid Floor Helper for spatial depth adapted for themes
+    const isInitialLight = getInitialTheme() === "light";
+    const gridHelper = new THREE.GridHelper(
+      16,
+      16,
+      isInitialLight ? 0x94a3b8 : 0x22364a,
+      isInitialLight ? 0xcbd5e1 : 0x14202d
+    );
     gridHelper.position.y = -3.5;
     scene.add(gridHelper);
 
     // Lights
-    const ambientLight = new THREE.AmbientLight(0xffffff, 0.85);
+    const ambientLight = new THREE.AmbientLight(0xffffff, isInitialLight ? 1.05 : 0.85);
     scene.add(ambientLight);
 
     const dirLight1 = new THREE.DirectionalLight(0x70e1c4, 1.0);
@@ -56,6 +63,13 @@ export function TaskMap3D({
     const dirLight2 = new THREE.DirectionalLight(0x8eb8ff, 0.6);
     dirLight2.position.set(-6, -6, -4);
     scene.add(dirLight2);
+
+    const onThemeChange = (evt: Event) => {
+      const customEvt = evt as CustomEvent<{ theme: string }>;
+      const isLightNow = customEvt.detail?.theme === "light";
+      ambientLight.intensity = isLightNow ? 1.05 : 0.85;
+    };
+    window.addEventListener("themechange", onThemeChange);
 
     const reducedMotion = window.matchMedia("(prefers-reduced-motion: reduce)").matches;
     const quality = qualityForPointCount(points.length, reducedMotion);
@@ -70,7 +84,7 @@ export function TaskMap3D({
         roughness: 0.25,
         metalness: 0.2,
         emissive: col,
-        emissiveIntensity: 0.25,
+        emissiveIntensity: 0.3,
       });
       const mesh = new THREE.Mesh(geom, mat);
       mesh.position.set(point.x, point.y, point.z);
@@ -84,7 +98,7 @@ export function TaskMap3D({
       const stemMat = new THREE.LineBasicMaterial({
         color: col,
         transparent: true,
-        opacity: 0.18,
+        opacity: isInitialLight ? 0.28 : 0.18,
       });
       const stem = new THREE.Line(stemGeom, stemMat);
       group.add(stem);
@@ -124,8 +138,11 @@ export function TaskMap3D({
     const raycaster = new THREE.Raycaster();
     const mouse = new THREE.Vector2(-999, -999);
     let isDragging = false;
+    let dragDist = 0;
     let prevMouseX = 0;
     let prevMouseY = 0;
+    let velX = 0;
+    let velY = 0;
 
     const onPointerMove = (evt: PointerEvent) => {
       const rect = renderer.domElement.getBoundingClientRect();
@@ -135,8 +152,11 @@ export function TaskMap3D({
       if (isDragging) {
         const dx = evt.clientX - prevMouseX;
         const dy = evt.clientY - prevMouseY;
+        dragDist += Math.hypot(dx, dy);
         group.rotation.y += dx * 0.007;
         group.rotation.x += dy * 0.007;
+        velX = dx * 0.002;
+        velY = dy * 0.002;
         prevMouseX = evt.clientX;
         prevMouseY = evt.clientY;
       }
@@ -144,121 +164,131 @@ export function TaskMap3D({
 
     const onPointerDown = (evt: PointerEvent) => {
       isDragging = true;
+      dragDist = 0;
       prevMouseX = evt.clientX;
       prevMouseY = evt.clientY;
+      velX = 0;
+      velY = 0;
+      renderer.domElement.setPointerCapture(evt.pointerId);
     };
 
-    const onPointerUp = () => {
-      isDragging = false;
-    };
+    const onPointerUp = (evt: PointerEvent) => {
+      if (isDragging) {
+        isDragging = false;
+        try {
+          renderer.domElement.releasePointerCapture(evt.pointerId);
+        } catch {
+          // ignore
+        }
 
-    const onClick = () => {
-      raycaster.setFromCamera(mouse, camera);
-      const hits = raycaster.intersectObjects(meshes);
-      if (hits.length > 0) {
-        const hitPoint = hits[0].object.userData.point as MapPoint;
-        if (onSelectPoint) onSelectPoint(hitPoint);
+        // If movement was minimal, trigger point selection
+        if (dragDist < 6) {
+          raycaster.setFromCamera(mouse, camera);
+          const hits = raycaster.intersectObjects(meshes);
+          if (hits.length > 0) {
+            const hitPoint = hits[0].object.userData.point as MapPoint;
+            if (onSelectPoint) onSelectPoint(hitPoint);
+          }
+        }
       }
     };
 
-    renderer.domElement.addEventListener("pointermove", onPointerMove);
-    renderer.domElement.addEventListener("pointerdown", onPointerDown);
-    renderer.domElement.addEventListener("click", onClick);
-    window.addEventListener("pointerup", onPointerUp);
+    const dom = renderer.domElement;
+    dom.style.touchAction = "none";
+    dom.addEventListener("pointermove", onPointerMove);
+    dom.addEventListener("pointerdown", onPointerDown);
+    dom.addEventListener("pointerup", onPointerUp);
 
     let frame = 0;
     const render = () => {
-      if (!pausedRef.current && quality.animate && !isDragging) {
-        group.rotation.y += 0.0016;
+      frame = requestAnimationFrame(render);
+
+      if (!pausedRef.current && quality.animate) {
+        if (!isDragging) {
+          if (Math.abs(velX) > 0.0001 || Math.abs(velY) > 0.0001) {
+            group.rotation.y += velX;
+            group.rotation.x += velY;
+            velX *= 0.93;
+            velY *= 0.93;
+          }
+          group.rotation.y += 0.0016;
+        }
       }
 
       // Check hovered mesh
       raycaster.setFromCamera(mouse, camera);
       const hits = raycaster.intersectObjects(meshes);
-      if (hits.length > 0) {
+      if (hits.length > 0 && !isDragging) {
         const topMesh = hits[0].object as THREE.Mesh;
         setHoveredPoint(topMesh.userData.point as MapPoint);
-        meshes.forEach((m) => {
-          const mat = m.material as THREE.MeshStandardMaterial;
-          if (m === topMesh) {
+        meshes.forEach((mesh) => {
+          const mat = mesh.material as THREE.MeshStandardMaterial;
+          if (mesh === topMesh) {
             mat.emissiveIntensity = 0.9;
-            m.scale.set(1.4, 1.4, 1.4);
+            mesh.scale.set(1.3, 1.3, 1.3);
           } else {
-            mat.emissiveIntensity = 0.25;
-            m.scale.set(1, 1, 1);
+            mat.emissiveIntensity = 0.2;
+            mesh.scale.set(1, 1, 1);
           }
         });
       } else {
         setHoveredPoint(null);
-        meshes.forEach((m) => {
-          const mat = m.material as THREE.MeshStandardMaterial;
-          mat.emissiveIntensity = 0.25;
-          m.scale.set(1, 1, 1);
+        meshes.forEach((mesh) => {
+          const mat = mesh.material as THREE.MeshStandardMaterial;
+          mat.emissiveIntensity = 0.3;
+          mesh.scale.set(1, 1, 1);
         });
       }
 
       renderer.render(scene, camera);
-      frame = requestAnimationFrame(render);
     };
-    render();
+
+    if (quality.animate) {
+      frame = requestAnimationFrame(render);
+    } else {
+      renderer.render(scene, camera);
+    }
 
     return () => {
       cancelAnimationFrame(frame);
       observer.disconnect();
-      renderer.domElement.removeEventListener("pointermove", onPointerMove);
-      renderer.domElement.removeEventListener("pointerdown", onPointerDown);
-      renderer.domElement.removeEventListener("click", onClick);
-      window.removeEventListener("pointerup", onPointerUp);
-      renderer.domElement.removeEventListener("webglcontextlost", onContextLost);
-      group.children.forEach((child) => {
-        if (child instanceof THREE.Mesh) {
-          child.geometry.dispose();
-          if (Array.isArray(child.material)) child.material.forEach(m => m.dispose());
-          else child.material.dispose();
-        }
-      });
-      gridHelper.geometry.dispose();
-      (gridHelper.material as THREE.Material).dispose();
+      window.removeEventListener("themechange", onThemeChange);
+      dom.removeEventListener("pointermove", onPointerMove);
+      dom.removeEventListener("pointerdown", onPointerDown);
+      dom.removeEventListener("pointerup", onPointerUp);
+      dom.removeEventListener("webglcontextlost", onContextLost);
       renderer.dispose();
       element.replaceChildren();
     };
-  }, [onUnsupported, points, onSelectPoint]);
+  }, [points, onUnsupported, onSelectPoint]);
 
   return (
-    <div className="task-map-3d-wrap">
-      <div
-        className="map-canvas"
-        ref={host}
-        aria-label="Three dimensional task map"
-        role="img"
-        aria-describedby="map-description"
-        onDoubleClick={() => resetRef.current()}
-      />
+    <div className="task-map-canvas-wrapper">
+      <div ref={host} className="task-map-host" />
 
       {/* Floating Hover Card */}
       {hoveredPoint && (
-        <div className="map-hover-card">
-          <div className="hover-head">
-            <span className="badge" style={{ background: moduleColor(hoveredPoint.task.module), color: "#000" }}>
+        <div className="map-hover-card" role="tooltip">
+          <div className="hover-card-head">
+            <span className="module-pill" style={{ borderColor: moduleColor(hoveredPoint.task.module) }}>
               {hoveredPoint.task.module}
             </span>
-            <strong>Task {hoveredPoint.task.id}</strong>
+            <strong>{hoveredPoint.task.id}</strong>
+            <span className={`verdict-pill ${hoveredPoint.task.expected_verdict}`}>
+              {hoveredPoint.task.expected_verdict}
+            </span>
           </div>
-          <div className="hover-meta">
-            <div>
-              <span className="muted">Verdict:</span> <strong>{hoveredPoint.task.expected_verdict}</strong>
+          <div className="hover-card-body">
+            <div className="history-preview-snippet">
+              <code>{hoveredPoint.task.history || hoveredPoint.task.prompt?.slice(0, 70) || `Task ${hoveredPoint.task.id}`}</code>
             </div>
-            <div>
-              <span className="muted">Type:</span> {hoveredPoint.task.control ? "Matched Control" : "Core Task"}
-            </div>
-            <div>
-              <span className="muted">Operations:</span> {hoveredPoint.task.difficulty?.operations ?? "—"}
-            </div>
-            <div>
-              <span className="muted">Keys:</span> {hoveredPoint.task.difficulty?.keys ?? "—"}
+            <div className="hover-meta-row">
+              <span>Ops: {hoveredPoint.task.difficulty?.operations ?? hoveredPoint.task.difficulty?.operation_count ?? "—"}</span>
+              <span>Keys: {hoveredPoint.task.difficulty?.keys ?? hoveredPoint.task.difficulty?.key_count ?? "—"}</span>
+              <span>Tier: {hoveredPoint.task.control ? "Control" : "Core"}</span>
             </div>
           </div>
-          <span className="hover-hint">Click sphere to view full details</span>
+          <div className="hover-card-hint">Click point to inspect full task details</div>
         </div>
       )}
     </div>
