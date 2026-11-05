@@ -1,4 +1,5 @@
 """The ten textbook cases must pass under BOTH checkers before anything else is built."""
+
 import pytest
 
 from evalkit.domain.history import parse
@@ -32,8 +33,14 @@ def test_v3_read_skew_snapshot_read():
     r = rules.check(H("V3_timed"), "M1")
     assert r["verdict"] == "invalid"
     v = r["violations"][0]
-    assert (v["rule"], v["txn"], v["op"], v["expected_source"], v["expected"], v["observed"]) == (
-        "snapshot-read", "T1", 2, "init", 0, 2)
+    assert (
+        v["rule"],
+        v["txn"],
+        v["op"],
+        v["expected_source"],
+        v["expected"],
+        v["observed"],
+    ) == ("snapshot-read", "T1", 2, "init", 0, 2)
     assert v["name"] == "snapshot-read"
 
 
@@ -45,7 +52,11 @@ def test_v4_stale_looking_read_valid_under_si():
 def test_v5_aborted_read_si():
     r = rules.check(H("V5_timed"), "M1")
     v = r["violations"][0]
-    assert r["verdict"] == "invalid" and v["rule"] == "snapshot-read" and v["name"] == "aborted-read"
+    assert (
+        r["verdict"] == "invalid"
+        and v["rule"] == "snapshot-read"
+        and v["name"] == "aborted-read"
+    )
     assert (v["txn"], v["op"], v["expected"], v["observed"]) == ("T2", 1, 0, 1)
 
 
@@ -97,13 +108,23 @@ def test_v4_serializable_not_strict():
 def test_v5_g1a():
     r = rules.check(H("V5_ordered"), "M2")
     v = r["violations"][0]
-    assert r["verdict"] == "invalid" and (v["rule"], v["reader"], v["writer"], v["key"]) == ("aborted-read", "T2", "T1", "x")
+    assert r["verdict"] == "invalid" and (
+        v["rule"],
+        v["reader"],
+        v["writer"],
+        v["key"],
+    ) == ("aborted-read", "T2", "T1", "x")
 
 
 def test_v6_g1b():
     r = rules.check(H("V6_ordered"), "M2")
     v = r["violations"][0]
-    assert r["verdict"] == "invalid" and (v["rule"], v["reader"], v["writer"], v["key"]) == ("intermediate-read", "T2", "T1", "x")
+    assert r["verdict"] == "invalid" and (
+        v["rule"],
+        v["reader"],
+        v["writer"],
+        v["key"],
+    ) == ("intermediate-read", "T2", "T1", "x")
 
 
 # ---- M3: in-doubt transactions -----------------------------------------------------
@@ -123,12 +144,23 @@ def test_v8_cannot_matter():
 @pytest.mark.parametrize(
     "name,module,expected",
     [
-        ("V1_timed", "M1", "valid"), ("V2_timed", "M1", "invalid"), ("V3_timed", "M1", "invalid"),
-        ("V4_timed", "M1", "valid"), ("V5_timed", "M1", "invalid"), ("V6_timed", "M1", "invalid"),
-        ("V9_timed", "M1", "valid"), ("V9_broken", "M1", "invalid"), ("V10_timed", "M1", "valid"),
-        ("V1_ordered", "M2", "invalid"), ("V2_ordered", "M2", "invalid"), ("V3_ordered", "M2", "invalid"),
-        ("V4_ordered", "M2", "valid"), ("V5_ordered", "M2", "invalid"), ("V6_ordered", "M2", "invalid"),
-        ("V7_timed", "M3", "undetermined"), ("V8_timed", "M3", "valid"),
+        ("V1_timed", "M1", "valid"),
+        ("V2_timed", "M1", "invalid"),
+        ("V3_timed", "M1", "invalid"),
+        ("V4_timed", "M1", "valid"),
+        ("V5_timed", "M1", "invalid"),
+        ("V6_timed", "M1", "invalid"),
+        ("V9_timed", "M1", "valid"),
+        ("V9_broken", "M1", "invalid"),
+        ("V10_timed", "M1", "valid"),
+        ("V1_ordered", "M2", "invalid"),
+        ("V2_ordered", "M2", "invalid"),
+        ("V3_ordered", "M2", "invalid"),
+        ("V4_ordered", "M2", "valid"),
+        ("V5_ordered", "M2", "invalid"),
+        ("V6_ordered", "M2", "invalid"),
+        ("V7_timed", "M3", "undetermined"),
+        ("V8_timed", "M3", "valid"),
     ],
 )
 def test_reference_agrees_with_vectors(name, module, expected):

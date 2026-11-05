@@ -1,4 +1,5 @@
 """Strict model and parser for M4 one-register histories."""
+
 from __future__ import annotations
 
 import re
@@ -41,10 +42,15 @@ def parse_register(text: str) -> RegisterHistory:
         match = _OP.fullmatch(line)
         if not match:
             raise HistoryError(f"bad register operation: {line!r}")
-        operations.append(RegisterOp(
-            match.group("id"), match.group("kind"), int(match.group("invoke")),
-            int(match.group("response")), int(match.group("value")),
-        ))
+        operations.append(
+            RegisterOp(
+                match.group("id"),
+                match.group("kind"),
+                int(match.group("invoke")),
+                int(match.group("response")),
+                int(match.group("value")),
+            )
+        )
     history = RegisterHistory(int(header.group("initial")), tuple(operations))
     validate_register(history)
     return history
@@ -54,8 +60,7 @@ def print_register(history: RegisterHistory) -> str:
     lines = [f"Register: initial={history.initial}."]
     for op in history.operations:
         lines.append(
-            f"{op.id}  invoke={op.invoke}  response={op.response}  "
-            f"{op.kind}={op.value}"
+            f"{op.id}  invoke={op.invoke}  response={op.response}  {op.kind}={op.value}"
         )
     return "\n".join(lines)
 

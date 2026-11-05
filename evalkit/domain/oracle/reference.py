@@ -6,6 +6,7 @@ Deliberately different from rules.py (it must NOT import it):
     and keeps each key's writers in commit order (no graphs, no edges).
 It only returns a verdict string, which is what the differential tests compare.
 """
+
 from __future__ import annotations
 
 from itertools import product
@@ -37,12 +38,14 @@ def ref_si_valid(h: History) -> bool:
                 if op.kind == "w":
                     mine[op.key] = op.value
                 else:
-                    expected = mine[op.key] if op.key in mine else snapshot[t.id][op.key]
+                    expected = (
+                        mine[op.key] if op.key in mine else snapshot[t.id][op.key]
+                    )
                     if t.outcome == "commit" and op.value != expected:
                         return False
             local[t.id] = mine
         elif kind == "commit":
-            for other_id, other_keys in commit_log[seq_at_start[t.id]:]:
+            for other_id, other_keys in commit_log[seq_at_start[t.id] :]:
                 if other_keys & set(local[t.id]):
                     return False
             for k, v in local[t.id].items():
@@ -119,6 +122,10 @@ def ref_verdict(h: History, module: str) -> str:
         ids = [t.id for t in h.txns if t.outcome == "prepared"]
         results = set()
         for combo in product(("commit", "abort"), repeat=len(ids)):
-            results.add("valid" if ref_si_valid(_resolved(h, dict(zip(ids, combo)))) else "invalid")
+            results.add(
+                "valid"
+                if ref_si_valid(_resolved(h, dict(zip(ids, combo))))
+                else "invalid"
+            )
         return results.pop() if len(results) == 1 else "undetermined"
     raise ValueError(f"unknown module {module!r}")

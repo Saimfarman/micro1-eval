@@ -13,7 +13,8 @@ def test_empty_database_migrations_create_projection(tmp_path):
     connection = sqlite3.connect(database)
     assert migrate(connection) == 5
     tables = {
-        row[0] for row in connection.execute(
+        row[0]
+        for row in connection.execute(
             "SELECT name FROM sqlite_master WHERE type='table'"
         )
     }
@@ -24,7 +25,9 @@ def test_empty_database_migrations_create_projection(tmp_path):
 def test_versioned_legacy_database_gets_projection_tables(tmp_path):
     database = tmp_path / "legacy.sqlite3"
     connection = sqlite3.connect(database)
-    connection.executescript((Path("backend/db/schema.sql")).read_text(encoding="utf-8"))
+    connection.executescript(
+        (Path("backend/db/schema.sql")).read_text(encoding="utf-8")
+    )
     connection.executescript(
         """
         DROP TABLE modules;
@@ -35,7 +38,8 @@ def test_versioned_legacy_database_gets_projection_tables(tmp_path):
     )
     assert migrate(connection) == 5
     tables = {
-        row[0] for row in connection.execute(
+        row[0]
+        for row in connection.execute(
             "SELECT name FROM sqlite_master WHERE type='table'"
         )
     }
@@ -57,7 +61,9 @@ def test_api_exposes_projection_contract_and_live_gate(tmp_path):
         modules = await client.get("/api/modules")
         providers = await client.get("/api/providers")
         manifests = await client.get("/api/manifests")
-        assert modules.status_code == providers.status_code == manifests.status_code == 200
+        assert (
+            modules.status_code == providers.status_code == manifests.status_code == 200
+        )
         assert [row["id"] for row in (await modules.get_json())["modules"]] == ["M1"]
         assert (await providers.get_json())["providers"][0]["id"] == "mock"
         assert (await manifests.get_json())["manifests"]

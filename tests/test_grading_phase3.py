@@ -18,13 +18,22 @@ T2  start=5  commit=8  r(x)=0
 
 
 def test_extract_answer_uses_last_json_block_and_reports_format_failure():
-    assert extract_answer("draft ```json {\"verdict\":\"invalid\"}``` final ```json {\"verdict\":\"valid\"}```")["verdict"] == "valid"
+    assert (
+        extract_answer(
+            'draft ```json {"verdict":"invalid"}``` final ```json {"verdict":"valid"}```'
+        )["verdict"]
+        == "valid"
+    )
     assert extract_answer("not json") is None
 
 
 def test_m5_valid_and_invalid_certificates_are_checked():
-    valid = check(__import__("evalkit.domain.history", fromlist=["parse"]).parse(VALID), "rules")
-    invalid = check(__import__("evalkit.domain.history", fromlist=["parse"]).parse(INVALID), "rules")
+    valid = check(
+        __import__("evalkit.domain.history", fromlist=["parse"]).parse(VALID), "rules"
+    )
+    invalid = check(
+        __import__("evalkit.domain.history", fromlist=["parse"]).parse(INVALID), "rules"
+    )
     assert grade(json.dumps(valid), VALID, "M5")["passed"]
     assert grade(json.dumps(invalid), INVALID, "M5")["passed"]
     bad = dict(valid)

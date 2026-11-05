@@ -7,7 +7,7 @@ from tests.domain.vectors import V
 
 
 def test_extract_answer_uses_last_fenced_json():
-    text = "draft ```json\n{\"verdict\":\"invalid\"}\n``` final ```json\n{\"verdict\":\"valid\"}\n```"
+    text = 'draft ```json\n{"verdict":"invalid"}\n``` final ```json\n{"verdict":"valid"}\n```'
     assert extract_answer(text)["verdict"] == "valid"
 
 
@@ -19,7 +19,9 @@ def test_m1_valid_certificate_passes():
 
 
 def test_m1_bad_certificate_fails_even_with_right_verdict():
-    result = grade(json.dumps({"verdict": "valid", "reads_from": {}}), V["V1_timed"], "M1")
+    result = grade(
+        json.dumps({"verdict": "valid", "reads_from": {}}), V["V1_timed"], "M1"
+    )
     assert not result["passed"]
     assert result["criteria"]["verdict"]
     assert not result["criteria"]["certificate"]
@@ -31,7 +33,9 @@ def test_m2_valid_serial_order_certificate_passes():
 
 
 def test_m3_requires_every_completion():
-    result = grade(json.dumps({"verdict": "undetermined", "completions": []}), V["V7_timed"], "M3")
+    result = grade(
+        json.dumps({"verdict": "undetermined", "completions": []}), V["V7_timed"], "M3"
+    )
     assert not result["passed"]
 
 
@@ -64,6 +68,8 @@ def test_m4_invalid_certificate_rejects_mutated_operations():
 
 
 def test_weighted_score_requires_critical_criteria():
-    result = grade(json.dumps({"verdict": "valid", "reads_from": {}}), V["V1_timed"], "M1")
+    result = grade(
+        json.dumps({"verdict": "valid", "reads_from": {}}), V["V1_timed"], "M1"
+    )
     assert result["score"] == pytest.approx(0.6)
     assert not result["passed"]

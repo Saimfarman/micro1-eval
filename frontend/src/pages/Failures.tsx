@@ -11,7 +11,8 @@ const TAXONOMY_DEFINITIONS = [
     color: "#ef4444",
     description:
       "The model concluded 'valid' for an invalid history, or 'invalid' for a valid history. Demonstrates fundamental failure to evaluate consistency rules.",
-    typicalCause: "Overlooking an uncommitted write, missing an rw anti-dependency edge, or misunderstanding snapshot start times.",
+    typicalCause:
+      "Overlooking an uncommitted write, missing an rw anti-dependency edge, or misunderstanding snapshot start times.",
   },
   {
     tag: "wrong_certificate",
@@ -20,7 +21,8 @@ const TAXONOMY_DEFINITIONS = [
     color: "#f97316",
     description:
       "The model arrived at the correct verdict string, but provided an invalid or hallucinated certificate (e.g. inventing a cycle that does not exist in the history, or citing incorrect reads-from mappings).",
-    typicalCause: "Hallucinating dependency edges without verifying the actual version order or commit sequence.",
+    typicalCause:
+      "Hallucinating dependency edges without verifying the actual version order or commit sequence.",
   },
   {
     tag: "calculation_error",
@@ -29,7 +31,8 @@ const TAXONOMY_DEFINITIONS = [
     color: "#eab308",
     description:
       "The model miscalculated integer timestamps (e.g. asserting start(T1) < commit(T2) when the opposite holds in the concrete history).",
-    typicalCause: "Arithmetic or comparison error on integer timestamps in timed histories (M1 Snapshot Isolation).",
+    typicalCause:
+      "Arithmetic or comparison error on integer timestamps in timed histories (M1 Snapshot Isolation).",
   },
   {
     tag: "format_violation",
@@ -38,7 +41,8 @@ const TAXONOMY_DEFINITIONS = [
     color: "#a855f7",
     description:
       "The model failed to produce a valid fenced JSON block matching the required output schema, or omitted mandatory fields like 'verdict' or 'certificate'.",
-    typicalCause: "Unfenced reasoning output, malformed JSON syntax, or conversational filler before the JSON block.",
+    typicalCause:
+      "Unfenced reasoning output, malformed JSON syntax, or conversational filler before the JSON block.",
   },
   {
     tag: "incomplete_answer",
@@ -47,7 +51,8 @@ const TAXONOMY_DEFINITIONS = [
     color: "#3b82f6",
     description:
       "The model provided an ambiguous response, stopped reasoning prematurely, or stated that the history cannot be evaluated without giving a valid 2PC branch completion analysis.",
-    typicalCause: "Token truncation, hesitation, or failure to explore all 2^k completions in M3 (In-doubt transactions).",
+    typicalCause:
+      "Token truncation, hesitation, or failure to explore all 2^k completions in M3 (In-doubt transactions).",
   },
   {
     tag: "refusal",
@@ -56,7 +61,8 @@ const TAXONOMY_DEFINITIONS = [
     color: "#6b7280",
     description:
       "The model explicitly declined to answer or issued a boilerplate safety disclaimer instead of performing mathematical history evaluation.",
-    typicalCause: "False-positive alignment triggers on words like 'transaction', 'abort', or 'exploit'.",
+    typicalCause:
+      "False-positive alignment triggers on words like 'transaction', 'abort', or 'exploit'.",
   },
 ];
 
@@ -92,8 +98,10 @@ export function Failures() {
         </div>
         <h1>Failure Mode Taxonomy & Analysis</h1>
         <p className="lede">
-          Models are evaluated not merely on binary text match, but on certificate soundness. When an attempt fails, it
-          is deterministically classified into one of six failure categories. Human review is never claimed or required.
+          Models are evaluated not merely on binary text match, but on
+          certificate soundness. When an attempt fails, it is deterministically
+          classified into one of six failure categories. Human review is never
+          claimed or required.
         </p>
       </div>
 
@@ -107,9 +115,10 @@ export function Failures() {
         <div className="panel-col-desc">
           <h3>Reproducible Fixture Status</h3>
           <p>
-            The bundled mock provider is a deterministic pipeline fixture with 100% pass@1. When testing live
-            commercial providers (e.g. Groq, Gemini, OpenRouter), failures populate into the taxonomy cards below and
-            project onto the 3D Failure Map.
+            The bundled mock provider is a deterministic pipeline fixture with
+            100% pass@1. When testing live commercial providers (e.g. Groq,
+            Gemini, OpenRouter), failures populate into the taxonomy cards below
+            and project onto the 3D Failure Map.
           </p>
           <a href="#/failure-map" className="button button-sm button-primary">
             Explore Failure Clusters on 3D Map →
@@ -130,7 +139,11 @@ export function Failures() {
           {TAXONOMY_DEFINITIONS.map((tax) => {
             const count = breakdown.by_reason[tax.tag] ?? 0;
             return (
-              <div key={tax.tag} className="taxonomy-card" style={{ borderTopColor: tax.color }}>
+              <div
+                key={tax.tag}
+                className="taxonomy-card"
+                style={{ borderTopColor: tax.color }}
+              >
                 <div className="tax-head">
                   <div>
                     <span className="tax-tag" style={{ color: tax.color }}>
@@ -138,7 +151,10 @@ export function Failures() {
                     </span>
                     <h3>{tax.title}</h3>
                   </div>
-                  <span className="count-badge" style={{ background: `${tax.color}20`, color: tax.color }}>
+                  <span
+                    className="count-badge"
+                    style={{ background: `${tax.color}20`, color: tax.color }}
+                  >
                     {count} instances
                   </span>
                 </div>
@@ -177,7 +193,10 @@ export function Failures() {
                 {failures.map((f, i) => (
                   <tr key={f.id ?? i}>
                     <td>
-                      <a href={`#/tasks/${encodeURIComponent(f.task_id)}`} className="table-link">
+                      <a
+                        href={`#/tasks/${encodeURIComponent(f.task_id)}`}
+                        className="table-link"
+                      >
                         {f.task_id}
                       </a>
                     </td>

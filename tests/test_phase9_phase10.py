@@ -12,13 +12,20 @@ from evalkit.manifest import write_manifest
 def test_live_events_are_versioned_ordered_bounded_and_redacted(tmp_path):
     database = tmp_path / "events.sqlite3"
     connection = sqlite3.connect(database)
-    connection.executescript((Path("backend/db/schema.sql")).read_text(encoding="utf-8"))
+    connection.executescript(
+        (Path("backend/db/schema.sql")).read_text(encoding="utf-8")
+    )
     connection.execute("INSERT INTO providers VALUES ('mock', '{}')")
     connection.execute("INSERT INTO runs VALUES ('r1', 'mock', '{}')")
-    assert event_payload("r1", "started", {"api_key": "do-not-leak"})["payload"]["api_key"] == "[REDACTED]"
+    assert (
+        event_payload("r1", "started", {"api_key": "do-not-leak"})["payload"]["api_key"]
+        == "[REDACTED]"
+    )
     for index in range(3):
         append_event(connection, "r1", "progress", {"step": index}, limit=2)
-    rows = connection.execute("SELECT sequence FROM live_run_events ORDER BY sequence").fetchall()
+    rows = connection.execute(
+        "SELECT sequence FROM live_run_events ORDER BY sequence"
+    ).fetchall()
     assert [row[0] for row in rows] == [2, 3]
     connection.close()
 

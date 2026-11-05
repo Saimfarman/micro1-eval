@@ -28,7 +28,10 @@ export function TaskDetail({ id }: { id: string }) {
         ← Back to Task Catalogue
       </a>
 
-      <div className="detail-header-card panel" style={{ borderLeftColor: moduleColor(task.module) }}>
+      <div
+        className="detail-header-card panel"
+        style={{ borderLeftColor: moduleColor(task.module) }}
+      >
         <div className="detail-header-top">
           <div className="detail-title-group">
             <span
@@ -40,7 +43,9 @@ export function TaskDetail({ id }: { id: string }) {
             <div>
               <h1>Task {task.id}</h1>
               <p className="detail-subtitle">
-                {task.control ? "Matched Metamorphic Control Instance" : "Core Benchmark Stratum Task"}
+                {task.control
+                  ? "Matched Metamorphic Control Instance"
+                  : "Core Benchmark Stratum Task"}
               </p>
             </div>
           </div>
@@ -54,7 +59,10 @@ export function TaskDetail({ id }: { id: string }) {
 
         <div className="detail-hash-row">
           <span className="muted">Canonical History SHA-256:</span>
-          <code>{task.canonical_hash ?? "41b6fed44c5232bb794a460d07f690227dc17c477f638f2919285038f8b0def3"}</code>
+          <code>
+            {task.canonical_hash ??
+              "41b6fed44c5232bb794a460d07f690227dc17c477f638f2919285038f8b0def3"}
+          </code>
         </div>
       </div>
 
@@ -67,7 +75,9 @@ export function TaskDetail({ id }: { id: string }) {
               <h2>Concrete Transaction History</h2>
               <span className="badge">Timed Execution Record</span>
             </div>
-            <pre className="code-block history-code">{task.history ?? "History is available in evidence record."}</pre>
+            <pre className="code-block history-code">
+              {task.history ?? "History is available in evidence record."}
+            </pre>
           </article>
 
           {/* Derivation */}
@@ -123,11 +133,15 @@ export function TaskDetail({ id }: { id: string }) {
               <dl className="facts-dl">
                 <div>
                   <dt>Total Operations:</dt>
-                  <dd><strong>{task.difficulty.operations ?? 0} ops</strong></dd>
+                  <dd>
+                    <strong>{task.difficulty.operations ?? 0} ops</strong>
+                  </dd>
                 </div>
                 <div>
                   <dt>Unique Keys:</dt>
-                  <dd><strong>{task.difficulty.keys ?? 0} keys</strong></dd>
+                  <dd>
+                    <strong>{task.difficulty.keys ?? 0} keys</strong>
+                  </dd>
                 </div>
                 <div>
                   <dt>Read Operations:</dt>
@@ -173,7 +187,9 @@ export function TaskDetail({ id }: { id: string }) {
                 <span className="check-icon">✓</span>
                 <div>
                   <strong>O3: Z3 SMT Solver</strong>
-                  <span className="muted">Proven constraint satisfiability</span>
+                  <span className="muted">
+                    Proven constraint satisfiability
+                  </span>
                 </div>
               </div>
             </div>
@@ -181,13 +197,18 @@ export function TaskDetail({ id }: { id: string }) {
 
           {/* Matched Control Link */}
           <article className="panel control-link-card">
-            <h3>{isCore ? "Paired Matched Control" : "Paired Core Benchmark Task"}</h3>
+            <h3>
+              {isCore ? "Paired Matched Control" : "Paired Core Benchmark Task"}
+            </h3>
             <p className="muted">
               {isCore
                 ? "This core task is mathematically paired with a control whose operations are perturbed to flip the verdict."
                 : "This control task is the metamorphic inverse of its corresponding core benchmark instance."}
             </p>
-            <a href={`#/tasks/${pairedId}`} className="button button-sm button-secondary">
+            <a
+              href={`#/tasks/${pairedId}`}
+              className="button button-sm button-secondary"
+            >
               Open Paired Task {pairedId} →
             </a>
           </article>

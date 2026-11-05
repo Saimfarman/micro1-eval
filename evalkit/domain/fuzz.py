@@ -3,6 +3,7 @@
 Valid histories are produced by simulating a database; faults are then injected with
 probability `fault`. Labels always come from the checkers, never from the injected fault.
 """
+
 from __future__ import annotations
 
 import random
@@ -27,8 +28,13 @@ def _plan(rng: random.Random, keys, counters, max_ops):
 
 
 def _fault_read(rng, txns, keys, initial):
-    reads = [(ti, oi) for ti, t in enumerate(txns) if t.outcome != "abort"
-             for oi, o in enumerate(t.ops) if o.kind == "r"]
+    reads = [
+        (ti, oi)
+        for ti, t in enumerate(txns)
+        if t.outcome != "abort"
+        for oi, o in enumerate(t.ops)
+        if o.kind == "r"
+    ]
     if not reads:
         return txns
     ti, oi = rng.choice(reads)
@@ -37,7 +43,9 @@ def _fault_read(rng, txns, keys, initial):
     values = {initial[o.key]}
     for u in txns:
         values.update(u.writes(o.key))
-    own = set(t.writes(o.key))  # a read must never be made to return the reader's own later write
+    own = set(
+        t.writes(o.key)
+    )  # a read must never be made to return the reader's own later write
     choices = sorted(v for v in values if v != o.value and v not in own)
     if not choices:
         return txns
@@ -48,7 +56,9 @@ def _fault_read(rng, txns, keys, initial):
     return new
 
 
-def gen_timed(rng: random.Random, n=4, nkeys=2, fault=0.5, p_abort=0.15, p_prepared=0.0, max_ops=3) -> History:
+def gen_timed(
+    rng: random.Random, n=4, nkeys=2, fault=0.5, p_abort=0.15, p_prepared=0.0, max_ops=3
+) -> History:
     keys = _keys(nkeys)
     initial = {k: 0 for k in keys}
     counters = {k: 0 for k in keys}
@@ -82,14 +92,17 @@ def gen_timed(rng: random.Random, n=4, nkeys=2, fault=0.5, p_abort=0.15, p_prepa
             ops_of[i], mine_of[i] = ops, mine
         else:
             end_ts[i] = ts
-            conflict = any(ks & set(mine_of[i]) for _, ks in log[seq0[i]:])
+            conflict = any(ks & set(mine_of[i]) for _, ks in log[seq0[i] :])
             if rng.random() < p_abort or (conflict and rng.random() >= fault):
                 outcome[i] = "abort"
             else:
                 outcome[i] = "commit"
                 store.update(mine_of[i])
                 log.append((i, set(mine_of[i])))
-    txns = [Txn(f"T{i + 1}", tuple(ops_of[i]), outcome[i], start_ts[i], end_ts[i]) for i in range(n)]
+    txns = [
+        Txn(f"T{i + 1}", tuple(ops_of[i]), outcome[i], start_ts[i], end_ts[i])
+        for i in range(n)
+    ]
     if rng.random() < fault:
         txns = _fault_read(rng, txns, keys, initial)
     if p_prepared:
@@ -104,7 +117,9 @@ def gen_timed(rng: random.Random, n=4, nkeys=2, fault=0.5, p_abort=0.15, p_prepa
     return h
 
 
-def gen_ordered(rng: random.Random, n=4, nkeys=2, fault=0.5, p_abort=0.15, max_ops=3) -> History:
+def gen_ordered(
+    rng: random.Random, n=4, nkeys=2, fault=0.5, p_abort=0.15, max_ops=3
+) -> History:
     keys = _keys(nkeys)
     initial = {k: 0 for k in keys}
     counters = {k: 0 for k in keys}
@@ -135,7 +150,10 @@ def gen_ordered(rng: random.Random, n=4, nkeys=2, fault=0.5, p_abort=0.15, max_o
                 com[j], com[j + 1] = com[j + 1], com[j]
     if len(com) > 1 and rng.random() < fault / 2:
         j = rng.randrange(len(com) - 1)
-        com[j], com[j + 1] = com[j + 1], com[j]  # may reorder writers of one key: a fault
+        com[j], com[j + 1] = (
+            com[j + 1],
+            com[j],
+        )  # may reorder writers of one key: a fault
     ts, c = {}, 0
     for i in com:
         c += rng.randint(1, 3)
@@ -143,7 +161,9 @@ def gen_ordered(rng: random.Random, n=4, nkeys=2, fault=0.5, p_abort=0.15, max_o
     rows = [Txn(f"T{i + 1}", tuple(ops_of[i]), "commit", None, ts[i]) for i in com]
     for i in range(n):
         if outcome[i] == "abort":
-            rows.insert(rng.randint(0, len(rows)), Txn(f"T{i + 1}", tuple(ops_of[i]), "abort"))
+            rows.insert(
+                rng.randint(0, len(rows)), Txn(f"T{i + 1}", tuple(ops_of[i]), "abort")
+            )
     if rng.random() < fault:
         rows = _fault_read(rng, rows, keys, initial)
     h = History("ordered", tuple(keys), initial, tuple(rows))
@@ -151,7 +171,9 @@ def gen_ordered(rng: random.Random, n=4, nkeys=2, fault=0.5, p_abort=0.15, max_o
     return h
 
 
-def random_history(rng: random.Random, module: str, n=None, nkeys=None, fault=0.5) -> History:
+def random_history(
+    rng: random.Random, module: str, n=None, nkeys=None, fault=0.5
+) -> History:
     n = n or rng.randint(2, 6)
     nkeys = nkeys or rng.randint(1, 3)
     module = module.upper()

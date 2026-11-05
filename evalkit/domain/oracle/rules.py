@@ -7,6 +7,7 @@ D3  in-doubt (prepared) transactions            -> check_indoubt (all completion
 Every function returns plain dicts (JSON-friendly) with a verdict, a certificate
 and a plain-English derivation. Nothing here calls a model or reads a file.
 """
+
 from __future__ import annotations
 
 from collections import deque
@@ -98,17 +99,28 @@ def check_si(h: History) -> dict:
                 )
                 if not ok:
                     violations.append(
-                        {"rule": "own-write", "txn": t.id, "op": i, "expected": exp, "observed": op.value}
+                        {
+                            "rule": "own-write",
+                            "txn": t.id,
+                            "op": i,
+                            "expected": exp,
+                            "observed": op.value,
+                        }
                     )
                 continue
             src, exp = snapshot_source(h, t, op.key)
             reads_from[f"{t.id}.op{i}"] = src
-            where = "the initial value" if src == "init" else f"the version written by {src}"
+            where = (
+                "the initial value"
+                if src == "init"
+                else f"the version written by {src}"
+            )
             ok = op.value == exp
             steps.append(
                 f"  op{i} r({op.key}): no earlier own write, so it reads the snapshot at start={t.start}. "
                 f"Latest version of {op.key} committed before {t.start}: {where} ({exp}). "
-                f"Observed {op.value}: " + ("matches." if ok else "VIOLATION (snapshot-read).")
+                f"Observed {op.value}: "
+                + ("matches." if ok else "VIOLATION (snapshot-read).")
             )
             if not ok:
                 violations.append(
@@ -130,7 +142,11 @@ def check_si(h: History) -> dict:
             if common and a.start < b.end and b.start < a.end:
                 conflicts.append((a, b, common[0]))
                 violations.append(
-                    {"rule": "first-committer-wins", "txns": [a.id, b.id], "key": common[0]}
+                    {
+                        "rule": "first-committer-wins",
+                        "txns": [a.id, b.id],
+                        "key": common[0],
+                    }
                 )
     if conflicts:
         for a, b, k in conflicts:
@@ -139,7 +155,9 @@ def check_si(h: History) -> dict:
                 "VIOLATION (first-committer-wins)."
             )
     else:
-        steps.append("No two overlapping committed transactions write a common key (first-committer-wins holds).")
+        steps.append(
+            "No two overlapping committed transactions write a common key (first-committer-wins holds)."
+        )
     verdict = "invalid" if violations else "valid"
     steps.append(
         "Conclusion: valid under snapshot isolation."
@@ -152,7 +170,9 @@ def check_si(h: History) -> dict:
         "verdict": verdict,
         "reads_from": reads_from,
         "violations": violations,
-        "derivation": [f"{n}. {s}" if not s.startswith("  ") else s for n, s in _number(steps)],
+        "derivation": [
+            f"{n}. {s}" if not s.startswith("  ") else s for n, s in _number(steps)
+        ],
     }
 
 
@@ -169,7 +189,9 @@ def _number(steps):
 def _describe_violation(v: dict) -> str:
     r = v["rule"]
     if r == "first-committer-wins":
-        return f"{v['txns'][0]} and {v['txns'][1]} are concurrent writers of {v['key']}."
+        return (
+            f"{v['txns'][0]} and {v['txns'][1]} are concurrent writers of {v['key']}."
+        )
     if r in ("snapshot-read", "own-write"):
         return f"{v['txn']}.op{v['op']} expected {v['expected']} but observed {v['observed']} ({v.get('name', r)})."
     return str(v)
@@ -182,7 +204,9 @@ def build_graph(h: History) -> dict:
     """Return versions, edges and read-level violations for a commit-ordered history."""
     _require(h.form == "ordered", "serializability needs a commit-ordered history")
     committed = [t for t in h.txns if t.outcome == "commit"]
-    versions = {k: ["init"] + [t.id for t in committed if k in t.write_keys()] for k in h.keys}
+    versions = {
+        k: ["init"] + [t.id for t in committed if k in t.write_keys()] for k in h.keys
+    }
     edges, violations, seen = [], [], set()
 
     def add(frm, to, kind, key):
@@ -204,30 +228,63 @@ def build_graph(h: History) -> dict:
             if op.key in own:
                 if op.value != own[op.key]:
                     violations.append(
-                        {"rule": "own-write", "txn": t.id, "op": i, "expected": own[op.key], "observed": op.value}
+                        {
+                            "rule": "own-write",
+                            "txn": t.id,
+                            "op": i,
+                            "expected": own[op.key],
+                            "observed": op.value,
+                        }
                     )
                 continue
             info = writer_of(h, op.key, op.value)
             if info is None or (info[0] == "txn" and info[1].id == t.id):
                 violations.append(
-                    {"rule": "unwritten-value", "reader": t.id, "op": i, "key": op.key, "observed": op.value}
+                    {
+                        "rule": "unwritten-value",
+                        "reader": t.id,
+                        "op": i,
+                        "key": op.key,
+                        "observed": op.value,
+                    }
                 )
                 continue
             kind, w, final = info
             if kind == "init":
                 j = 0
             elif w.outcome == "abort":
-                violations.append({"rule": "aborted-read", "reader": t.id, "writer": w.id, "key": op.key, "op": i})
+                violations.append(
+                    {
+                        "rule": "aborted-read",
+                        "reader": t.id,
+                        "writer": w.id,
+                        "key": op.key,
+                        "op": i,
+                    }
+                )
                 continue
             elif not final:
-                violations.append({"rule": "intermediate-read", "reader": t.id, "writer": w.id, "key": op.key, "op": i})
+                violations.append(
+                    {
+                        "rule": "intermediate-read",
+                        "reader": t.id,
+                        "writer": w.id,
+                        "key": op.key,
+                        "op": i,
+                    }
+                )
                 continue
             else:
                 j = versions[op.key].index(w.id)
                 add(w.id, t.id, "wr", op.key)
             if j + 1 < len(versions[op.key]):
                 add(t.id, versions[op.key][j + 1], "rw", op.key)
-    return {"committed": [t.id for t in committed], "versions": versions, "edges": edges, "violations": violations}
+    return {
+        "committed": [t.id for t in committed],
+        "versions": versions,
+        "edges": edges,
+        "violations": violations,
+    }
 
 
 def shortest_cycle(nodes, edges):
@@ -301,14 +358,20 @@ def check_ser(h: History) -> dict:
     for k in h.keys:
         parts = [f"initial ({h.initial[k]})"]
         for w in g["versions"][k][1:]:
-            parts.append(f"{w}'s value {h.txn(w).final_write(k)} (commit {commit_ts[w]})")
+            parts.append(
+                f"{w}'s value {h.txn(w).final_write(k)} (commit {commit_ts[w]})"
+            )
         steps.append(f"Version order of {k}: " + ", then ".join(parts) + ".")
     for e in edges:
         a, b, k = e["from"], e["to"], e["key"]
         if e["edge"] == "ww":
-            steps.append(f"{a} and {b} install consecutive versions of {k}, so {a} must come before {b}. Edge: {a} -> {b}, type ww, key {k}.")
+            steps.append(
+                f"{a} and {b} install consecutive versions of {k}, so {a} must come before {b}. Edge: {a} -> {b}, type ww, key {k}."
+            )
         elif e["edge"] == "wr":
-            steps.append(f"{b} read the version of {k} written by {a}, so {a} must come before {b}. Edge: {a} -> {b}, type wr, key {k}.")
+            steps.append(
+                f"{b} read the version of {k} written by {a}, so {a} must come before {b}. Edge: {a} -> {b}, type wr, key {k}."
+            )
         else:
             steps.append(
                 f"{a} read a version of {k} whose next version is written by {b}, so {a} must come before {b}. "
@@ -316,11 +379,21 @@ def check_ser(h: History) -> dict:
             )
     for v in viol:
         steps.append(f"VIOLATION ({v['rule']}): {v}")
-    result = {"module": "M2", "edges": edges, "violations": viol, "versions": g["versions"]}
+    result = {
+        "module": "M2",
+        "edges": edges,
+        "violations": viol,
+        "versions": g["versions"],
+    }
     if cycle:
         label = classify_cycle(cycle)
-        text = " ".join(f"{e['from']} -{e['edge']}({e['key']})->" for e in cycle) + f" {cycle[0]['from']}"
-        steps.append(f"The graph has a cycle: {text}. It has {sum(e['edge']=='rw' for e in cycle)} rw edge(s) (class {label}), so no serial order can satisfy every edge.")
+        text = (
+            " ".join(f"{e['from']} -{e['edge']}({e['key']})->" for e in cycle)
+            + f" {cycle[0]['from']}"
+        )
+        steps.append(
+            f"The graph has a cycle: {text}. It has {sum(e['edge'] == 'rw' for e in cycle)} rw edge(s) (class {label}), so no serial order can satisfy every edge."
+        )
         result["cycle"] = cycle
         result["anomaly"] = label
     if viol or cycle:
@@ -330,7 +403,9 @@ def check_ser(h: History) -> dict:
         order = topological_order(nodes, edges)
         result["verdict"] = "valid"
         result["serial_order"] = order
-        steps.append(f"The graph is acyclic. A serial order that respects every edge: {', '.join(order)}. Conclusion: serializable.")
+        steps.append(
+            f"The graph is acyclic. A serial order that respects every edge: {', '.join(order)}. Conclusion: serializable."
+        )
     result["derivation"] = [f"{i}. {s}" for i, s in enumerate(steps, 1)]
     return result
 

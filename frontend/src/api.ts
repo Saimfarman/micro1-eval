@@ -16,19 +16,28 @@ import type {
 } from "./types";
 
 async function request<T>(path: string): Promise<T> {
-  const response = await fetch(path, { headers: { Accept: "application/json" } });
+  const response = await fetch(path, {
+    headers: { Accept: "application/json" },
+  });
   if (!response.ok) {
     const body = (await response.json().catch(() => ({}))) as Partial<ApiError>;
-    throw new Error(body.detail ?? body.title ?? `Request failed (${response.status})`);
+    throw new Error(
+      body.detail ?? body.title ?? `Request failed (${response.status})`,
+    );
   }
   return response.json() as Promise<T>;
 }
 
-export async function getTasks(module?: string, control?: boolean): Promise<Task[]> {
+export async function getTasks(
+  module?: string,
+  control?: boolean,
+): Promise<Task[]> {
   const query = new URLSearchParams({ per_page: "100" });
   if (module && module !== "all") query.set("module", module);
   if (control !== undefined) query.set("control", String(control));
-  const payload = await request<{ tasks: Task[]; total: number }>(`/api/tasks?${query.toString()}`);
+  const payload = await request<{ tasks: Task[]; total: number }>(
+    `/api/tasks?${query.toString()}`,
+  );
   return payload.tasks;
 }
 
@@ -64,12 +73,19 @@ export async function getModels(): Promise<ModelConfig[]> {
   return res.models;
 }
 
-export async function getAttempts(page = 1, perPage = 50): Promise<{ attempts: AttemptGrade[]; total: number }> {
-  return request<{ attempts: AttemptGrade[]; total: number }>(`/api/results/attempts?page=${page}&per_page=${perPage}`);
+export async function getAttempts(
+  page = 1,
+  perPage = 50,
+): Promise<{ attempts: AttemptGrade[]; total: number }> {
+  return request<{ attempts: AttemptGrade[]; total: number }>(
+    `/api/results/attempts?page=${page}&per_page=${perPage}`,
+  );
 }
 
 export function getAttemptDetail(attemptKey: string): Promise<AttemptDetail> {
-  return request<AttemptDetail>(`/api/results/attempt?key=${encodeURIComponent(attemptKey)}`);
+  return request<AttemptDetail>(
+    `/api/results/attempt?key=${encodeURIComponent(attemptKey)}`,
+  );
 }
 
 export async function getFailures(): Promise<FailureItem[]> {
@@ -94,8 +110,13 @@ export function getHealth(): Promise<{ status: string; database: boolean }> {
   return request<{ status: string; database: boolean }>("/api/health");
 }
 
-export function subscribeToRun(runId: string, onEvent: (event: LiveRunEvent) => void): () => void {
-  const source = new EventSource(`/api/runs/${encodeURIComponent(runId)}/events`);
+export function subscribeToRun(
+  runId: string,
+  onEvent: (event: LiveRunEvent) => void,
+): () => void {
+  const source = new EventSource(
+    `/api/runs/${encodeURIComponent(runId)}/events`,
+  );
   const handler = (message: MessageEvent<string>) => {
     try {
       onEvent(JSON.parse(message.data) as LiveRunEvent);
@@ -114,6 +135,6 @@ export function subscribeToRun(runId: string, onEvent: (event: LiveRunEvent) => 
     "failed",
     "cancelled",
     "finished",
-  ].forEach(type => source.addEventListener(type, handler));
+  ].forEach((type) => source.addEventListener(type, handler));
   return () => source.close();
 }

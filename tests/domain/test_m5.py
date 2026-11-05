@@ -27,16 +27,22 @@ T2  start=2  commit=5  r(y)=0  w(x)=1
 
 def generated_histories():
     for value in range(1, 6):
-        yield parse(f"""\
+        yield (
+            parse(f"""\
 Keys: x. Initial: x=0.
 T1  start=1  commit=4  w(x)={value}
 T2  start=5  commit=8  r(x)={value}
-"""), "valid"
-        yield parse(f"""\
+"""),
+            "valid",
+        )
+        yield (
+            parse(f"""\
 Keys: x. Initial: x=0.
 T1  start=1  commit=4  w(x)={value}
 T2  start=5  commit=8  r(x)=0
-"""), "invalid"
+"""),
+            "invalid",
+        )
 
 
 def test_m5_generated_positive_and_negative_cases_agree():
@@ -77,7 +83,10 @@ def test_m5_checker_rejects_wrong_history_form_and_prepared_transactions():
     with pytest.raises(HistoryError):
         check(parse("Keys: x. Initial: x=0.\nT1  commit=1  w(x)=1"), "reference")
     with pytest.raises(HistoryError):
-        check(parse("Keys: x. Initial: x=0.\nT1  start=1  prepared commit_ts=4  w(x)=1"), "reference")
+        check(
+            parse("Keys: x. Initial: x=0.\nT1  start=1  prepared commit_ts=4  w(x)=1"),
+            "reference",
+        )
 
 
 def test_m5_metamorphic_transaction_rename_preserves_verdict():
@@ -87,9 +96,10 @@ Keys: x, y. Initial: x=0, y=0.
 Q1  start=1  commit=6  r(x)=0  w(y)=1
 Q2  start=2  commit=5  r(y)=0  w(x)=1
 """)
-    assert check(history, "all")["reference"]["verdict"] == check(
-        renamed, "all"
-    )["reference"]["verdict"]
+    assert (
+        check(history, "all")["reference"]["verdict"]
+        == check(renamed, "all")["reference"]["verdict"]
+    )
 
 
 def test_m5_mutated_valid_certificate_is_not_accepted_as_a_certificate():

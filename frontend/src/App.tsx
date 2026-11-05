@@ -87,7 +87,10 @@ export function App() {
       pageContent = (
         <div className="not-found-panel panel">
           <h2>Page Not Found</h2>
-          <p className="muted">The requested route "#{current.page}" does not exist in this dashboard.</p>
+          <p className="muted">
+            The requested route "#{current.page}" does not exist in this
+            dashboard.
+          </p>
           <a href="#/" className="button button-primary">
             Return to Overview →
           </a>

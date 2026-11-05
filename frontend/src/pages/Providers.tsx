@@ -10,10 +10,7 @@ export function Providers() {
   const [error, setError] = useState<string | null>(null);
 
   useEffect(() => {
-    Promise.all([
-      getProviders().catch(() => []),
-      getModels().catch(() => []),
-    ])
+    Promise.all([getProviders().catch(() => []), getModels().catch(() => [])])
       .then(([p, m]) => {
         setProviders(p);
         setModels(m);
@@ -37,8 +34,9 @@ export function Providers() {
         </div>
         <h1>Supported Model Providers & Quotas</h1>
         <p className="lede">
-          The evaluation harness includes a multi-provider adapter supporting local deterministic mocks and
-          OpenAI-compatible endpoints. Provider credentials remain strictly server-side in <code>.env</code> and are
+          The evaluation harness includes a multi-provider adapter supporting
+          local deterministic mocks and OpenAI-compatible endpoints. Provider
+          credentials remain strictly server-side in <code>.env</code> and are
           never transmitted to the client.
         </p>
       </div>
@@ -51,9 +49,10 @@ export function Providers() {
         <div>
           <h3>Zero Secret Leakage Architecture</h3>
           <p>
-            API keys are read exclusively on the backend from <code>.env</code>. They are omitted from task records,
-            raw attempt JSONs, database indices, and all API responses. Live runs are completely opt-in and disabled
-            by default.
+            API keys are read exclusively on the backend from <code>.env</code>.
+            They are omitted from task records, raw attempt JSONs, database
+            indices, and all API responses. Live runs are completely opt-in and
+            disabled by default.
           </p>
         </div>
       </section>
@@ -64,10 +63,14 @@ export function Providers() {
           <article key={mod.id} className="provider-card panel">
             <div className="provider-head">
               <div>
-                <span className="badge primary">{mod.provider.toUpperCase()}</span>
+                <span className="badge primary">
+                  {mod.provider.toUpperCase()}
+                </span>
                 <h3>{mod.display_name ?? mod.id}</h3>
               </div>
-              <span className={`status-tag ${mod.id === "mock" ? "pass" : "muted"}`}>
+              <span
+                className={`status-tag ${mod.id === "mock" ? "pass" : "muted"}`}
+              >
                 {mod.id === "mock" ? "ONLINE FIXTURE" : "OPT-IN API"}
               </span>
             </div>
@@ -75,7 +78,9 @@ export function Providers() {
             <div className="provider-specs-grid">
               <div className="spec-row">
                 <span>Protocol:</span>
-                <strong>{mod.id === "mock" ? "Local Simulator" : "OpenAI-Compatible"}</strong>
+                <strong>
+                  {mod.id === "mock" ? "Local Simulator" : "OpenAI-Compatible"}
+                </strong>
               </div>
               <div className="spec-row">
                 <span>Requests / Min:</span>
@@ -87,11 +92,15 @@ export function Providers() {
               </div>
               <div className="spec-row">
                 <span>Tokens / Min:</span>
-                <strong>{(mod.tokens_per_minute ?? 100000).toLocaleString()} TPM</strong>
+                <strong>
+                  {(mod.tokens_per_minute ?? 100000).toLocaleString()} TPM
+                </strong>
               </div>
               <div className="spec-row">
                 <span>Tokens / Day:</span>
-                <strong>{(mod.tokens_per_day ?? 1000000).toLocaleString()} TPD</strong>
+                <strong>
+                  {(mod.tokens_per_day ?? 1000000).toLocaleString()} TPD
+                </strong>
               </div>
               <div className="spec-row">
                 <span>Max Context Tokens:</span>

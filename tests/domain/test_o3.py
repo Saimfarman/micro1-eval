@@ -11,5 +11,10 @@ def test_o3_agrees_with_existing_checkers(module):
     rng = random.Random(20261102 + len(module))
     for _ in range(100):
         history = random_history(rng, module)
-        assert o3.check(history, module)["verdict"] == rules.check(history, module)["verdict"]
-        assert o3.check(history, module)["verdict"] == reference.ref_verdict(history, module)
+        assert (
+            o3.check(history, module)["verdict"]
+            == rules.check(history, module)["verdict"]
+        )
+        assert o3.check(history, module)["verdict"] == reference.ref_verdict(
+            history, module
+        )

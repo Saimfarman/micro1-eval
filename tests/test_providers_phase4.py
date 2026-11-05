@@ -3,7 +3,12 @@ import time
 import pytest
 
 from evalkit.model_config import estimate, load_models
-from evalkit.providers import Quota, ProviderResponse, mock_response, validate_provider_config
+from evalkit.providers import (
+    Quota,
+    ProviderResponse,
+    mock_response,
+    validate_provider_config,
+)
 
 
 def test_quota_enforces_request_rate_and_spend_cap():
@@ -30,7 +35,14 @@ def test_quota_daily_limit():
 
 
 def test_provider_response_contract_contains_redacted_metadata():
-    response = mock_response({"id": "T1", "module": "M1", "history": "Keys: x. Initial: x=0.\nT1  start=1  commit=2  w(x)=1", "prompt": "x"})
+    response = mock_response(
+        {
+            "id": "T1",
+            "module": "M1",
+            "history": "Keys: x. Initial: x=0.\nT1  start=1  commit=2  w(x)=1",
+            "prompt": "x",
+        }
+    )
     assert isinstance(response, ProviderResponse)
     assert response.request_metadata["live"] is False
     assert "api_key" not in response.request_metadata

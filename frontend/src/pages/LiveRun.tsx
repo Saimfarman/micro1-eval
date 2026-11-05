@@ -31,7 +31,7 @@ export function LiveRun() {
     if (!isStreaming || !runId.trim()) return;
 
     const unsubscribe = subscribeToRun(runId.trim(), (event) => {
-      setEvents(prev => [...prev.slice(-99), event]);
+      setEvents((prev) => [...prev.slice(-99), event]);
     });
 
     return () => {
@@ -51,8 +51,9 @@ export function LiveRun() {
         </div>
         <h1>Live Execution Monitor</h1>
         <p className="lede">
-          Listen to live event telemetry from active evaluation batches via Server-Sent Events (SSE). Live runs are
-          gated by server authorization tokens to prevent unmetered spending.
+          Listen to live event telemetry from active evaluation batches via
+          Server-Sent Events (SSE). Live runs are gated by server authorization
+          tokens to prevent unmetered spending.
         </p>
       </div>
 
@@ -64,9 +65,10 @@ export function LiveRun() {
         <div>
           <h3>Safety Policy: Web-Initiated Live Runs Are Protected</h3>
           <p className="muted">
-            In accordance with hackathon reproducibility rules, live model requests cannot be dispatched directly from
-            an unauthenticated web client. Live runs are triggered through the CLI (<code>python -m evalkit run</code>)
-            or an authorized token header.
+            In accordance with hackathon reproducibility rules, live model
+            requests cannot be dispatched directly from an unauthenticated web
+            client. Live runs are triggered through the CLI (
+            <code>python -m evalkit run</code>) or an authorized token header.
           </p>
         </div>
       </section>
@@ -83,14 +85,16 @@ export function LiveRun() {
               type="text"
               className="text-input"
               value={runId}
-              onChange={e => setRunId(e.target.value)}
+              onChange={(e) => setRunId(e.target.value)}
               placeholder="e.g. 20261102T191035Z-db7b409f"
             />
           </div>
           <button
             type="button"
             className={`button ${isStreaming ? "button-danger" : "button-primary"} live-stream-button`}
-            onClick={() => (isStreaming ? setIsStreaming(false) : handleStartStream())}
+            onClick={() =>
+              isStreaming ? setIsStreaming(false) : handleStartStream()
+            }
           >
             {isStreaming ? "⏹ Disconnect Stream" : "▶ Listen to Run Events"}
           </button>
@@ -100,7 +104,7 @@ export function LiveRun() {
           <div className="quick-runs-bar">
             <span className="quick-runs-label">Recent runs:</span>
             <div className="quick-runs-list">
-              {runs.map(r => {
+              {runs.map((r) => {
                 const id = r.run_id ?? r.id ?? "";
                 return (
                   <button
@@ -126,7 +130,9 @@ export function LiveRun() {
             <span className="dot yellow" />
             <span className="dot green" />
           </div>
-          <span className="terminal-title">Event Log · {runId || "No Run Selected"}</span>
+          <span className="terminal-title">
+            Event Log · {runId || "No Run Selected"}
+          </span>
           <span className="badge">{events.length} events logged</span>
         </div>
 
@@ -145,9 +151,13 @@ export function LiveRun() {
               {events.map((ev, index) => (
                 <div key={`${ev.run_id}-${index}`} className="stream-event-row">
                   <span className="event-seq">#{index + 1}</span>
-                  <span className={`event-type-badge ${ev.type}`}>{ev.type}</span>
+                  <span className={`event-type-badge ${ev.type}`}>
+                    {ev.type}
+                  </span>
                   <span className="event-payload">
-                    {Object.keys(ev.payload || {}).length > 0 ? JSON.stringify(ev.payload) : "Heartbeat tick"}
+                    {Object.keys(ev.payload || {}).length > 0
+                      ? JSON.stringify(ev.payload)
+                      : "Heartbeat tick"}
                   </span>
                 </div>
               ))}

@@ -12,7 +12,10 @@ export function Reproduce() {
 
   useEffect(() => {
     Promise.all([
-      getIntegrity().catch(() => ({ ok: false, errors: ["Failed to fetch integrity API"] })),
+      getIntegrity().catch(() => ({
+        ok: false,
+        errors: ["Failed to fetch integrity API"],
+      })),
       getManifests().catch(() => []),
     ])
       .then(([integ, mans]) => {
@@ -24,12 +27,30 @@ export function Reproduce() {
   }, []);
 
   const commands = [
-    { label: "Validate task schemas & hashes", cmd: "python -m evalkit validate-tasks" },
-    { label: "Run offline preflight verification", cmd: "python -m evalkit preflight" },
-    { label: "Replay & grade attempts without API keys", cmd: "python -m evalkit reproduce" },
-    { label: "Verify SHA-256 manifest cryptographic integrity", cmd: "python -m evalkit verify" },
-    { label: "Rebuild derived SQLite projection database", cmd: "python -m evalkit ingest" },
-    { label: "Launch local offline dashboard server", cmd: "python -m backend.serve" },
+    {
+      label: "Validate task schemas & hashes",
+      cmd: "python -m evalkit validate-tasks",
+    },
+    {
+      label: "Run offline preflight verification",
+      cmd: "python -m evalkit preflight",
+    },
+    {
+      label: "Replay & grade attempts without API keys",
+      cmd: "python -m evalkit reproduce",
+    },
+    {
+      label: "Verify SHA-256 manifest cryptographic integrity",
+      cmd: "python -m evalkit verify",
+    },
+    {
+      label: "Rebuild derived SQLite projection database",
+      cmd: "python -m evalkit ingest",
+    },
+    {
+      label: "Launch local offline dashboard server",
+      cmd: "python -m backend.serve",
+    },
   ];
 
   const copyCmd = (cmd: string, idx: number) => {
@@ -53,19 +74,24 @@ export function Reproduce() {
         </div>
         <h1>Reproduce Evaluation Results Locally</h1>
         <p className="lede">
-          A core requirement of the micro1 evaluation hackathon is that results must be 100% reproducible offline
-          without API keys, remote databases, or external network connectivity.
+          A core requirement of the micro1 evaluation hackathon is that results
+          must be 100% reproducible offline without API keys, remote databases,
+          or external network connectivity.
         </p>
       </div>
 
       {/* Real-time Integrity Status Card */}
-      <section className={`integrity-status-card panel ${integrity?.ok ? "success" : "danger"}`}>
+      <section
+        className={`integrity-status-card panel ${integrity?.ok ? "success" : "danger"}`}
+      >
         <div className="status-icon" aria-hidden="true">
           {integrity?.ok ? "✓" : "⚠"}
         </div>
         <div className="status-content">
           <h3>
-            {integrity?.ok ? "Cryptographic Evidence Integrity: 100% VERIFIED" : "Evidence Integrity Check Required"}
+            {integrity?.ok
+              ? "Cryptographic Evidence Integrity: 100% VERIFIED"
+              : "Evidence Integrity Check Required"}
           </h3>
           <p>
             {integrity?.ok
@@ -118,16 +144,24 @@ export function Reproduce() {
         <div className="panel manifest-info-box">
           <h4>How Verification Works</h4>
           <p>
-            <code>results/MANIFEST.json</code> contains an indexed cryptographic dictionary of every core asset in the
-            repository: task JSONs, oracle implementations, code requirements, and raw execution attempt outputs.
+            <code>results/MANIFEST.json</code> contains an indexed cryptographic
+            dictionary of every core asset in the repository: task JSONs, oracle
+            implementations, code requirements, and raw execution attempt
+            outputs.
           </p>
           <p>
-            When <code>python -m evalkit verify</code> executes, it recalculates the SHA-256 hash of each file on disk
-            and verifies that every attempt record self-hash matches. Any modified byte fails verification immediately.
+            When <code>python -m evalkit verify</code> executes, it recalculates
+            the SHA-256 hash of each file on disk and verifies that every
+            attempt record self-hash matches. Any modified byte fails
+            verification immediately.
           </p>
           <div className="manifest-actions">
-            <span className="badge">Results Manifest: results/MANIFEST.json</span>
-            <span className="badge">Database: Derived SQLite Projection (Rebuildable)</span>
+            <span className="badge">
+              Results Manifest: results/MANIFEST.json
+            </span>
+            <span className="badge">
+              Database: Derived SQLite Projection (Rebuildable)
+            </span>
           </div>
         </div>
       </section>

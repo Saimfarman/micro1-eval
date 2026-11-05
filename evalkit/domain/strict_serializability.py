@@ -4,6 +4,7 @@ M5 extends the serial-order view of M2 with real-time order.  Aborted
 transactions are ignored, prepared transactions are rejected, and a valid
 certificate is a serial order that reproduces every committed read.
 """
+
 from __future__ import annotations
 
 from itertools import permutations
@@ -57,9 +58,11 @@ def _result(
     checker: str,
     serial_order: list[str] | None = None,
 ) -> dict[str, Any]:
-    certificate = {"serial_order": serial_order} if serial_order is not None else {
-        "kind": "no-strict-serial-order"
-    }
+    certificate = (
+        {"serial_order": serial_order}
+        if serial_order is not None
+        else {"kind": "no-strict-serial-order"}
+    )
     return {
         "module": "M5",
         "verdict": verdict,
@@ -106,7 +109,9 @@ def _topological_orders(txns: list[Txn]) -> list[tuple[Txn, ...]]:
             return
         placed = {t.id for t in prefix}
         for transaction in remaining:
-            if all(left in placed for left, right in required if right == transaction.id):
+            if all(
+                left in placed for left, right in required if right == transaction.id
+            ):
                 visit(
                     prefix + (transaction,),
                     tuple(t for t in remaining if t.id != transaction.id),
@@ -156,30 +161,37 @@ def constraint_check(history: History) -> dict[str, Any]:
                 solver.add(operation.value == previous)
                 continue
             writers = [
-                writer for writer in txns
+                writer
+                for writer in txns
                 if writer.id != transaction.id
                 and writer.final_write(operation.key) is not None
             ]
             choices = []
             if operation.value == history.initial[operation.key]:
-                choices.append(And(*(
-                    position[writer.id] > position[transaction.id]
-                    for writer in writers
-                )))
+                choices.append(
+                    And(
+                        *(
+                            position[writer.id] > position[transaction.id]
+                            for writer in writers
+                        )
+                    )
+                )
             for writer in writers:
                 if writer.final_write(operation.key) != operation.value:
                     continue
-                choices.append(And(
-                    position[writer.id] < position[transaction.id],
-                    *(
-                        Or(
-                            position[other.id] < position[writer.id],
-                            position[other.id] > position[transaction.id],
-                        )
-                        for other in writers
-                        if other.id != writer.id
-                    ),
-                ))
+                choices.append(
+                    And(
+                        position[writer.id] < position[transaction.id],
+                        *(
+                            Or(
+                                position[other.id] < position[writer.id],
+                                position[other.id] > position[transaction.id],
+                            )
+                            for other in writers
+                            if other.id != writer.id
+                        ),
+                    )
+                )
             solver.add(Or(*choices) if choices else False)
 
     if solver.check() != sat:
@@ -197,10 +209,7 @@ def check(history: History, checker: str = "reference") -> dict[str, Any]:
         "constraint": constraint_check,
     }
     if checker == "all":
-        return {
-            name: function(history)
-            for name, function in checkers.items()
-        }
+        return {name: function(history) for name, function in checkers.items()}
     try:
         return checkers[checker](history)
     except KeyError as exc:

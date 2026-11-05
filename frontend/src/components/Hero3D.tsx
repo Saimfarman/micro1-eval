@@ -14,14 +14,72 @@ interface HeroNode {
 }
 
 const DEMO_NODES: HeroNode[] = [
-  { id: "T1", module: "M1", label: "T1 (Snapshot Read)", pos: [-3.2, 1.4, 0.8], reads: "x=0 @ snapshot", writes: "y=1" },
-  { id: "T2", module: "M1", label: "T2 (Concurrent Write)", pos: [3.1, -1.2, 0.4], reads: "y=0 @ snapshot", writes: "x=1" },
-  { id: "T3", module: "M2", label: "T3 (Commit Ordered)", pos: [-1.4, -2.2, 2.1], reads: "x=1 (ww edge)", writes: "z=2" },
-  { id: "T4", module: "M2", label: "T4 (G2-item Cycle)", pos: [1.8, 2.3, -1.5], reads: "z=0 (rw edge)", writes: "x=2", anomaly: "G2-item rw-cycle" },
-  { id: "T5", module: "M3", label: "T5 (2PC Prepared)", pos: [-2.5, -0.8, -2.2], reads: "k=0", writes: "k=1", anomaly: "In-doubt completion" },
-  { id: "T6", module: "M4", label: "T6 (Linearizable Reg)", pos: [2.6, 0.6, -2.6], reads: "reg=1", writes: "reg=2" },
-  { id: "T7", module: "M5", label: "T7 (Strict Serial)", pos: [0.1, 2.8, 1.2], reads: "y=1 (wr edge)", writes: "w=3" },
-  { id: "T8", module: "M2", label: "T8 (Dirty Read Prevented)", pos: [0.2, -2.9, -0.6], reads: "init x=0", writes: "v=1" },
+  {
+    id: "T1",
+    module: "M1",
+    label: "T1 (Snapshot Read)",
+    pos: [-3.2, 1.4, 0.8],
+    reads: "x=0 @ snapshot",
+    writes: "y=1",
+  },
+  {
+    id: "T2",
+    module: "M1",
+    label: "T2 (Concurrent Write)",
+    pos: [3.1, -1.2, 0.4],
+    reads: "y=0 @ snapshot",
+    writes: "x=1",
+  },
+  {
+    id: "T3",
+    module: "M2",
+    label: "T3 (Commit Ordered)",
+    pos: [-1.4, -2.2, 2.1],
+    reads: "x=1 (ww edge)",
+    writes: "z=2",
+  },
+  {
+    id: "T4",
+    module: "M2",
+    label: "T4 (G2-item Cycle)",
+    pos: [1.8, 2.3, -1.5],
+    reads: "z=0 (rw edge)",
+    writes: "x=2",
+    anomaly: "G2-item rw-cycle",
+  },
+  {
+    id: "T5",
+    module: "M3",
+    label: "T5 (2PC Prepared)",
+    pos: [-2.5, -0.8, -2.2],
+    reads: "k=0",
+    writes: "k=1",
+    anomaly: "In-doubt completion",
+  },
+  {
+    id: "T6",
+    module: "M4",
+    label: "T6 (Linearizable Reg)",
+    pos: [2.6, 0.6, -2.6],
+    reads: "reg=1",
+    writes: "reg=2",
+  },
+  {
+    id: "T7",
+    module: "M5",
+    label: "T7 (Strict Serial)",
+    pos: [0.1, 2.8, 1.2],
+    reads: "y=1 (wr edge)",
+    writes: "w=3",
+  },
+  {
+    id: "T8",
+    module: "M2",
+    label: "T8 (Dirty Read Prevented)",
+    pos: [0.2, -2.9, -0.6],
+    reads: "init x=0",
+    writes: "v=1",
+  },
 ];
 
 const EDGES: [number, number, "ww" | "wr" | "rw"][] = [
@@ -69,7 +127,12 @@ export function Hero3D() {
     }
 
     const scene = new THREE.Scene();
-    const camera = new THREE.PerspectiveCamera(45, container.clientWidth / container.clientHeight, 0.1, 100);
+    const camera = new THREE.PerspectiveCamera(
+      45,
+      container.clientWidth / container.clientHeight,
+      0.1,
+      100,
+    );
     camera.position.set(0, 0, 10.5);
 
     renderer.setSize(container.clientWidth, container.clientHeight);
@@ -140,7 +203,9 @@ export function Hero3D() {
     EDGES.forEach(([fromIdx, toIdx, type]) => {
       const fromPos = new THREE.Vector3(...DEMO_NODES[fromIdx].pos);
       const toPos = new THREE.Vector3(...DEMO_NODES[toIdx].pos);
-      const mid = new THREE.Vector3().addVectors(fromPos, toPos).multiplyScalar(0.5);
+      const mid = new THREE.Vector3()
+        .addVectors(fromPos, toPos)
+        .multiplyScalar(0.5);
       mid.normalize().multiplyScalar(fromPos.length() * 0.92);
 
       const curve = new THREE.QuadraticBezierCurve3(fromPos, mid, toPos);
@@ -321,8 +386,13 @@ export function Hero3D() {
             // When hovering directly over a node, slow down to 15% speed for effortless inspection
             const speedFactor = isHoveringNode ? 0.15 : 1.0;
             const deltaScale = Math.min(delta * 60, 2.0); // normalize around 60fps
-            worldGroup.rotation.y += AUTO_ROT_SPEED_Y * speedFactor * deltaScale;
-            worldGroup.rotation.x += AUTO_ROT_SPEED_X * speedFactor * deltaScale * Math.sin(now * 0.001);
+            worldGroup.rotation.y +=
+              AUTO_ROT_SPEED_Y * speedFactor * deltaScale;
+            worldGroup.rotation.x +=
+              AUTO_ROT_SPEED_X *
+              speedFactor *
+              deltaScale *
+              Math.sin(now * 0.001);
           }
         }
       }
@@ -354,8 +424,9 @@ export function Hero3D() {
           <span className="badge">WebGL Fallback</span>
           <h4>Transaction Dependency Lattice</h4>
           <p>
-            Interactive 3D representation is running in accessible text mode. Nodes represent transactions, and edges
-            represent dependency relations (ww, wr, rw).
+            Interactive 3D representation is running in accessible text mode.
+            Nodes represent transactions, and edges represent dependency
+            relations (ww, wr, rw).
           </p>
         </div>
       </div>
@@ -370,7 +441,10 @@ export function Hero3D() {
       {hoveredNode && (
         <div className="hero-node-tooltip" role="tooltip">
           <div className="tooltip-head">
-            <span className="tooltip-badge" style={{ background: moduleColor(hoveredNode.module) }}>
+            <span
+              className="tooltip-badge"
+              style={{ background: moduleColor(hoveredNode.module) }}
+            >
               {hoveredNode.module}
             </span>
             <strong>{hoveredNode.label}</strong>
@@ -397,7 +471,10 @@ export function Hero3D() {
         <div className="hero-selected-card">
           <div className="selected-head">
             <div className="selected-title">
-              <span className="module-pill" style={{ borderColor: moduleColor(selectedNode.module) }}>
+              <span
+                className="module-pill"
+                style={{ borderColor: moduleColor(selectedNode.module) }}
+              >
                 {selectedNode.module}
               </span>
               <h3>{selectedNode.label}</h3>
@@ -413,8 +490,9 @@ export function Hero3D() {
           </div>
           <div className="selected-content">
             <p className="selected-desc">
-              Transaction node verified against formal rules of {selectedNode.module}. Dependencies trace reads-from
-              relations and detect cycle anomalies.
+              Transaction node verified against formal rules of{" "}
+              {selectedNode.module}. Dependencies trace reads-from relations and
+              detect cycle anomalies.
             </p>
             <div className="selected-specs">
               <div>
@@ -446,7 +524,9 @@ export function Hero3D() {
         >
           {paused ? "▶ Resume Motion" : "⏸ Pause Motion"}
         </button>
-        <span className="control-hint">Drag to rotate lattice · Click any node</span>
+        <span className="control-hint">
+          Drag to rotate lattice · Click any node
+        </span>
       </div>
 
       {/* Edge color legend */}

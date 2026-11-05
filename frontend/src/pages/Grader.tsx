@@ -4,7 +4,9 @@ import type { GraderReliability } from "../types";
 import { ErrorState, LoadingState } from "../components/LoadingState";
 
 export function Grader() {
-  const [reliability, setReliability] = useState<GraderReliability | null>(null);
+  const [reliability, setReliability] = useState<GraderReliability | null>(
+    null,
+  );
   const [error, setError] = useState<string | null>(null);
 
   useEffect(() => {
@@ -28,9 +30,10 @@ export function Grader() {
         </div>
         <h1>Grader Architecture & Reliability</h1>
         <p className="lede">
-          Unlike benchmarks that rely on non-deterministic LLM judges or naive regex string matching, our grader is a
-          purely deterministic mathematical verifier that checks the soundness of model certificates against concrete
-          histories.
+          Unlike benchmarks that rely on non-deterministic LLM judges or naive
+          regex string matching, our grader is a purely deterministic
+          mathematical verifier that checks the soundness of model certificates
+          against concrete histories.
         </p>
       </div>
 
@@ -42,7 +45,9 @@ export function Grader() {
             <span className="metric-tag success">Deterministic</span>
           </div>
           <strong className="metric-value">{reliability.method}</strong>
-          <span className="metric-desc">Pure Python graph verification & state simulator</span>
+          <span className="metric-desc">
+            Pure Python graph verification & state simulator
+          </span>
         </article>
 
         <article className="metric-card">
@@ -51,7 +56,9 @@ export function Grader() {
             <span className="metric-tag success">Empirical</span>
           </div>
           <strong className="metric-value">0.00%</strong>
-          <span className="metric-desc">Tested across 15,000+ harmful mutated certificates</span>
+          <span className="metric-desc">
+            Tested across 15,000+ harmful mutated certificates
+          </span>
         </article>
 
         <article className="metric-card">
@@ -60,7 +67,9 @@ export function Grader() {
             <span className="metric-tag success">Empirical</span>
           </div>
           <strong className="metric-value">0.00%</strong>
-          <span className="metric-desc">Tested across 15,000+ harmless re-orderings</span>
+          <span className="metric-desc">
+            Tested across 15,000+ harmless re-orderings
+          </span>
         </article>
 
         <article className="metric-card">
@@ -69,7 +78,10 @@ export function Grader() {
             <span className="metric-tag">Disclosed</span>
           </div>
           <strong className="metric-value">Unassisted</strong>
-          <span className="metric-desc">{reliability.note ?? "Fully automated without subjective human bias"}</span>
+          <span className="metric-desc">
+            {reliability.note ??
+              "Fully automated without subjective human bias"}
+          </span>
         </article>
       </section>
 
@@ -88,8 +100,9 @@ export function Grader() {
             <h3>JSON Parse & Schema</h3>
             <p className="weight">Weight: 10%</p>
             <p>
-              Extracts the final fenced JSON block from model output. Validates against the module-specific answer
-              schema. Fails if JSON is malformed or missing required keys.
+              Extracts the final fenced JSON block from model output. Validates
+              against the module-specific answer schema. Fails if JSON is
+              malformed or missing required keys.
             </p>
           </div>
 
@@ -98,9 +111,10 @@ export function Grader() {
             <h3>Certificate Soundness</h3>
             <p className="weight">Weight: 40% (Critical Gate)</p>
             <p>
-              Directly verifies the model's emitted certificate against the concrete history. For M1, checks reads-from
-              validity; for M2, traces the anomaly cycle through actual ww/wr/rw edges. Never compares text against the
-              oracle's certificate.
+              Directly verifies the model's emitted certificate against the
+              concrete history. For M1, checks reads-from validity; for M2,
+              traces the anomaly cycle through actual ww/wr/rw edges. Never
+              compares text against the oracle's certificate.
             </p>
           </div>
 
@@ -109,8 +123,9 @@ export function Grader() {
             <h3>Verdict Match</h3>
             <p className="weight">Weight: 40% (Critical Gate)</p>
             <p>
-              Compares the model's stated verdict (valid, invalid, undetermined) against the multi-oracle ground truth.
-              Both C2 and C3 must pass for an attempt to be declared successful.
+              Compares the model's stated verdict (valid, invalid, undetermined)
+              against the multi-oracle ground truth. Both C2 and C3 must pass
+              for an attempt to be declared successful.
             </p>
           </div>
 
@@ -119,8 +134,8 @@ export function Grader() {
             <h3>Derivation Completeness</h3>
             <p className="weight">Weight: 10%</p>
             <p>
-              Checks for step-by-step reasoning presence and naming of relevant transaction identifiers without arithmetic
-              contradictions.
+              Checks for step-by-step reasoning presence and naming of relevant
+              transaction identifiers without arithmetic contradictions.
             </p>
           </div>
         </div>

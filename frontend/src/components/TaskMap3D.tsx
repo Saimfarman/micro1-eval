@@ -28,14 +28,23 @@ export function TaskMap3D({
 
     let renderer: THREE.WebGLRenderer;
     try {
-      renderer = new THREE.WebGLRenderer({ antialias: true, alpha: true, powerPreference: "high-performance" });
+      renderer = new THREE.WebGLRenderer({
+        antialias: true,
+        alpha: true,
+        powerPreference: "high-performance",
+      });
     } catch {
       onUnsupported();
       return;
     }
 
     const scene = new THREE.Scene();
-    const camera = new THREE.PerspectiveCamera(45, element.clientWidth / element.clientHeight, 0.1, 100);
+    const camera = new THREE.PerspectiveCamera(
+      45,
+      element.clientWidth / element.clientHeight,
+      0.1,
+      100,
+    );
     camera.position.set(0, 1.5, 14);
 
     const group = new THREE.Group();
@@ -47,13 +56,16 @@ export function TaskMap3D({
       16,
       16,
       isInitialLight ? 0x94a3b8 : 0x22364a,
-      isInitialLight ? 0xcbd5e1 : 0x14202d
+      isInitialLight ? 0xcbd5e1 : 0x14202d,
     );
     gridHelper.position.y = -3.5;
     scene.add(gridHelper);
 
     // Lights
-    const ambientLight = new THREE.AmbientLight(0xffffff, isInitialLight ? 1.05 : 0.85);
+    const ambientLight = new THREE.AmbientLight(
+      0xffffff,
+      isInitialLight ? 1.05 : 0.85,
+    );
     scene.add(ambientLight);
 
     const dirLight1 = new THREE.DirectionalLight(0x70e1c4, 1.0);
@@ -71,14 +83,20 @@ export function TaskMap3D({
     };
     window.addEventListener("themechange", onThemeChange);
 
-    const reducedMotion = window.matchMedia("(prefers-reduced-motion: reduce)").matches;
+    const reducedMotion = window.matchMedia(
+      "(prefers-reduced-motion: reduce)",
+    ).matches;
     const quality = qualityForPointCount(points.length, reducedMotion);
 
     // Create Mesh for each Task point
     const meshes: THREE.Mesh[] = [];
     points.forEach((point) => {
       const col = new THREE.Color(moduleColor(point.task.module));
-      const geom = new THREE.SphereGeometry(point.size * 1.3, quality.segments, quality.segments);
+      const geom = new THREE.SphereGeometry(
+        point.size * 1.3,
+        quality.segments,
+        quality.segments,
+      );
       const mat = new THREE.MeshStandardMaterial({
         color: col,
         roughness: 0.25,
@@ -270,25 +288,48 @@ export function TaskMap3D({
       {hoveredPoint && (
         <div className="map-hover-card" role="tooltip">
           <div className="hover-card-head">
-            <span className="module-pill" style={{ borderColor: moduleColor(hoveredPoint.task.module) }}>
+            <span
+              className="module-pill"
+              style={{ borderColor: moduleColor(hoveredPoint.task.module) }}
+            >
               {hoveredPoint.task.module}
             </span>
             <strong>{hoveredPoint.task.id}</strong>
-            <span className={`verdict-pill ${hoveredPoint.task.expected_verdict}`}>
+            <span
+              className={`verdict-pill ${hoveredPoint.task.expected_verdict}`}
+            >
               {hoveredPoint.task.expected_verdict}
             </span>
           </div>
           <div className="hover-card-body">
             <div className="history-preview-snippet">
-              <code>{hoveredPoint.task.history || hoveredPoint.task.prompt?.slice(0, 70) || `Task ${hoveredPoint.task.id}`}</code>
+              <code>
+                {hoveredPoint.task.history ||
+                  hoveredPoint.task.prompt?.slice(0, 70) ||
+                  `Task ${hoveredPoint.task.id}`}
+              </code>
             </div>
             <div className="hover-meta-row">
-              <span>Ops: {hoveredPoint.task.difficulty?.operations ?? hoveredPoint.task.difficulty?.operation_count ?? "—"}</span>
-              <span>Keys: {hoveredPoint.task.difficulty?.keys ?? hoveredPoint.task.difficulty?.key_count ?? "—"}</span>
-              <span>Tier: {hoveredPoint.task.control ? "Control" : "Core"}</span>
+              <span>
+                Ops:{" "}
+                {hoveredPoint.task.difficulty?.operations ??
+                  hoveredPoint.task.difficulty?.operation_count ??
+                  "—"}
+              </span>
+              <span>
+                Keys:{" "}
+                {hoveredPoint.task.difficulty?.keys ??
+                  hoveredPoint.task.difficulty?.key_count ??
+                  "—"}
+              </span>
+              <span>
+                Tier: {hoveredPoint.task.control ? "Control" : "Core"}
+              </span>
             </div>
           </div>
-          <div className="hover-card-hint">Click point to inspect full task details</div>
+          <div className="hover-card-hint">
+            Click point to inspect full task details
+          </div>
         </div>
       )}
     </div>

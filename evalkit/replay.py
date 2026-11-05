@@ -7,6 +7,7 @@ from .tasks import load_tasks
 from .report import build_report
 from .failures import classify_failure
 
+
 def replay(root: Path) -> dict:
     tasks = {t["id"]: t for t in load_tasks(root / "tasks")}
     runs = sorted((root / "results" / "runs").glob("*"))
@@ -18,17 +19,25 @@ def replay(root: Path) -> dict:
     for path in (latest / "raw").glob("*.json"):
         record = json.loads(path.read_text(encoding="utf-8"))
         task = tasks[record["task_id"]]
-        result = grade(record["response_text"], task["history"], task["module"],
-                       task["expected_verdict"])
+        result = grade(
+            record["response_text"],
+            task["history"],
+            task["module"],
+            task["expected_verdict"],
+        )
         passed += int(result["passed"])
         total += 1
         if not result["passed"]:
             tag = classify_failure(record, result)["tag"]
             failure_counts[tag] = failure_counts.get(tag, 0) + 1
-    return {"run_id": latest.name, "attempts": total, "passed": passed,
-            "pass_at_1": passed / total if total else 0,
-            "failure_counts": failure_counts,
-            "human_review": {"status": "not_requested", "reviewed": False}}
+    return {
+        "run_id": latest.name,
+        "attempts": total,
+        "passed": passed,
+        "pass_at_1": passed / total if total else 0,
+        "failure_counts": failure_counts,
+        "human_review": {"status": "not_requested", "reviewed": False},
+    }
 
 
 def verify_results(root: Path) -> list[str]:
@@ -40,13 +49,28 @@ def verify_results(root: Path) -> list[str]:
     grades_path = latest / "grades.jsonl"
     if not grades_path.exists():
         return ["grades.jsonl is missing"]
-    stored = [json.loads(line) for line in grades_path.read_text(encoding="utf-8").splitlines() if line.strip()]
+    stored = [
+        json.loads(line)
+        for line in grades_path.read_text(encoding="utf-8").splitlines()
+        if line.strip()
+    ]
     actual = []
     for path in sorted((latest / "raw").glob("*.json")):
         record = json.loads(path.read_text(encoding="utf-8"))
         task = tasks[record["task_id"]]
-        result = grade(record["response_text"], task["history"], task["module"], task["expected_verdict"])
-        actual.append({**result, "attempt_key": record["attempt_key"], "task_id": record["task_id"]})
+        result = grade(
+            record["response_text"],
+            task["history"],
+            task["module"],
+            task["expected_verdict"],
+        )
+        actual.append(
+            {
+                **result,
+                "attempt_key": record["attempt_key"],
+                "task_id": record["task_id"],
+            }
+        )
     errors = [] if stored == actual else ["stored grades do not match replayed grades"]
     replayed = build_report(root)
     summary = root / "results" / "summary.json"

@@ -10,7 +10,7 @@ export function Runs() {
 
   useEffect(() => {
     getRuns()
-      .then(r => setRuns(r))
+      .then((r) => setRuns(r))
       .catch((err: Error) => setError(err.message))
       .finally(() => setLoading(false));
   }, []);
@@ -30,8 +30,9 @@ export function Runs() {
         </div>
         <h1>Evaluation Run Records</h1>
         <p className="lede">
-          Every execution batch is logged into an immutable run directory under <code>results/runs/&lt;run_id&gt;/</code>.
-          Attempts are recorded to disk before grading and sealed with SHA-256 self-hashes.
+          Every execution batch is logged into an immutable run directory under{" "}
+          <code>results/runs/&lt;run_id&gt;/</code>. Attempts are recorded to
+          disk before grading and sealed with SHA-256 self-hashes.
         </p>
       </div>
 
@@ -47,10 +48,14 @@ export function Runs() {
                     <span className="badge primary">RUN ID</span>
                     <h3>{runId}</h3>
                   </div>
-                  <span className="muted">Provider: <strong>{run.provider ?? "mock"}</strong></span>
+                  <span className="muted">
+                    Provider: <strong>{run.provider ?? "mock"}</strong>
+                  </span>
                 </div>
                 <div className="run-status-badge">
-                  <span className={`status-tag ${status === "completed" ? "pass" : "warning"}`}>
+                  <span
+                    className={`status-tag ${status === "completed" ? "pass" : "warning"}`}
+                  >
                     {status.toUpperCase()}
                   </span>
                 </div>
@@ -71,7 +76,11 @@ export function Runs() {
                 </div>
                 <div className="run-stat">
                   <span className="stat-label">SPEND CAP</span>
-                  <strong>{run.spend_cap_usd == null ? "None ($0.00)" : `$${run.spend_cap_usd.toFixed(2)}`}</strong>
+                  <strong>
+                    {run.spend_cap_usd == null
+                      ? "None ($0.00)"
+                      : `$${run.spend_cap_usd.toFixed(2)}`}
+                  </strong>
                 </div>
               </div>
 
@@ -81,7 +90,10 @@ export function Runs() {
               </div>
 
               <div className="run-actions">
-                <a href="#/results" className="button button-sm button-secondary">
+                <a
+                  href="#/results"
+                  className="button button-sm button-secondary"
+                >
                   View Graded Attempts in Results Matrix →
                 </a>
                 <a href="#/reproduce" className="button button-sm button-ghost">

@@ -77,7 +77,9 @@ const MODULE_SPECS = [
         text: "A history with k in-doubt transactions is valid iff all 2^k completions are valid, invalid iff all 2^k completions are invalid, and undetermined otherwise.",
       },
     ],
-    anomalies: ["branch divergence: one branch valid, another branch invalid -> undetermined"],
+    anomalies: [
+      "branch divergence: one branch valid, another branch invalid -> undetermined",
+    ],
   },
   {
     id: "M4",
@@ -94,7 +96,10 @@ const MODULE_SPECS = [
         text: "Each read operation must return the value of the most recent preceding write operation in the linearization order, or initial value 0.",
       },
     ],
-    anomalies: ["inversion of real-time order", "stale register read violating sequential order"],
+    anomalies: [
+      "inversion of real-time order",
+      "stale register read violating sequential order",
+    ],
   },
   {
     id: "M5",
@@ -118,7 +123,7 @@ export function Modules() {
 
   useEffect(() => {
     getTasks()
-      .then(t => setTasks(t))
+      .then((t) => setTasks(t))
       .catch((err: Error) => setError(err.message))
       .finally(() => setLoading(false));
   }, []);
@@ -138,8 +143,10 @@ export function Modules() {
         </div>
         <h1>Consistency Modules & Formal Rules</h1>
         <p className="lede">
-          The single source of truth for all oracles, prompts, and graders. Every task prompt contains these exact
-          definitions verbatim, guaranteeing that models are evaluated on formal rules rather than ambiguous terminology.
+          The single source of truth for all oracles, prompts, and graders.
+          Every task prompt contains these exact definitions verbatim,
+          guaranteeing that models are evaluated on formal rules rather than
+          ambiguous terminology.
         </p>
       </div>
 
@@ -150,11 +157,13 @@ export function Modules() {
           <h3>Transaction History Notation Grammar</h3>
         </div>
         <p className="muted">
-          Every transaction history evaluated by the benchmark follows this strict, unambiguous syntax:
+          Every transaction history evaluated by the benchmark follows this
+          strict, unambiguous syntax:
         </p>
         <div className="grammar-example">
           <code>
-            Keys: x, y. Initial: x=0, y=0. Every written value is unique per key.
+            Keys: x, y. Initial: x=0, y=0. Every written value is unique per
+            key.
             <br />
             T1 start=1 commit=6 r(x)=0 w(y)=1
             <br />
@@ -168,7 +177,9 @@ export function Modules() {
           </div>
           <div className="grammar-item">
             <strong>start=t, commit=t:</strong>
-            <span>Distinct integer timestamps on a linear real-time scale.</span>
+            <span>
+              Distinct integer timestamps on a linear real-time scale.
+            </span>
           </div>
           <div className="grammar-item">
             <strong>r(k)=v:</strong>
@@ -188,10 +199,14 @@ export function Modules() {
       {/* Module Specifications */}
       <div className="modules-list">
         {MODULE_SPECS.map((spec) => {
-          const modTasks = tasks.filter(t => t.module === spec.id);
+          const modTasks = tasks.filter((t) => t.module === spec.id);
           const color = moduleColor(spec.id);
           return (
-            <article key={spec.id} className="module-detail-panel panel" style={{ borderLeft: `4px solid ${color}` }}>
+            <article
+              key={spec.id}
+              className="module-detail-panel panel"
+              style={{ borderLeft: `4px solid ${color}` }}
+            >
               <div className="panel-top">
                 <div className="panel-title-group">
                   <span
@@ -207,7 +222,9 @@ export function Modules() {
                 </div>
                 <div className="panel-badge-group">
                   <span className="badge">{spec.historyType}</span>
-                  <span className="badge success">{modTasks.length} tasks in corpus</span>
+                  <span className="badge success">
+                    {modTasks.length} tasks in corpus
+                  </span>
                 </div>
               </div>
 
@@ -241,10 +258,22 @@ export function Modules() {
                 <div className="linked-tasks-section">
                   <h4>Associated Evaluation Tasks</h4>
                   <div className="linked-tasks-grid">
-                    {modTasks.map(t => (
-                      <a key={t.id} href={`#/tasks/${t.id}`} className="linked-task-chip">
+                    {modTasks.map((t) => (
+                      <a
+                        key={t.id}
+                        href={`#/tasks/${t.id}`}
+                        className="linked-task-chip"
+                      >
                         <strong>{t.id}</strong>
-                        <span className="task-verdict-dot" style={{ background: t.expected_verdict === "valid" ? "var(--pass)" : "var(--fail)" }} />
+                        <span
+                          className="task-verdict-dot"
+                          style={{
+                            background:
+                              t.expected_verdict === "valid"
+                                ? "var(--pass)"
+                                : "var(--fail)",
+                          }}
+                        />
                         <span>{t.expected_verdict}</span>
                       </a>
                     ))}

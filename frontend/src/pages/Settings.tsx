@@ -3,7 +3,10 @@ import { getHealth } from "../api";
 import { applyTheme, getInitialTheme, type Theme } from "../theme";
 
 export function Settings() {
-  const [health, setHealth] = useState<{ status: string; database: boolean } | null>(null);
+  const [health, setHealth] = useState<{
+    status: string;
+    database: boolean;
+  } | null>(null);
   const [theme, setTheme] = useState<Theme>(getInitialTheme);
 
   useEffect(() => {
@@ -41,7 +44,8 @@ export function Settings() {
         </div>
         <h1>Application Settings & Environment</h1>
         <p className="lede">
-          Configure display preferences, visual accessibility adjustments, and inspect local backend runtime status.
+          Configure display preferences, visual accessibility adjustments, and
+          inspect local backend runtime status.
         </p>
       </div>
 
@@ -49,7 +53,10 @@ export function Settings() {
         {/* Visual Appearance Panel */}
         <section className="settings-card panel">
           <h3>Display Theme</h3>
-          <p className="muted">Choose between the high-contrast Dark Obsidian theme or the clean Clinical Light theme.</p>
+          <p className="muted">
+            Choose between the high-contrast Dark Obsidian theme or the clean
+            Clinical Light theme.
+          </p>
           <div className="theme-toggle-row">
             <button
               type="button"
@@ -74,14 +81,20 @@ export function Settings() {
           <div className="diagnostics-list">
             <div className="diag-row">
               <span className="diag-label">Quart API Status:</span>
-              <span className={`status-tag ${health?.status === "ok" ? "pass" : "fail"}`}>
+              <span
+                className={`status-tag ${health?.status === "ok" ? "pass" : "fail"}`}
+              >
                 {health?.status === "ok" ? "✓ ONLINE (HTTP 200)" : "OFFLINE"}
               </span>
             </div>
             <div className="diag-row">
               <span className="diag-label">SQLite Projection:</span>
-              <span className={`status-tag ${health?.database ? "pass" : "fail"}`}>
-                {health?.database ? "✓ CONNECTED (index.sqlite3)" : "NOT CONNECTED"}
+              <span
+                className={`status-tag ${health?.database ? "pass" : "fail"}`}
+              >
+                {health?.database
+                  ? "✓ CONNECTED (index.sqlite3)"
+                  : "NOT CONNECTED"}
               </span>
             </div>
             <div className="diag-row">
@@ -90,7 +103,9 @@ export function Settings() {
             </div>
             <div className="diag-row">
               <span className="diag-label">Security Boundary:</span>
-              <strong className="diag-val">Zero Secret Leakage (Keys restricted to server-side .env)</strong>
+              <strong className="diag-val">
+                Zero Secret Leakage (Keys restricted to server-side .env)
+              </strong>
             </div>
           </div>
         </section>
@@ -99,8 +114,9 @@ export function Settings() {
         <section className="settings-card panel">
           <h3>Evidence Storage Policy</h3>
           <p className="muted">
-            This dashboard operates as a read-only projection over immutable evidence files stored in the repository.
-            The SQLite database is completely disposable and can be rebuilt at any time using:
+            This dashboard operates as a read-only projection over immutable
+            evidence files stored in the repository. The SQLite database is
+            completely disposable and can be rebuilt at any time using:
           </p>
           <pre className="code-block">
             <code>python -m evalkit ingest</code>

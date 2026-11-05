@@ -1,4 +1,5 @@
 """Deterministic aggregate scoring for completed evaluation rows."""
+
 from __future__ import annotations
 
 import random
@@ -13,7 +14,9 @@ def _bootstrap(values: list[float], seed: int, samples: int = 2000) -> dict:
     if not values:
         return {"low": 0.0, "high": 0.0, "seed": seed, "samples": samples}
     rng = random.Random(seed)
-    estimates = sorted(_mean([rng.choice(values) for _ in values]) for _ in range(samples))
+    estimates = sorted(
+        _mean([rng.choice(values) for _ in values]) for _ in range(samples)
+    )
     return {
         "low": estimates[int(samples * 0.025)],
         "high": estimates[int(samples * 0.975) - 1],
@@ -22,7 +25,9 @@ def _bootstrap(values: list[float], seed: int, samples: int = 2000) -> dict:
     }
 
 
-def aggregate_grades(rows: list[dict], tasks: dict[str, dict], seed: int = 20261102) -> dict:
+def aggregate_grades(
+    rows: list[dict], tasks: dict[str, dict], seed: int = 20261102
+) -> dict:
     """Aggregate grades without inventing missing attempts or expected answers."""
     scopes: dict[str, list[dict]] = defaultdict(list)
     modules: dict[str, list[dict]] = defaultdict(list)
@@ -40,10 +45,12 @@ def aggregate_grades(rows: list[dict], tasks: dict[str, dict], seed: int = 20261
             "pass_at_1": _mean([float(value) for value in passed]),
             "mean_score": _mean(scores),
             "bootstrap_95": _bootstrap(passed, seed),
-            "consistency": _mean([
-                int(item.get("criteria", {}).get("certificate", item["passed"]))
-                for item in items
-            ]),
+            "consistency": _mean(
+                [
+                    int(item.get("criteria", {}).get("certificate", item["passed"]))
+                    for item in items
+                ]
+            ),
         }
 
     core = summarize(scopes["core"])

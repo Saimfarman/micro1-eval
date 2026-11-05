@@ -4,9 +4,22 @@ import json
 from pathlib import Path
 
 TEXT_EXTS = {
-    ".json", ".yaml", ".yml", ".txt", ".toml", ".py", ".md",
-    ".html", ".css", ".js", ".jsonl", ".ts", ".tsx", ".svg"
+    ".json",
+    ".yaml",
+    ".yml",
+    ".txt",
+    ".toml",
+    ".py",
+    ".md",
+    ".html",
+    ".css",
+    ".js",
+    ".jsonl",
+    ".ts",
+    ".tsx",
+    ".svg",
 }
+
 
 def sha256(path: Path) -> str:
     data = path.read_bytes()
@@ -16,32 +29,42 @@ def sha256(path: Path) -> str:
         data = data.replace(b"\r\n", b"\n")
     return hashlib.sha256(data).hexdigest()
 
+
 def build_manifest(root: Path) -> dict:
     files = {}
     for base in (root / "tasks", root / "results"):
         if base.exists():
             for path in base.rglob("*"):
-                if (path.is_file() and path.name != "MANIFEST.json"
-                        and not path.name.endswith(".migrate.lock")
-                        and path.suffix not in {".sqlite", ".sqlite3", ".db"}
-                        and "__pycache__" not in path.parts
-                        and not path.name.endswith(".pyc")):
+                if (
+                    path.is_file()
+                    and path.name != "MANIFEST.json"
+                    and not path.name.endswith(".migrate.lock")
+                    and path.suffix not in {".sqlite", ".sqlite3", ".db"}
+                    and "__pycache__" not in path.parts
+                    and not path.name.endswith(".pyc")
+                ):
                     files[str(path.relative_to(root)).replace("\\", "/")] = sha256(path)
     for path in (root / "eval.config.yaml", root / "models.yaml"):
         if path.exists():
             files[path.name] = sha256(path)
-    for path in (root / "requirements.txt", root / "requirements-dev.txt",
-                 root / "pyproject.toml"):
+    for path in (
+        root / "requirements.txt",
+        root / "requirements-dev.txt",
+        root / "pyproject.toml",
+    ):
         if path.exists():
             files[str(path.relative_to(root)).replace("\\", "/")] = sha256(path)
-    for base in (root / "evalkit" / "domain" / "oracle",
-                 root / "frontend" / "dist"):
+    for base in (root / "evalkit" / "domain" / "oracle", root / "frontend" / "dist"):
         if base.exists():
             for path in base.rglob("*"):
-                if (path.is_file() and "__pycache__" not in path.parts
-                        and not path.name.endswith(".pyc")):
+                if (
+                    path.is_file()
+                    and "__pycache__" not in path.parts
+                    and not path.name.endswith(".pyc")
+                ):
                     files[str(path.relative_to(root)).replace("\\", "/")] = sha256(path)
     return {"version": 2, "files": dict(sorted(files.items()))}
+
 
 def write_manifest(root: Path) -> Path:
     path = root / "results" / "MANIFEST.json"
@@ -49,6 +72,7 @@ def write_manifest(root: Path) -> Path:
     manifest_data = json.dumps(build_manifest(root), indent=2) + "\n"
     path.write_bytes(manifest_data.encode("utf-8"))
     return path
+
 
 def verify_manifest(root: Path) -> list[str]:
     path = root / "results" / "MANIFEST.json"
@@ -88,17 +112,23 @@ def verify_attempt_hashes(root: Path) -> list[str]:
                 json.dumps(record, sort_keys=True).encode("utf-8")
             ).hexdigest()
             if stored != actual:
-                errors.append(f"attempt content hash mismatch: {path.relative_to(root)}")
+                errors.append(
+                    f"attempt content hash mismatch: {path.relative_to(root)}"
+                )
             task = tasks.get(record.get("task_id"))
             if not task:
-                errors.append(f"attempt references unknown task: {path.relative_to(root)}")
+                errors.append(
+                    f"attempt references unknown task: {path.relative_to(root)}"
+                )
                 continue
             th = record.get("task_hash")
             task_path = Path(task["_path"])
             task_bytes = task_path.read_bytes()
             valid_hashes = {
                 hashlib.sha256(task_bytes.replace(b"\r\n", b"\n")).hexdigest(),
-                hashlib.sha256(task_bytes.replace(b"\r\n", b"\n").replace(b"\n", b"\r\n")).hexdigest(),
+                hashlib.sha256(
+                    task_bytes.replace(b"\r\n", b"\n").replace(b"\n", b"\r\n")
+                ).hexdigest(),
             }
             if th not in valid_hashes:
                 errors.append(f"attempt task hash mismatch: {path.relative_to(root)}")

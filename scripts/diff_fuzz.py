@@ -3,6 +3,7 @@
 Compares checker O1 (reference) with O2 (rules) on random histories and prints how often each
 kind of verdict, violation and anomaly was exercised. Exit code 1 on any disagreement.
 """
+
 from __future__ import annotations
 
 import argparse
@@ -29,18 +30,26 @@ def main() -> int:
     for module in ("M1", "M2", "M3"):
         cover = collections.Counter()
         for i in range(a.n):
-            h = random_history(rng, module, n=rng.randint(2, a.max_txns), nkeys=rng.randint(1, 3))
+            h = random_history(
+                rng, module, n=rng.randint(2, a.max_txns), nkeys=rng.randint(1, 3)
+            )
             r = rules.check(h, module)
             ref = reference.ref_verdict(h, module)
             if r["verdict"] != ref:
                 bad += 1
-                print(f"DISAGREEMENT {module} #{i}: rules={r['verdict']} reference={ref}\n{print_history(h)}\n")
+                print(
+                    f"DISAGREEMENT {module} #{i}: rules={r['verdict']} reference={ref}\n{print_history(h)}\n"
+                )
                 if bad > 5:
                     return 1
             cover["verdict:" + r["verdict"]] += 1
             if module == "M1":
                 for v in r["violations"]:
-                    cover["violation:" + v["rule"] + (":" + v["name"] if v.get("name") else "")] += 1
+                    cover[
+                        "violation:"
+                        + v["rule"]
+                        + (":" + v["name"] if v.get("name") else "")
+                    ] += 1
             elif module == "M2":
                 for v in r["violations"]:
                     cover["violation:" + v["rule"]] += 1

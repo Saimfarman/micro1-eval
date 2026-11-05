@@ -3,12 +3,14 @@
 Z3 is used for M2 serial orders and M4 linearizations. M1 and M3 use separate
 implementations of the definitions and never import O1 or O2.
 """
+
 from __future__ import annotations
 
 from itertools import product
 
 from ..history import History, Txn
 from ..linearizability import RegisterHistory
+
 try:
     from z3 import And, Distinct, Int, Or, Solver, sat
 except ImportError:  # pragma: no cover - exercised by installation checks
@@ -31,32 +33,48 @@ def _si_valid(history: History) -> bool:
                 return False
             elif operation.key not in own:
                 candidates = [
-                    writer for writer in committed
-                    if writer.id != transaction.id and operation.key in writer.write_keys()
+                    writer
+                    for writer in committed
+                    if writer.id != transaction.id
+                    and operation.key in writer.write_keys()
                     and writer.end < transaction.start
                 ]
-                source = max(candidates, key=lambda item: item.end) if candidates else None
-                expected = source.final_write(operation.key) if source else history.initial[operation.key]
+                source = (
+                    max(candidates, key=lambda item: item.end) if candidates else None
+                )
+                expected = (
+                    source.final_write(operation.key)
+                    if source
+                    else history.initial[operation.key]
+                )
                 if operation.value != expected:
                     return False
     for index, left in enumerate(committed):
-        for right in committed[index + 1:]:
-            if left.write_keys() & right.write_keys() and left.start < right.end and right.start < left.end:
+        for right in committed[index + 1 :]:
+            if (
+                left.write_keys() & right.write_keys()
+                and left.start < right.end
+                and right.start < left.end
+            ):
                 return False
     return True
 
 
 def _resolved(history: History, assignment: dict[str, str]) -> History:
-    return history.replace_txns(tuple(
-        Txn(t.id, t.ops, assignment.get(t.id, t.outcome), t.start, t.end)
-        for t in history.txns
-    ))
+    return history.replace_txns(
+        tuple(
+            Txn(t.id, t.ops, assignment.get(t.id, t.outcome), t.start, t.end)
+            for t in history.txns
+        )
+    )
 
 
 def _m3(history: History) -> str:
     prepared = [t.id for t in history.txns if t.outcome == "prepared"]
     verdicts = {
-        "valid" if _si_valid(_resolved(history, dict(zip(prepared, values)))) else "invalid"
+        "valid"
+        if _si_valid(_resolved(history, dict(zip(prepared, values))))
+        else "invalid"
         for values in product(("commit", "abort"), repeat=len(prepared))
     }
     return verdicts.pop() if len(verdicts) == 1 else "undetermined"
@@ -71,7 +89,11 @@ def _m2(history: History) -> str:
     for position in positions.values():
         solver.add(position >= 0, position < len(committed))
     writers = {
-        key: [t for t in sorted(committed, key=lambda item: item.end) if key in t.write_keys()]
+        key: [
+            t
+            for t in sorted(committed, key=lambda item: item.end)
+            if key in t.write_keys()
+        ]
         for key in history.keys
     }
     for key_writers in writers.values():
@@ -86,7 +108,10 @@ def _m2(history: History) -> str:
             if operation.key in local:
                 solver.add(local[operation.key] == operation.value)
                 continue
-            source = next((t for t in committed if operation.value in t.writes(operation.key)), None)
+            source = next(
+                (t for t in committed if operation.value in t.writes(operation.key)),
+                None,
+            )
             if source is None:
                 solver.add(operation.value == history.initial[operation.key])
                 for writer in writers[operation.key]:
@@ -99,8 +124,12 @@ def _m2(history: History) -> str:
                 solver.add(positions[source.id] < positions[transaction.id])
                 for later in committed:
                     if later.id != source.id and operation.key in later.write_keys():
-                        solver.add(Or(positions[later.id] <= positions[source.id],
-                                      positions[later.id] >= positions[transaction.id]))
+                        solver.add(
+                            Or(
+                                positions[later.id] <= positions[source.id],
+                                positions[later.id] >= positions[transaction.id],
+                            )
+                        )
     return "valid" if solver.check() == sat else "invalid"
 
 
@@ -120,16 +149,21 @@ def _m4(history: RegisterHistory) -> str:
         if read.kind != "read":
             continue
         matching_writes = [
-            write_index for write_index, write in enumerate(operations)
+            write_index
+            for write_index, write in enumerate(operations)
             if write.kind == "write" and write.value == read.value
         ]
         choices = []
         if read.value == history.initial:
-            choices.append(And(*(
-                positions[write_index] > positions[read_index]
-                for write_index, write in enumerate(operations)
-                if write.kind == "write"
-            )))
+            choices.append(
+                And(
+                    *(
+                        positions[write_index] > positions[read_index]
+                        for write_index, write in enumerate(operations)
+                        if write.kind == "write"
+                    )
+                )
+            )
         for write_index in matching_writes:
             between = [
                 Or(
@@ -139,10 +173,12 @@ def _m4(history: RegisterHistory) -> str:
                 for other_index, other in enumerate(operations)
                 if other.kind == "write" and other_index != write_index
             ]
-            choices.append(And(
-                positions[write_index] < positions[read_index],
-                *between,
-            ))
+            choices.append(
+                And(
+                    positions[write_index] < positions[read_index],
+                    *between,
+                )
+            )
         solver.add(Or(*choices) if choices else False)
     return "valid" if solver.check() == sat else "invalid"
 
@@ -156,7 +192,11 @@ def check(history: History | RegisterHistory, module: str) -> dict:
     if not isinstance(history, History):
         raise ValueError("M1-M3 require a transaction History")
     if module == "M1":
-        return {"module": "M1", "verdict": "valid" if _si_valid(history) else "invalid", "checker": "O3"}
+        return {
+            "module": "M1",
+            "verdict": "valid" if _si_valid(history) else "invalid",
+            "checker": "O3",
+        }
     if module == "M2":
         return {"module": "M2", "verdict": _m2(history), "checker": "O3"}
     if module == "M3":

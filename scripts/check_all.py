@@ -1,10 +1,14 @@
 """One local command for everything that exists so far: python scripts/check_all.py"""
+
 import subprocess
 import sys
 
 STEPS = [
     ("unit and property tests", [sys.executable, "-m", "pytest"]),
-    ("differential fuzz (O1 vs O2), 3000 per module", [sys.executable, "scripts/diff_fuzz.py", "--n", "3000"]),
+    (
+        "differential fuzz (O1 vs O2), 3000 per module",
+        [sys.executable, "scripts/diff_fuzz.py", "--n", "3000"],
+    ),
 ]
 
 failed = 0

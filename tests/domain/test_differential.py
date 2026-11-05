@@ -1,4 +1,5 @@
 """O1 (reference) and O2 (rules) must agree on every random history."""
+
 import random
 
 import pytest
@@ -19,7 +20,9 @@ def test_checkers_agree_on_random_histories(module):
         assert parse(print_history(h)) == h  # printer/parser round trip on fuzz data
         a = rules.check(h, module)["verdict"]
         b = reference.ref_verdict(h, module)
-        assert a == b, f"{module} disagreement #{i}:\n{print_history(h)}\nrules={a} reference={b}"
+        assert a == b, (
+            f"{module} disagreement #{i}:\n{print_history(h)}\nrules={a} reference={b}"
+        )
         seen[a] += 1
     # the fuzzer must exercise both classes, otherwise agreement means little
     assert seen["valid"] > N * 0.15 and seen["invalid"] > N * 0.15, seen

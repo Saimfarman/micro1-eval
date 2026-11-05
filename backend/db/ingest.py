@@ -50,11 +50,15 @@ def _latest_run(root: Path) -> Path | None:
     return runs[-1] if runs else None
 
 
-def ingest(root: Path, database: Path | None = None, require_integrity: bool = True) -> dict:
+def ingest(
+    root: Path, database: Path | None = None, require_integrity: bool = True
+) -> dict:
     database = database or (root / "results" / "index.sqlite3")
     integrity_errors = verify_manifest(root) + verify_attempt_hashes(root)
     if require_integrity and integrity_errors:
-        raise ValueError("cannot ingest unverified evidence: " + "; ".join(integrity_errors))
+        raise ValueError(
+            "cannot ingest unverified evidence: " + "; ".join(integrity_errors)
+        )
     with migration_lock(database):
         connection = connect(database)
     try:
@@ -66,12 +70,25 @@ def ingest(root: Path, database: Path | None = None, require_integrity: bool = T
             "SELECT value FROM schema_meta WHERE key='manifest_hash'"
         ).fetchone()
         if previous and previous["value"] == manifest_hash:
-            return {"database": str(database), "status": "unchanged",
-                    "manifest_hash": manifest_hash}
+            return {
+                "database": str(database),
+                "status": "unchanged",
+                "manifest_hash": manifest_hash,
+            }
         connection.execute("BEGIN")
-        for table in ("live_run_events", "failure_tags", "grades", "attempts",
-                      "summaries", "runs", "models", "tasks", "modules", "providers",
-                      "manifests"):
+        for table in (
+            "live_run_events",
+            "failure_tags",
+            "grades",
+            "attempts",
+            "summaries",
+            "runs",
+            "models",
+            "tasks",
+            "modules",
+            "providers",
+            "manifests",
+        ):
             connection.execute(f"DELETE FROM {table}")
         tasks = load_tasks(root / "tasks")
         modules = sorted({task["module"] for task in tasks})
@@ -84,24 +101,38 @@ def ingest(root: Path, database: Path | None = None, require_integrity: bool = T
         models_path = root / "models.yaml"
         if models_path.exists():
             from evalkit.model_config import load_models
+
             model_rows = load_models(models_path)
-            providers.update(model.get("provider", "") for model in model_rows if model.get("provider"))
+            providers.update(
+                model.get("provider", "")
+                for model in model_rows
+                if model.get("provider")
+            )
         else:
             model_rows = []
         for provider in sorted(providers):
-            connection.execute("INSERT INTO providers VALUES (?, ?)",
-                               (provider, _json({"id": provider})))
+            connection.execute(
+                "INSERT INTO providers VALUES (?, ?)",
+                (provider, _json({"id": provider})),
+            )
         for task in tasks:
             connection.execute(
                 "INSERT INTO tasks VALUES (?, ?, ?, ?, ?, ?, ?)",
-                (task["id"], task["module"], int(task["control"]), task.get("status", "final"),
-                 task["expected_verdict"], task["canonical_hash"], _json(task)),
+                (
+                    task["id"],
+                    task["module"],
+                    int(task["control"]),
+                    task.get("status", "final"),
+                    task["expected_verdict"],
+                    task["canonical_hash"],
+                    _json(task),
+                ),
             )
         for model in model_rows:
             connection.execute(
-                    "INSERT INTO models VALUES (?, ?, ?)",
-                    (model["id"], model.get("provider", ""), _json(model)),
-                )
+                "INSERT INTO models VALUES (?, ?, ?)",
+                (model["id"], model.get("provider", ""), _json(model)),
+            )
         runs = sorted((root / "results" / "runs").glob("*"))
         attempt_count = grade_count = failure_count = 0
         for run in runs:
@@ -109,8 +140,10 @@ def ingest(root: Path, database: Path | None = None, require_integrity: bool = T
                 continue
             run_payload = json.loads((run / "run.json").read_text(encoding="utf-8"))
             provider = run_payload.get("provider", "mock")
-            connection.execute("INSERT OR IGNORE INTO providers VALUES (?, ?)",
-                               (provider, _json({"id": provider})))
+            connection.execute(
+                "INSERT OR IGNORE INTO providers VALUES (?, ?)",
+                (provider, _json({"id": provider})),
+            )
             connection.execute(
                 "INSERT INTO runs VALUES (?, ?, ?)",
                 (run.name, provider, _json(run_payload)),
@@ -119,8 +152,13 @@ def ingest(root: Path, database: Path | None = None, require_integrity: bool = T
                 record = json.loads(path.read_text(encoding="utf-8"))
                 connection.execute(
                     "INSERT INTO attempts VALUES (?, ?, ?, ?, ?)",
-                    (record["attempt_key"], run.name, record["task_id"],
-                     record["content_sha256"], _json(record)),
+                    (
+                        record["attempt_key"],
+                        run.name,
+                        record["task_id"],
+                        record["content_sha256"],
+                        _json(record),
+                    ),
                 )
                 attempt_count += 1
             grades_path = run / "grades.jsonl"
@@ -129,24 +167,37 @@ def ingest(root: Path, database: Path | None = None, require_integrity: bool = T
                     grade = json.loads(line)
                     connection.execute(
                         "INSERT INTO grades VALUES (?, ?, ?, ?)",
-                        (grade["attempt_key"], int(grade["passed"]), grade["score"], _json(grade)),
+                        (
+                            grade["attempt_key"],
+                            int(grade["passed"]),
+                            grade["score"],
+                            _json(grade),
+                        ),
                     )
                     grade_count += 1
             failures_path = run / "failures.json"
             if failures_path.exists():
-                failures = json.loads(failures_path.read_text(encoding="utf-8")).get("failures", [])
+                failures = json.loads(failures_path.read_text(encoding="utf-8")).get(
+                    "failures", []
+                )
                 for failure in failures:
                     connection.execute(
                         "INSERT INTO failure_tags(attempt_key, tag, payload_json) VALUES (?, ?, ?)",
-                        (failure.get("attempt_key"), failure.get("tag", "unknown"), _json(failure)),
+                        (
+                            failure.get("attempt_key"),
+                            failure.get("tag", "unknown"),
+                            _json(failure),
+                        ),
                     )
                     failure_count += 1
             summary_path = run / "summary.json"
             if not summary_path.exists():
                 summary_path = root / "results" / "summary.json"
             if summary_path.exists():
-                connection.execute("INSERT INTO summaries VALUES (?, ?)",
-                                   (run.name, summary_path.read_text(encoding="utf-8")))
+                connection.execute(
+                    "INSERT INTO summaries VALUES (?, ?)",
+                    (run.name, summary_path.read_text(encoding="utf-8")),
+                )
             for event_path in sorted(run.glob("events*.jsonl")):
                 for line in event_path.read_text(encoding="utf-8").splitlines():
                     if line.strip():
@@ -154,23 +205,39 @@ def ingest(root: Path, database: Path | None = None, require_integrity: bool = T
                         connection.execute(
                             "INSERT INTO live_run_events(run_id, event_type, event_json, created_at) "
                             "VALUES (?, ?, ?, ?)",
-                            (run.name, event.get("type", "message"), _json(event),
-                             event.get("created_at", datetime.now(timezone.utc).isoformat())),
+                            (
+                                run.name,
+                                event.get("type", "message"),
+                                _json(event),
+                                event.get(
+                                    "created_at", datetime.now(timezone.utc).isoformat()
+                                ),
+                            ),
                         )
         if manifest_hash:
             manifest_path = root / "results" / "MANIFEST.json"
             connection.execute(
                 "INSERT INTO manifests VALUES (?, ?, ?)",
-                (manifest_hash, str(manifest_path.relative_to(root)), manifest_path.read_text(encoding="utf-8")),
+                (
+                    manifest_hash,
+                    str(manifest_path.relative_to(root)),
+                    manifest_path.read_text(encoding="utf-8"),
+                ),
             )
         connection.execute(
             "INSERT OR REPLACE INTO schema_meta(key, value) VALUES('manifest_hash', ?)",
             (manifest_hash,),
         )
         connection.commit()
-        return {"database": str(database), "status": "rebuilt", "manifest_hash": manifest_hash,
-                "tasks": len(tasks), "attempts": attempt_count, "grades": grade_count,
-                "failures": failure_count}
+        return {
+            "database": str(database),
+            "status": "rebuilt",
+            "manifest_hash": manifest_hash,
+            "tasks": len(tasks),
+            "attempts": attempt_count,
+            "grades": grade_count,
+            "failures": failure_count,
+        }
     except Exception:
         connection.rollback()
         raise

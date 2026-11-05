@@ -9,7 +9,9 @@ export function Results() {
   const [attempts, setAttempts] = useState<AttemptGrade[]>([]);
   const [totalAttempts, setTotalAttempts] = useState(0);
   const [page, setPage] = useState(1);
-  const [selectedAttempt, setSelectedAttempt] = useState<AttemptDetail | null>(null);
+  const [selectedAttempt, setSelectedAttempt] = useState<AttemptDetail | null>(
+    null,
+  );
   const [loadingAttempt, setLoadingAttempt] = useState(false);
   const [attemptError, setAttemptError] = useState<string | null>(null);
   const [activeAttemptKey, setActiveAttemptKey] = useState<string | null>(null);
@@ -49,7 +51,11 @@ export function Results() {
       const detail = await getAttemptDetail(key);
       setSelectedAttempt(detail);
     } catch (err: unknown) {
-      setAttemptError(err instanceof Error ? err.message : "Failed to load raw attempt record.");
+      setAttemptError(
+        err instanceof Error
+          ? err.message
+          : "Failed to load raw attempt record.",
+      );
     } finally {
       setLoadingAttempt(false);
     }
@@ -90,8 +96,10 @@ export function Results() {
         </div>
         <h1>Evaluation Results & Attempts Matrix</h1>
         <p className="lede">
-          All metrics derive from immutable raw JSON execution records replayed through the deterministic certificate
-          grader. No commercial model claims are fabricated; results represent the reproducible mock run fixture.
+          All metrics derive from immutable raw JSON execution records replayed
+          through the deterministic certificate grader. No commercial model
+          claims are fabricated; results represent the reproducible mock run
+          fixture.
         </p>
       </div>
 
@@ -103,9 +111,13 @@ export function Results() {
             <span className="metric-tag success">Deterministic Grader</span>
           </div>
           <strong className="metric-value">
-            {summary.pass_at_1 != null ? `${Math.round(summary.pass_at_1 * 100)}%` : "100%"}
+            {summary.pass_at_1 != null
+              ? `${Math.round(summary.pass_at_1 * 100)}%`
+              : "100%"}
           </strong>
-          <span className="metric-desc">Mean Score: {summary.mean_score?.toFixed(2) ?? "1.00"}</span>
+          <span className="metric-desc">
+            Mean Score: {summary.mean_score?.toFixed(2) ?? "1.00"}
+          </span>
         </article>
 
         <article className="metric-card">
@@ -119,7 +131,8 @@ export function Results() {
               : "100%"}
           </strong>
           <span className="metric-desc">
-            {summary.scopes?.core?.passed ?? 10} of {summary.scopes?.core?.attempts ?? 10} verified
+            {summary.scopes?.core?.passed ?? 10} of{" "}
+            {summary.scopes?.core?.attempts ?? 10} verified
           </span>
         </article>
 
@@ -134,7 +147,8 @@ export function Results() {
               : "100%"}
           </strong>
           <span className="metric-desc">
-            {summary.scopes?.control?.passed ?? 9} of {summary.scopes?.control?.attempts ?? 9} verified
+            {summary.scopes?.control?.passed ?? 9} of{" "}
+            {summary.scopes?.control?.attempts ?? 9} verified
           </span>
         </article>
 
@@ -176,17 +190,28 @@ export function Results() {
                   return (
                     <tr key={name}>
                       <td>
-                        <strong>{name === "core" ? "Stratified Core (T01–T10)" : "Matched Controls (C10–C18)"}</strong>
+                        <strong>
+                          {name === "core"
+                            ? "Stratified Core (T01–T10)"
+                            : "Matched Controls (C10–C18)"}
+                        </strong>
                       </td>
                       <td>{sc.attempts}</td>
                       <td>{sc.passed}</td>
                       <td>
-                        <span className="badge success">{Math.round(sc.pass_at_1 * 100)}%</span>
+                        <span className="badge success">
+                          {Math.round(sc.pass_at_1 * 100)}%
+                        </span>
                       </td>
                       <td>{sc.mean_score.toFixed(2)}</td>
-                      <td>{sc.consistency != null ? `${Math.round(sc.consistency * 100)}%` : "100%"}</td>
                       <td>
-                        [{sc.bootstrap_95?.low.toFixed(2)}, {sc.bootstrap_95?.high.toFixed(2)}]
+                        {sc.consistency != null
+                          ? `${Math.round(sc.consistency * 100)}%`
+                          : "100%"}
+                      </td>
+                      <td>
+                        [{sc.bootstrap_95?.low.toFixed(2)},{" "}
+                        {sc.bootstrap_95?.high.toFixed(2)}]
                       </td>
                     </tr>
                   );
@@ -238,21 +263,24 @@ export function Results() {
                       {mod === "M1"
                         ? "Snapshot Isolation"
                         : mod === "M2"
-                        ? "Conflict Serializability"
-                        : mod === "M3"
-                        ? "In-Doubt 2PC"
-                        : mod === "M4"
-                        ? "Register Linearizability"
-                        : "Strict Serializability"}
+                          ? "Conflict Serializability"
+                          : mod === "M3"
+                            ? "In-Doubt 2PC"
+                            : mod === "M4"
+                              ? "Register Linearizability"
+                              : "Strict Serializability"}
                     </td>
                     <td>{data.attempts}</td>
                     <td>{data.passed}</td>
                     <td>
-                      <span className="badge success">{Math.round(data.pass_at_1 * 100)}%</span>
+                      <span className="badge success">
+                        {Math.round(data.pass_at_1 * 100)}%
+                      </span>
                     </td>
                     <td>{data.mean_score.toFixed(2)}</td>
                     <td>
-                      [{data.bootstrap_95?.low.toFixed(2)}, {data.bootstrap_95?.high.toFixed(2)}]
+                      [{data.bootstrap_95?.low.toFixed(2)},{" "}
+                      {data.bootstrap_95?.high.toFixed(2)}]
                     </td>
                   </tr>
                 ))}
@@ -272,7 +300,10 @@ export function Results() {
           <div className="filter-pill-group">
             <label className="filter-inline">
               <span>Filter Status:</span>
-              <select value={filterPassed} onChange={e => setFilterPassed(e.target.value)}>
+              <select
+                value={filterPassed}
+                onChange={(e) => setFilterPassed(e.target.value)}
+              >
                 <option value="all">All outcomes</option>
                 <option value="pass">Passed only</option>
                 <option value="fail">Failed only</option>
@@ -302,24 +333,35 @@ export function Results() {
                     <code className="key-code">{att.attempt_key}</code>
                   </td>
                   <td>
-                    <a href={`#/tasks/${encodeURIComponent(att.task_id)}`} className="table-link">
+                    <a
+                      href={`#/tasks/${encodeURIComponent(att.task_id)}`}
+                      className="table-link"
+                    >
                       <strong>{att.task_id}</strong>
                     </a>
                   </td>
                   <td>
-                    <span className={`verdict-pill ${att.expected_verdict}`}>{att.expected_verdict}</span>
+                    <span className={`verdict-pill ${att.expected_verdict}`}>
+                      {att.expected_verdict}
+                    </span>
                   </td>
                   <td>
-                    <span className={`verdict-pill ${att.observed_verdict}`}>{att.observed_verdict}</span>
+                    <span className={`verdict-pill ${att.observed_verdict}`}>
+                      {att.observed_verdict}
+                    </span>
                   </td>
                   <td>{att.score.toFixed(2)}</td>
                   <td>
-                    <span className={`status-tag ${att.passed ? "pass" : "fail"}`}>
+                    <span
+                      className={`status-tag ${att.passed ? "pass" : "fail"}`}
+                    >
                       {att.passed ? "✓ PASSED" : "✕ FAILED"}
                     </span>
                   </td>
                   <td>
-                    <span className="muted">{att.grader_method ?? "deterministic-v2"}</span>
+                    <span className="muted">
+                      {att.grader_method ?? "deterministic-v2"}
+                    </span>
                   </td>
                   <td>
                     <button
@@ -339,8 +381,16 @@ export function Results() {
 
       {/* Raw Attempt Inspection Modal Dialog */}
       {(selectedAttempt || loadingAttempt || attemptError) && (
-        <div className="modal-overlay modal-backdrop" onClick={closeModal} role="dialog" aria-modal="true">
-          <div className="modal-content modal-card" onClick={e => e.stopPropagation()}>
+        <div
+          className="modal-overlay modal-backdrop"
+          onClick={closeModal}
+          role="dialog"
+          aria-modal="true"
+        >
+          <div
+            className="modal-content modal-card"
+            onClick={(e) => e.stopPropagation()}
+          >
             <div className="modal-head modal-header">
               <div>
                 <p className="eyebrow">RAW EXECUTION RECORD</p>
@@ -348,10 +398,12 @@ export function Results() {
                   {loadingAttempt
                     ? "Loading Output..."
                     : selectedAttempt
-                    ? `Attempt: ${selectedAttempt.task_id}`
-                    : "Attempt Record"}
+                      ? `Attempt: ${selectedAttempt.task_id}`
+                      : "Attempt Record"}
                 </h3>
-                {activeAttemptKey && <code className="muted">{activeAttemptKey}</code>}
+                {activeAttemptKey && (
+                  <code className="muted">{activeAttemptKey}</code>
+                )}
               </div>
               <button
                 type="button"
@@ -367,23 +419,41 @@ export function Results() {
               {loadingAttempt ? (
                 <div className="modal-loading-state">
                   <div className="spinner" />
-                  <p className="muted">Fetching raw execution telemetry from backend SQLite store...</p>
+                  <p className="muted">
+                    Fetching raw execution telemetry from backend SQLite
+                    store...
+                  </p>
                 </div>
               ) : attemptError ? (
                 <div className="modal-error-state panel">
                   <h4>Unable to load attempt record</h4>
                   <p className="muted">{attemptError}</p>
-                  <p className="muted">Key: <code>{activeAttemptKey}</code></p>
+                  <p className="muted">
+                    Key: <code>{activeAttemptKey}</code>
+                  </p>
                 </div>
               ) : selectedAttempt ? (
                 <>
                   <div className="meta-pill-row">
-                    <span className="badge">Model: {selectedAttempt.model_returned ?? selectedAttempt.model_requested ?? "mock"}</span>
-                    <span className="badge">Finish Reason: {selectedAttempt.finish_reason ?? "stop"}</span>
-                    <span className="badge">Tokens: {selectedAttempt.usage?.total_tokens ?? 0}</span>
-                    <span className="badge">Latency: {selectedAttempt.latency_ms ?? 0} ms</span>
+                    <span className="badge">
+                      Model:{" "}
+                      {selectedAttempt.model_returned ??
+                        selectedAttempt.model_requested ??
+                        "mock"}
+                    </span>
+                    <span className="badge">
+                      Finish Reason: {selectedAttempt.finish_reason ?? "stop"}
+                    </span>
+                    <span className="badge">
+                      Tokens: {selectedAttempt.usage?.total_tokens ?? 0}
+                    </span>
+                    <span className="badge">
+                      Latency: {selectedAttempt.latency_ms ?? 0} ms
+                    </span>
                     {selectedAttempt.content_sha256 && (
-                      <span className="badge">SHA: {selectedAttempt.content_sha256.slice(0, 10)}…</span>
+                      <span className="badge">
+                        SHA: {selectedAttempt.content_sha256.slice(0, 10)}…
+                      </span>
                     )}
                   </div>
 
@@ -399,7 +469,10 @@ export function Results() {
                       </button>
                     </div>
                     <pre className="code-block response-block">
-                      <code>{selectedAttempt.response_text || "No response text captured."}</code>
+                      <code>
+                        {selectedAttempt.response_text ||
+                          "No response text captured."}
+                      </code>
                     </pre>
                   </div>
 
@@ -408,7 +481,10 @@ export function Results() {
                       <h4>Prompt Sent to Model</h4>
                     </div>
                     <pre className="code-block prompt-block">
-                      <code>{selectedAttempt.prompt_sent || "No prompt record captured."}</code>
+                      <code>
+                        {selectedAttempt.prompt_sent ||
+                          "No prompt record captured."}
+                      </code>
                     </pre>
                   </div>
                 </>
@@ -416,7 +492,11 @@ export function Results() {
             </div>
 
             <div className="modal-footer">
-              <button type="button" className="button button-secondary" onClick={closeModal}>
+              <button
+                type="button"
+                className="button button-secondary"
+                onClick={closeModal}
+              >
                 Close Inspector (Esc)
               </button>
               {selectedAttempt && (

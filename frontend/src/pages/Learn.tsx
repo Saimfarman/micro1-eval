@@ -1,7 +1,9 @@
 import { useState } from "react";
 
 export function Learn() {
-  const [selectedScenario, setSelectedScenario] = useState<"write_skew" | "dirty_read" | "lost_update">("write_skew");
+  const [selectedScenario, setSelectedScenario] = useState<
+    "write_skew" | "dirty_read" | "lost_update"
+  >("write_skew");
 
   const scenarios = {
     write_skew: {
@@ -47,8 +49,9 @@ export function Learn() {
         </div>
         <h1>Understanding Transaction Consistency & Oracles</h1>
         <p className="lede">
-          A step-by-step primer on database isolation levels, dependency graph anomalies, and how automated mathematical
-          oracles verify transaction histories.
+          A step-by-step primer on database isolation levels, dependency graph
+          anomalies, and how automated mathematical oracles verify transaction
+          histories.
         </p>
       </div>
 
@@ -58,10 +61,12 @@ export function Learn() {
           <div className="step-tag">LESSON 1</div>
           <h3>Why Isolation Matters</h3>
           <p>
-            When multiple transactions execute concurrently on a database, their interleaved operations can cause
-            corrupted states—such as double-spending account balances or displaying phantom records. Classical database
-            theory classifies these anomalies into formal levels: <em>Read Committed</em>, <em>Snapshot Isolation</em>,
-            and <em>Serializability</em>.
+            When multiple transactions execute concurrently on a database, their
+            interleaved operations can cause corrupted states—such as
+            double-spending account balances or displaying phantom records.
+            Classical database theory classifies these anomalies into formal
+            levels: <em>Read Committed</em>, <em>Snapshot Isolation</em>, and{" "}
+            <em>Serializability</em>.
           </p>
         </div>
 
@@ -73,8 +78,10 @@ export function Learn() {
           </p>
           <code>T1 start=1 commit=6 r(x)=0 w(y)=1</code>
           <p>
-            <code>start=1</code> marks when T1 begins reading its snapshot. <code>r(x)=0</code> means T1 read value 0
-            from key x. <code>w(y)=1</code> writes value 1 to key y. <code>commit=6</code> is the linear commit point.
+            <code>start=1</code> marks when T1 begins reading its snapshot.{" "}
+            <code>r(x)=0</code> means T1 read value 0 from key x.{" "}
+            <code>w(y)=1</code> writes value 1 to key y. <code>commit=6</code>{" "}
+            is the linear commit point.
           </p>
         </div>
 
@@ -82,24 +89,39 @@ export function Learn() {
           <div className="step-tag">LESSON 3</div>
           <h3>The Three Dependency Edges</h3>
           <p>
-            Conflict Serializability (Adya 1999) models history as a directed graph with 3 edge types:
+            Conflict Serializability (Adya 1999) models history as a directed
+            graph with 3 edge types:
           </p>
           <ul>
-            <li><strong>wr (reads-from):</strong> Ti writes a version, and Tj reads that version.</li>
-            <li><strong>ww (overwrite):</strong> Ti writes a version, and Tj overwrites it next.</li>
-            <li><strong>rw (anti-dependency):</strong> Ti reads an old version before Tj writes a new version.</li>
+            <li>
+              <strong>wr (reads-from):</strong> Ti writes a version, and Tj
+              reads that version.
+            </li>
+            <li>
+              <strong>ww (overwrite):</strong> Ti writes a version, and Tj
+              overwrites it next.
+            </li>
+            <li>
+              <strong>rw (anti-dependency):</strong> Ti reads an old version
+              before Tj writes a new version.
+            </li>
           </ul>
         </div>
 
         <div className="learn-step-card panel">
           <div className="step-tag">LESSON 4</div>
           <h3>What Is a Certificate?</h3>
-          <p>
-            A certificate is a mathematical witness proving the verdict:
-          </p>
+          <p>A certificate is a mathematical witness proving the verdict:</p>
           <ul>
-            <li><strong>Valid Certificate:</strong> The complete mapping of which committed write each read returned.</li>
-            <li><strong>Invalid Certificate:</strong> The exact directed cycle (e.g. <code>T1 -rw-&gt; T2 -rw-&gt; T1</code>) or rule violation witness.</li>
+            <li>
+              <strong>Valid Certificate:</strong> The complete mapping of which
+              committed write each read returned.
+            </li>
+            <li>
+              <strong>Invalid Certificate:</strong> The exact directed cycle
+              (e.g. <code>T1 -rw-&gt; T2 -rw-&gt; T1</code>) or rule violation
+              witness.
+            </li>
           </ul>
         </div>
       </div>

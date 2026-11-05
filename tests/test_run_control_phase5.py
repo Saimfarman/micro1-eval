@@ -13,16 +13,24 @@ def _task(tmp_path):
 
 
 def test_token_quota_is_enforced():
-    quota = Quota(requests_per_minute=10, requests_per_day=10,
-                  tokens_per_minute=2, tokens_per_day=2)
+    quota = Quota(
+        requests_per_minute=10,
+        requests_per_day=10,
+        tokens_per_minute=2,
+        tokens_per_day=2,
+    )
     quota.reserve(tokens=2, now=10)
     with pytest.raises(RuntimeError, match="tokens-per-minute"):
         quota.reserve(tokens=1, now=10)
 
 
 def test_daily_quota_resets_on_new_day():
-    quota = Quota(requests_per_minute=10, requests_per_day=1,
-                  tokens_per_minute=10, tokens_per_day=10)
+    quota = Quota(
+        requests_per_minute=10,
+        requests_per_day=1,
+        tokens_per_minute=10,
+        tokens_per_day=10,
+    )
     quota.reserve(tokens=1, day="2026-11-03")
     with pytest.raises(RuntimeError, match="per-day"):
         quota.reserve(tokens=1, day="2026-11-03")

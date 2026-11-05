@@ -1,4 +1,5 @@
 """Oracle-derived task corpus, deterministic generation, and selection metadata."""
+
 from __future__ import annotations
 
 import hashlib
@@ -31,7 +32,11 @@ def _history_for(module: str, text: str) -> History | RegisterHistory:
 
 
 def _canonical_history(history: History | RegisterHistory) -> str:
-    return print_register(history) if isinstance(history, RegisterHistory) else print_history(history)
+    return (
+        print_register(history)
+        if isinstance(history, RegisterHistory)
+        else print_history(history)
+    )
 
 
 def _difficulty(history: History | RegisterHistory, result: dict) -> dict:
@@ -43,7 +48,9 @@ def _difficulty(history: History | RegisterHistory, result: dict) -> dict:
             "reads": reads,
             "writes": writes,
             "search_space": len(history.operations),
-            "certificate_items": len(result.get("order", result.get("violation", {}).get("operations", []))),
+            "certificate_items": len(
+                result.get("order", result.get("violation", {}).get("operations", []))
+            ),
         }
     if result.get("module") == "M5":
         certificate = result.get("certificate", {})
@@ -58,7 +65,9 @@ def _difficulty(history: History | RegisterHistory, result: dict) -> dict:
                 left.end < right.start
                 for left in history.txns
                 for right in history.txns
-                if left.id != right.id and left.end is not None and right.start is not None
+                if left.id != right.id
+                and left.end is not None
+                and right.start is not None
             ),
             "certificate_items": len(certificate.get("serial_order", [])),
         }
@@ -71,7 +80,9 @@ def _difficulty(history: History | RegisterHistory, result: dict) -> dict:
         "reads": reads,
         "writes": writes,
         "prepared": sum(txn.outcome == "prepared" for txn in history.txns),
-        "certificate_items": len(result.get("edges", result.get("completions", result.get("violations", [])))),
+        "certificate_items": len(
+            result.get("edges", result.get("completions", result.get("violations", [])))
+        ),
     }
 
 
@@ -119,10 +130,13 @@ def _metadata(
     task["expected_certificate"] = rules_result
     task["derivation"] = rules_result.get("derivation", [])
     task["verified_by"] = (
-        ["evalkit.domain.strict_serializability.reference_check",
-         "evalkit.domain.strict_serializability.rules_check",
-         "evalkit.domain.strict_serializability.constraint_check"]
-        if task["module"] == "M5" else list(ORACLES)
+        [
+            "evalkit.domain.strict_serializability.reference_check",
+            "evalkit.domain.strict_serializability.rules_check",
+            "evalkit.domain.strict_serializability.constraint_check",
+        ]
+        if task["module"] == "M5"
+        else list(ORACLES)
     )
     task["canonical_hash"] = _canonical_hash(task["module"], history)
     task["difficulty"] = _difficulty(history, rules_result)
@@ -162,16 +176,30 @@ def validate_tasks(directory: Path, *, strict: bool = False) -> list[str]:
     for task in load_tasks(directory):
         path = task.get("_path", "<unknown>")
         required = (
-            "id", "module", "prompt", "history", "expected_verdict", "control",
-            "status", "verified_by", "expected_certificate", "derivation",
-            "difficulty", "provenance", "canonical_hash",
+            "id",
+            "module",
+            "prompt",
+            "history",
+            "expected_verdict",
+            "control",
+            "status",
+            "verified_by",
+            "expected_certificate",
+            "derivation",
+            "difficulty",
+            "provenance",
+            "canonical_hash",
         )
         for field in required:
             if field not in task:
                 errors.append(f"{path}: missing {field}")
         if strict:
-            for field in ("schema_version", "rubric", "verification_level",
-                          "control_relationship"):
+            for field in (
+                "schema_version",
+                "rubric",
+                "verification_level",
+                "control_relationship",
+            ):
                 if field not in task:
                     errors.append(f"{path}: missing {field} in strict mode")
             if task.get("schema_version") != 2:
@@ -180,9 +208,11 @@ def validate_tasks(directory: Path, *, strict: bool = False) -> list[str]:
                 errors.append(f"{task.get('id')}: invalid verification_level")
             if not isinstance(task.get("rubric"), dict) or not task.get("rubric"):
                 errors.append(f"{task.get('id')}: rubric must be non-empty")
-            if any(token in str(task.get(field, "")).lower()
-                   for field in ("prompt", "history", "derivation")
-                   for token in ("todo", "placeholder", "tbd")):
+            if any(
+                token in str(task.get(field, "")).lower()
+                for field in ("prompt", "history", "derivation")
+                for token in ("todo", "placeholder", "tbd")
+            ):
                 errors.append(f"{task.get('id')}: placeholder content")
         if task.get("status", "final") in {"draft", "placeholder"}:
             errors.append(f"{task.get('id')}: unfinished status")
@@ -201,10 +231,13 @@ def validate_tasks(directory: Path, *, strict: bool = False) -> list[str]:
             history = _history_for(module, task["history"])
             verdict, rules_result = _oracle_result(module, history)
             expected_verifiers = (
-                ["evalkit.domain.strict_serializability.reference_check",
-                 "evalkit.domain.strict_serializability.rules_check",
-                 "evalkit.domain.strict_serializability.constraint_check"]
-                if module == "M5" else list(ORACLES)
+                [
+                    "evalkit.domain.strict_serializability.reference_check",
+                    "evalkit.domain.strict_serializability.rules_check",
+                    "evalkit.domain.strict_serializability.constraint_check",
+                ]
+                if module == "M5"
+                else list(ORACLES)
             )
             if tuple(task["verified_by"]) != tuple(expected_verifiers):
                 errors.append(f"{task['id']}: verified_by must list all three checkers")
@@ -234,18 +267,25 @@ def _register_history(rng: random.Random, count: int, fault: bool) -> RegisterHi
         response = invoke + 1
         if index == count - 1 or rng.random() < 0.55:
             value += 1
-            operations.append(RegisterOp(f"R{index + 1}", "write", invoke, response, value))
+            operations.append(
+                RegisterOp(f"R{index + 1}", "write", invoke, response, value)
+            )
         else:
-            operations.append(RegisterOp(f"R{index + 1}", "read", invoke, response, value))
+            operations.append(
+                RegisterOp(f"R{index + 1}", "read", invoke, response, value)
+            )
     if fault:
         read_indices = [i for i, op in enumerate(operations) if op.kind == "read"]
         if not read_indices:
-            operations[-1] = RegisterOp("R" + str(count), "read", (count - 1) * 2 + 1,
-                                        count * 2, 0)
+            operations[-1] = RegisterOp(
+                "R" + str(count), "read", (count - 1) * 2 + 1, count * 2, 0
+            )
         else:
             index = rng.choice(read_indices)
             op = operations[index]
-            operations[index] = RegisterOp(op.id, "read", op.invoke, op.response, value + 1000)
+            operations[index] = RegisterOp(
+                op.id, "read", op.invoke, op.response, value + 1000
+            )
     return RegisterHistory(0, tuple(operations))
 
 
@@ -294,10 +334,19 @@ def generate_tasks(directory: Path, module: str, count: int, seed: int) -> list[
             "status": "generated",
             "control_relationship": {"kind": "core", "paired_with": None},
         }
-        _metadata(task, history, verdict, rules_result, source="seeded-generator",
-                  seed=seed, generator="evalkit.tasks.generate_tasks")
+        _metadata(
+            task,
+            history,
+            verdict,
+            rules_result,
+            source="seeded-generator",
+            seed=seed,
+            generator="evalkit.tasks.generate_tasks",
+        )
         path = directory / f"{task_id}.json"
-        path.write_text(json.dumps(task, indent=2, sort_keys=False) + "\n", encoding="utf-8")
+        path.write_text(
+            json.dumps(task, indent=2, sort_keys=False) + "\n", encoding="utf-8"
+        )
         created.append(path)
     return created
 
@@ -311,15 +360,22 @@ def enrich_frozen_tasks(directory: Path, source: str = "frozen-v1") -> list[Path
         history = _history_for(module, task["history"])
         verdict, rules_result = _oracle_result(module, history)
         task = _metadata(
-            task, history, verdict, rules_result, source=source,
+            task,
+            history,
+            verdict,
+            rules_result,
+            source=source,
             seed=task.get("provenance", {}).get("seed"),
             generator=task.get("provenance", {}).get("generator", "frozen-corpus"),
         )
         task.setdefault("status", "final")
-        task.setdefault("control_relationship", {
-            "kind": "standalone-control" if task.get("control") else "core",
-            "paired_with": None,
-        })
+        task.setdefault(
+            "control_relationship",
+            {
+                "kind": "standalone-control" if task.get("control") else "core",
+                "paired_with": None,
+            },
+        )
         path.write_text(json.dumps(task, indent=2) + "\n", encoding="utf-8")
         updated.append(path)
     return updated
@@ -344,8 +400,15 @@ def create_m4_frozen_tasks(directory: Path) -> list[Path]:
                 "paired_with": paired_with,
             },
         }
-        _metadata(task, history, verdict, rules_result, source="phase-2-frozen",
-                  seed=410, generator="evalkit.tasks.create_m4_frozen_tasks")
+        _metadata(
+            task,
+            history,
+            verdict,
+            rules_result,
+            source="phase-2-frozen",
+            seed=410,
+            generator="evalkit.tasks.create_m4_frozen_tasks",
+        )
         path = directory / f"{task_id}.json"
         path.write_text(json.dumps(task, indent=2) + "\n", encoding="utf-8")
         created.append(path)

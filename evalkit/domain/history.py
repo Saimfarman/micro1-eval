@@ -8,6 +8,7 @@ Two forms share one notation:
 Aborted:   timed ``abort=<t>``  ordered ``abort``
 In doubt:  timed ``prepared commit_ts=<t>``  (timed histories only)
 """
+
 from __future__ import annotations
 
 import re
@@ -32,7 +33,9 @@ class Txn:
     ops: tuple
     outcome: str  # "commit" | "abort" | "prepared"
     start: Optional[int] = None  # timed histories only
-    end: Optional[int] = None  # commit ts, abort ts (timed) or proposed commit ts (prepared)
+    end: Optional[int] = (
+        None  # commit ts, abort ts (timed) or proposed commit ts (prepared)
+    )
 
     def writes(self, key: str) -> list:
         return [o.value for o in self.ops if o.kind == "w" and o.key == key]
@@ -157,9 +160,11 @@ def parse(text: str) -> History:
 # Printing
 # ----------------------------------------------------------------------------
 def print_history(h: History, note: bool = True) -> str:
-    head = f"Keys: {', '.join(h.keys)}. Initial: " + ", ".join(
-        f"{k}={h.initial[k]}" for k in h.keys
-    ) + "."
+    head = (
+        f"Keys: {', '.join(h.keys)}. Initial: "
+        + ", ".join(f"{k}={h.initial[k]}" for k in h.keys)
+        + "."
+    )
     if note:
         head += " Every written value is unique per key."
     out = [head]
@@ -219,7 +224,9 @@ def validate(h: History) -> None:
             if t.start is not None:
                 raise HistoryError(f"{t.id}: ordered histories have no start times")
             if t.outcome == "prepared":
-                raise HistoryError(f"{t.id}: in-doubt transactions need a timed history")
+                raise HistoryError(
+                    f"{t.id}: in-doubt transactions need a timed history"
+                )
             if t.outcome == "commit":
                 if t.end is None:
                     raise HistoryError(f"{t.id}: commit needs a timestamp")

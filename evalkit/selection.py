@@ -1,4 +1,5 @@
 """Deterministic task selection and provenance manifests."""
+
 from __future__ import annotations
 
 import hashlib
@@ -44,13 +45,22 @@ def _balanced(tasks: list[dict], count: int, rng: random.Random) -> list[dict]:
     return chosen
 
 
-def _mark(task: dict, *, task_id: str, control: bool, paired_with: str | None,
-          split: str, spec: SelectionSpec) -> dict:
+def _mark(
+    task: dict,
+    *,
+    task_id: str,
+    control: bool,
+    paired_with: str | None,
+    split: str,
+    spec: SelectionSpec,
+) -> dict:
     result = {key: value for key, value in task.items() if key != "_path"}
     result["id"] = task_id
     result["control"] = control
     result["control_relationship"] = {
-        "kind": "matched" if paired_with else ("standalone-control" if control else "core"),
+        "kind": "matched"
+        if paired_with
+        else ("standalone-control" if control else "core"),
         "paired_with": paired_with,
     }
     result["provenance"] = {
@@ -83,21 +93,42 @@ def select_tasks(directory: Path, spec: SelectionSpec) -> Path:
     selected = _balanced(candidates, spec.count + spec.control_count, rng)
     selected_hashes = {task["canonical_hash"] for task in selected}
     held_out = [
-        task for task in candidates
-        if task["canonical_hash"] not in selected_hashes
-    ][:spec.held_out_count]
+        task for task in candidates if task["canonical_hash"] not in selected_hashes
+    ][: spec.held_out_count]
 
     records: list[dict] = []
-    for index, task in enumerate(selected[:spec.count]):
-        records.append(_mark(task, task_id=f"T{index + 1:02d}", control=False,
-                             paired_with=None, split="final", spec=spec))
-    for index, task in enumerate(selected[spec.count:]):
+    for index, task in enumerate(selected[: spec.count]):
+        records.append(
+            _mark(
+                task,
+                task_id=f"T{index + 1:02d}",
+                control=False,
+                paired_with=None,
+                split="final",
+                spec=spec,
+            )
+        )
+    for index, task in enumerate(selected[spec.count :]):
         paired = records[index % len(records)]["id"]
-        records.append(_mark(task, task_id=f"C{index + 1:02d}", control=True,
-                             paired_with=paired, split="final", spec=spec))
+        records.append(
+            _mark(
+                task,
+                task_id=f"C{index + 1:02d}",
+                control=True,
+                paired_with=paired,
+                split="final",
+                spec=spec,
+            )
+        )
     records.extend(
-        _mark(task, task_id=f"H{index + 1:02d}", control=False, paired_with=None,
-              split="held-out", spec=spec)
+        _mark(
+            task,
+            task_id=f"H{index + 1:02d}",
+            control=False,
+            paired_with=None,
+            split="held-out",
+            spec=spec,
+        )
         for index, task in enumerate(held_out)
     )
 
@@ -117,8 +148,11 @@ def select_tasks(directory: Path, spec: SelectionSpec) -> Path:
             for task in load_tasks(pilot_generated)
         ],
         "tasks": [
-            {"id": task["id"], "canonical_hash": task["canonical_hash"],
-             "split": task["provenance"]["selection_split"]}
+            {
+                "id": task["id"],
+                "canonical_hash": task["canonical_hash"],
+                "split": task["provenance"]["selection_split"],
+            }
             for task in records
         ],
     }
