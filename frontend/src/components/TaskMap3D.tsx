@@ -263,7 +263,7 @@ export function TaskMap3D({
   }, [points, onUnsupported, onSelectPoint]);
 
   return (
-    <div className="task-map-canvas-wrapper">
+    <div className="task-map-wrapper">
       <div ref={host} className="task-map-host" />
 
       {/* Floating Hover Card */}

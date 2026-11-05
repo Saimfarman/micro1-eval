@@ -34,7 +34,7 @@ export function TaskCard({ task }: { task: Task }) {
 
       <div className="task-card-body">
         <h3 className="task-card-title">{task.control ? "Matched Metamorphic Control" : "Core Benchmark Task"}</h3>
-        <p className="task-preview-desc">
+        <p className="task-desc">
           {ops} operations · {keys} keys accessed · {reads} reads / {writes} writes
         </p>
       </div>

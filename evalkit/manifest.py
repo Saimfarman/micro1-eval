@@ -3,8 +3,18 @@ import hashlib
 import json
 from pathlib import Path
 
+TEXT_EXTS = {
+    ".json", ".yaml", ".yml", ".txt", ".toml", ".py", ".md",
+    ".html", ".css", ".js", ".jsonl", ".ts", ".tsx", ".svg"
+}
+
 def sha256(path: Path) -> str:
-    return hashlib.sha256(path.read_bytes()).hexdigest()
+    data = path.read_bytes()
+    # Normalize CRLF to LF for text files so that git checkouts across
+    # Windows (CRLF) and Linux (LF, e.g. CI) produce identical cryptographic digests
+    if path.suffix.lower() in TEXT_EXTS:
+        data = data.replace(b"\r\n", b"\n")
+    return hashlib.sha256(data).hexdigest()
 
 def build_manifest(root: Path) -> dict:
     files = {}
@@ -13,7 +23,9 @@ def build_manifest(root: Path) -> dict:
             for path in base.rglob("*"):
                 if (path.is_file() and path.name != "MANIFEST.json"
                         and not path.name.endswith(".migrate.lock")
-                        and path.suffix not in {".sqlite", ".sqlite3", ".db"}):
+                        and path.suffix not in {".sqlite", ".sqlite3", ".db"}
+                        and "__pycache__" not in path.parts
+                        and not path.name.endswith(".pyc")):
                     files[str(path.relative_to(root)).replace("\\", "/")] = sha256(path)
     for path in (root / "eval.config.yaml", root / "models.yaml"):
         if path.exists():
@@ -26,14 +38,16 @@ def build_manifest(root: Path) -> dict:
                  root / "frontend" / "dist"):
         if base.exists():
             for path in base.rglob("*"):
-                if path.is_file():
+                if (path.is_file() and "__pycache__" not in path.parts
+                        and not path.name.endswith(".pyc")):
                     files[str(path.relative_to(root)).replace("\\", "/")] = sha256(path)
     return {"version": 2, "files": dict(sorted(files.items()))}
 
 def write_manifest(root: Path) -> Path:
     path = root / "results" / "MANIFEST.json"
     path.parent.mkdir(exist_ok=True)
-    path.write_text(json.dumps(build_manifest(root), indent=2) + "\n", encoding="utf-8")
+    manifest_data = json.dumps(build_manifest(root), indent=2) + "\n"
+    path.write_bytes(manifest_data.encode("utf-8"))
     return path
 
 def verify_manifest(root: Path) -> list[str]:
@@ -79,7 +93,14 @@ def verify_attempt_hashes(root: Path) -> list[str]:
             if not task:
                 errors.append(f"attempt references unknown task: {path.relative_to(root)}")
                 continue
-            if record.get("task_hash") != sha256(Path(task["_path"])):
+            th = record.get("task_hash")
+            task_path = Path(task["_path"])
+            task_bytes = task_path.read_bytes()
+            valid_hashes = {
+                hashlib.sha256(task_bytes.replace(b"\r\n", b"\n")).hexdigest(),
+                hashlib.sha256(task_bytes.replace(b"\r\n", b"\n").replace(b"\n", b"\r\n")).hexdigest(),
+            }
+            if th not in valid_hashes:
                 errors.append(f"attempt task hash mismatch: {path.relative_to(root)}")
         except (KeyError, json.JSONDecodeError):
             errors.append(f"invalid attempt record: {path.relative_to(root)}")

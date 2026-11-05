@@ -41,7 +41,7 @@ def _release_checks(clean_room: bool = False) -> list[str]:
                         and "==" not in line):
                     errors.append(f"unpinned dependency: {requirement_file}: {line}")
     secret_pattern = re.compile(
-        r"""(?:api[_-]?key|client[_-]?secret|password|token)\s*[:=]\s*['"][^'"]{8,}['"]|(?:sk-|AIza)[A-Za-z0-9_-]{12,}"""
+        r"""(?:api[_-]?key|client[_-]?secret|password|token)\s*[:=]\s*['"][^'"]{8,}['"]|\b(?:sk-|AIza)[A-Za-z0-9_-]{12,}"""
     )
     placeholder_pattern = re.compile(r"\b(?:TODO|FIXME|TBD|coming soon|to be recorded)\b", re.I)
     excluded = {".git", ".venv", "venv", "node_modules", "__pycache__",

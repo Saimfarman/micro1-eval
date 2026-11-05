@@ -291,7 +291,7 @@ export function FailureMap() {
 
       {/* Selected Task Inspection Card (DOM overlay, not canvas) */}
       {selectedPoint && (
-        <div className="task-inspection-card panel">
+        <div className="task-inspect-card panel">
           <div className="inspection-header">
             <div className="inspection-title">
               <span className="badge" style={{ background: moduleColor(selectedPoint.task.module), color: "#042f2e" }}>
