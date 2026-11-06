@@ -1,19 +1,18 @@
 # Task map visualization
 
-The dashboard provides a restrained task topology view at `#/failure-map`. It uses
-shared deterministic layout data for three equivalent presentations:
+The dashboard Failure Map (`#/failure-map`) presents task/run information in
+three forms:
 
-- Three.js points for the interactive 3D view
-- CSS/SVG-like 2D points for environments without WebGL
-- An accessible HTML table containing every plotted value
+- Interactive Three.js 3D view
+- 2D view without WebGL
+- Semantic HTML table with the underlying records
 
-The map uses module, model, operation/key difficulty, control status, and
-failure-category metadata when present from the oracle-derived task corpus. It
-deliberately does not label expected invalid
-tasks as model failures. Model failure claims require completed attempts and
-are reserved for the results/failure analysis surfaces.
+Visualization metadata comes from task records and saved evaluation data.
+Expected-invalid tasks are not labelled as model failures; failure claims
+require an actual saved attempt and grade.
 
-The 3D view caps pixel ratio, adapts geometry for large datasets, disposes
-geometry/materials on unmount, supports pause/reset, and reports WebGL context
-loss. Reduced-motion preferences disable rotation; the 2D and table views
-remain fully usable without motion or WebGL.
+The 3D view supports pause/reset, limits rendering scale, disposes graphics
+resources when unmounted, and handles WebGL loss. Reduced-motion preferences
+are respected. The 2D and table views remain usable without WebGL or animation.
+See [ACCESSIBILITY.md](ACCESSIBILITY.md) for the UI accessibility target and
+automated checks.

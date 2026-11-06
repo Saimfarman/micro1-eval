@@ -72,17 +72,6 @@ export function Grader() {
           </span>
         </article>
 
-        <article className="metric-card">
-          <div className="metric-header">
-            <span className="metric-label">HUMAN REVIEW</span>
-            <span className="metric-tag">Disclosed</span>
-          </div>
-          <strong className="metric-value">Unassisted</strong>
-          <span className="metric-desc">
-            {reliability.note ??
-              "Fully automated without subjective human bias"}
-          </span>
-        </article>
       </section>
 
       {/* The 4 Criteria Pipeline */}

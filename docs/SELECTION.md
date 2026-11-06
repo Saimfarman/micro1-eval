@@ -1,32 +1,22 @@
 # Task selection rules
 
-Phase 2 freezes the checked-in JSON files under `tasks/`. The source of truth
-for every expected verdict, certificate, and derivation is the three oracle
-implementations; task files are rejected if any stored value differs.
+The checked-in task JSON files under `tasks/` are the frozen evaluation
+corpus. The validator recomputes expected verdicts, certificates, derivations,
+and canonical hashes using the appropriate checker implementations. Stored
+expectations that disagree with recomputation are rejected.
 
-## Chronology and seeds
+Generated tasks are deterministic for a fixed module, count, and seed, and are
+written outside the frozen corpus. Canonical identity is SHA-256 over module
+name and canonical history; duplicate task histories are rejected.
 
-- The original frozen corpus is `frozen-v1` and retains its task IDs.
-- Phase 1/2 M4 additions use seed `410`.
-- Held-out generated tasks use an explicit caller-supplied seed and are written
-  under ignored `generated-tasks/`.
-- Canonical identity is SHA-256 of the module name and canonical history text.
-  Duplicate canonical hashes are rejected.
+Every eligible task must use a supported module (M1–M5), parse using the
+module's format, have a final/generated status, and carry the required
+provenance and oracle-derived metadata. Draft or placeholder tasks are not
+eligible.
 
-## Eligibility
+Core tasks and controls remain distinct. Matched controls identify their paired
+core task; standalone controls are labelled as such. Selection does not
+silently replace unavailable module/verdict categories with another category.
+The actual checked-in corpus is the authority for counts and composition.
 
-Every eligible task must be final or generated, have a supported module, parse
-under that module's strict parser, and include provenance, difficulty metrics,
-oracle-derived expected certificate, derivation, and canonical hash. Placeholder
-and draft tasks are never eligible.
-
-## Balance and controls
-
-Selection is balanced across M1-M5 and valid/invalid/undetermined verdicts
-whenever the available corpus supports the category. Controls are retained
-separately from core tasks and are never silently substituted for core tasks.
-Matched controls carry a `control_relationship` with their paired core ID.
-Standalone historical controls remain explicitly labelled as such.
-
-Task generation is deterministic for a fixed module, count, and seed. Live
-providers are not called while generating or validating tasks.
+Generation and validation are offline and do not call model providers.

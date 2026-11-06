@@ -74,9 +74,8 @@ export function Reproduce() {
         </div>
         <h1>Reproduce Evaluation Results Locally</h1>
         <p className="lede">
-          A core requirement of the micro1 evaluation hackathon is that results
-          must be 100% reproducible offline without API keys, remote databases,
-          or external network connectivity.
+          Evaluation results can be reproduced locally without API keys,
+          remote databases, or external network connectivity.
         </p>
       </div>
 

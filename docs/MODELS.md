@@ -1,9 +1,11 @@
-# Formal definitions (D1 to D4)
+# Formal definitions (D1 to D5)
 
-These definitions are the single source of truth for every checker, grader and prompt in this project.
-They follow the standard formulations in Berenson et al. (1995) and Adya (1999). Do not change them
-without recording the reason in docs/DECISIONS.md and re-running the whole test suite.
-Every task prompt includes the relevant definition verbatim.
+These definitions are the rule source for the checkers and grader. D1 to D3
+follow the formulations cited in Berenson et al. (1995) and Adya (1999). D4
+and D5 describe the implemented linearizability and strict-serializability
+modules. Do not change definitions without recording the reason in
+`docs/DECISIONS.md` and rerunning the test suite. Task prompts identify the
+module and history; the expected answer is always computed by checker code.
 
 **Basics.** A store has keys, each with an initial value. Every value written to a key in a history differs from every other value of that key, the initial one included, so a read value identifies exactly one writer (or the initial state). A transaction has an id, a list of operations in program order (`r(k)=v` or `w(k)=v`) and an outcome: committed (with a commit timestamp), aborted, or prepared (in doubt, see D3). Timed histories also give each transaction a start timestamp earlier than its end timestamp. All timestamps in one history are distinct integers, so there are no ties. The **version installed** on key k by a committed transaction is the value of its last write to k; its earlier writes to k are **intermediate**. The **version order** of a key is the initial version followed by the installed versions in order of their writers’ commit timestamps. A read **reads from** the transaction that wrote the value it returned.
 
@@ -27,7 +29,21 @@ Equivalent view, used by two of the checkers: some serial order of the committed
 
 **D3. In-doubt transactions.** A prepared transaction either committed at its stated timestamp or aborted. A **completion** fixes every in-doubt transaction as committed or aborted. A history with k in-doubt transactions is valid if all 2^k completions are valid, invalid if all are invalid, and **undetermined** otherwise. Core tasks use at most two in-doubt transactions; the extended study at most three.
 
-**D4 (optional module). Linearizability of one register.** Operations have invocation and response times (distinct integers), every write has a unique value, and the initial value is 0. A history is linearizable iff all operations can be placed in one total order that respects real time (if a responds before b is invoked, a comes first) and is legal for a register (each read returns the latest earlier write, or the initial value). A certificate of violation is a set of operations that is closed under reads-from (each read in it comes with its writer, or the initial state) and is itself not linearizable, checked exhaustively; such a set proves the whole history is not linearizable.
+**D4 (M4). Linearizability of one register.** Operations have invocation and response times (distinct integers), every write has a unique value, and the initial value is 0. A history is linearizable iff all operations can be placed in one total order that respects real time (if a responds before b is invoked, a comes first) and is legal for a register (each read returns the latest earlier write, or the initial value). A certificate of violation is a set of operations that is closed under reads-from (each read in it comes with its writer, or the initial state) and is itself not linearizable, checked exhaustively; such a set proves the whole history is not linearizable.
+
+**D5 (M5). Strict serializability of timed transactions.** Ignore aborted
+transactions and reject histories that still contain prepared transactions.
+A history is valid iff there is a serial order of all committed transactions
+that reproduces every observed read and respects real-time precedence: if
+transaction T1 ends before T2 starts, T1 must precede T2 in the serial order.
+The initial store supplies values read before any preceding write. A valid
+certificate contains such a serial order; an invalid result means no such
+order exists. The M5 checker implementations are in
+`evalkit.domain.strict_serializability`.
 
 
-**Source fidelity.** D1 to D3 follow the standard formulations in Berenson et al. (1995) and Adya (1999) (see 20.16). A reviewer should compare them with those sources and record any difference in `docs/DECISIONS.md` before the definitions are frozen.
+**Source fidelity.** D1 to D3 follow the standard formulations in Berenson et
+al. (1995) and Adya (1999) (see the source discussion in this document's
+history). The project-specific M4 and M5 definitions describe the implemented
+task/checker scope and should not be read as claims about every form of
+linearizability or strict serializability.

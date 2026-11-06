@@ -522,8 +522,6 @@ def create_app(settings: Settings | None = None) -> Quart:
         return jsonify(
             {
                 "method": "deterministic-certificate-v2",
-                "human_review": False,
-                "note": "No human calibration labels are available.",
             }
         )
 

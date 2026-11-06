@@ -6,7 +6,8 @@
   "scripts": {
     "build": "vite build",
     "typecheck": "tsc --noEmit",
-    "accessibility": "node frontend/a11y-check.mjs"
+    "accessibility": "node frontend/a11y-check.mjs",
+    "bundle-check": "node frontend/bundle-check.mjs"
   },
   "dependencies": {
     "@fontsource/inter": "^5.3.0",

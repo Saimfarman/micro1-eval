@@ -1,93 +1,164 @@
-# Transaction History Eval
+# Transaction History Evaluation
 
-## 1. Short description
+An offline-first benchmark for evaluating whether AI models can reason about
+database transaction histories. It includes a formal domain core, oracle-derived
+tasks, a reproducible evaluation and grading harness, a Quart API, a rebuildable
+SQLite projection, and a React dashboard.
 
-This is an offline-first evaluation of model reasoning about database transaction
-histories. It covers snapshot isolation (M1), serializability (M2), in-doubt
-transactions (M3), linearizability (M4), and strict serializability (M5), with
-independent reference, rules, and constraint checker paths where supported.
-Raw evidence is immutable and the SQLite database is only a rebuildable projection.
-The bundled mock run is a reproducibility fixture, not a commercial-model claim.
+The supported modules are:
 
-## 2. Video walkthrough link
+- **M1 — Snapshot isolation**
+- **M2 — Serializability**
+- **M3 — In-doubt transactions**
+- **M4 — Register linearizability**
+- **M5 — Strict serializability**
 
-Video: optional and not supplied yet. Add the final link here when available.
-The walkthrough script is in [docs/VIDEO_SCRIPT.md](docs/VIDEO_SCRIPT.md).
+The project tests rule application and certificates on synthetic histories. It
+does not claim to measure database performance, vendor configuration, predicate
+reads, or complete distributed protocols.
 
-## 3. Domain and expertise
+## GitHub repository
 
-The domain is computer science, specifically transaction-history consistency
-definitions. Claims are limited to the explicit definitions in
-[docs/MODELS.md](docs/MODELS.md) and the published vectors in
-[docs/VECTORS.md](docs/VECTORS.md).
+[Saimfarman/micro1-eval](https://github.com/Saimfarman/micro1-eval)
 
-## 4. What it tests and why it matters
+## Project video
 
-Tasks test whether a model can apply a formal rule to a concrete history and
-provide a verdict. They do not measure performance, vendor configuration,
-predicate reads, or full distributed protocols.
+Video walkthrough: not available yet. Add the published video URL here when it
+is ready.
 
-## 5. Setup and run instructions
+## What is included
 
-Requires Python 3.12+, Node.js 22+, and npm. From the repository root:
+- Independent checker paths where supported: O1 reference, O2 rules, and O3
+  constraint solving for M1–M4; M5 has its own reference, rules, and
+  constraint-checker implementations.
+- Frozen and generated tasks whose expected answers are derived from checker
+  code, never hand-written.
+- A CLI for validation, mock/live evaluation, grading, replay, reports,
+  integrity checks, reproduction, and SQLite ingest.
+- A local Quart API and dashboard pages for overview, modules, tasks, results,
+  failures, providers, runs, grading, methodology, reproduction, settings, and
+  accessibility.
+- Three.js task/failure visualization with 2D and table alternatives.
 
-```text
-python -m evalkit validate-tasks
-python -m evalkit preflight
-python -m evalkit run
-python -m evalkit reproduce
-python -m evalkit ingest
+The bundled `mock` provider is a deterministic pipeline fixture, not a
+commercial-model result. Live providers are optional, make external requests,
+and may incur cost. Do not select one unless you intentionally approve a live
+run and have configured local credentials.
+
+## Requirements
+
+- Python 3.12 or newer
+- Node.js 22 or newer and npm
+- Windows PowerShell examples below; the Python and npm commands also work on
+  other supported platforms with equivalent activation syntax
+
+## Run the application
+
+Run these commands from the repository root in **PowerShell**.
+
+### 1. Install dependencies
+
+```powershell
+py -3.12 -m venv .venv
+.\.venv\Scripts\Activate.ps1
+python -m pip install -r requirements.txt -r requirements-dev.txt
 npm ci
+```
+
+If PowerShell blocks virtual-environment activation, use the venv interpreter
+directly instead:
+
+```powershell
+.\.venv\Scripts\python.exe -m pip install -r requirements.txt -r requirements-dev.txt
+```
+
+### 2. Validate and build the frontend
+
+```powershell
+python -m evalkit validate-tasks
 npm run typecheck
 npm run build
+```
+
+### 3. Build the local results index
+
+```powershell
+python -m evalkit ingest
+```
+
+Ingest validates local evidence and builds or updates `results/index.sqlite3`.
+It does not call a model provider. The SQLite database is derived and can be
+rebuilt; task and result files remain the evidence source.
+
+### 4. Start the backend and dashboard
+
+In the first PowerShell terminal:
+
+```powershell
+.\.venv\Scripts\Activate.ps1
 python -m backend.serve
 ```
 
-Run `python -m evalkit ingest` before serving indexed results, then open
-`http://127.0.0.1:5000`. The mock path needs no API key or network. An
-OpenAI-compatible live provider is opt-in through `.env` variables documented in
-`.env.example`; do not commit secrets. Live runs are disabled in the web service
-unless explicitly enabled in server settings.
+Open [http://127.0.0.1:5000](http://127.0.0.1:5000). Quart serves both the API
+and the built dashboard. To access the API health response, open
+[http://127.0.0.1:5000/api/health](http://127.0.0.1:5000/api/health).
 
-## 6. Models tested and results
+For frontend development with Vite, keep the backend running in the first
+terminal and run this in a second one:
 
-The included result is the deterministic `mock` provider fixture. Run
-`python -m evalkit report` after a live run to regenerate statistics; no
-commercial model result is fabricated here.
+```powershell
+npm exec vite -- --host 127.0.0.1
+```
 
-## 7. Failure analysis
+Then open [http://127.0.0.1:5173](http://127.0.0.1:5173). Vite proxies `/api`
+requests to the backend on port 5000. The regular production-style workflow is
+`npm run build` followed by the Quart server.
 
-The deterministic grader verifies certificates, not only verdict text. It records
-wrong verdict, wrong certificate, calculation error, format violation,
-incomplete answer, and refusal categories. Raw outputs are stored under
-`results/runs/`; replay grades them without contacting a model. No human review
-was available, so no human-confirmed failure analysis is claimed.
+## Common evaluation commands
 
-## 8. Prior work and sources
+These commands use only local data unless a live provider is explicitly
+selected:
 
-The formal definitions cite Berenson et al. (1995) and Adya (1999) in
-[docs/MODELS.md](docs/MODELS.md). The domain core and vectors came in the
-starter pack; the harness, backend, and dashboard around them are original
-integration work. See [docs/DISCLOSURES.md](docs/DISCLOSURES.md).
+```powershell
+python -m evalkit preflight
+python -m evalkit run
+python -m evalkit verify
+python -m evalkit replay
+python -m evalkit report
+python -m evalkit reproduce
+```
 
-## Limitations and threats to validity
-
-The bundled mock provider is only a pipeline fixture. A live study is optional
-and requires owner-supplied provider keys, a frozen model/date table, and
-repetitions. Keys remain local in `.env`; the browser never receives them.
+`python -m evalkit run` defaults to the offline `mock` provider. Selecting
+`groq`, `gemini`, `openrouter`, `mistral`, or `azure-openai` can make external
+requests and incur cost. Provider credentials belong only in the local,
+git-ignored `.env`; see [.env.example](.env.example) for variable names.
+Never put credentials in source files or the browser.
 
 ## Repository map
 
-- `evalkit/domain/`: parser and separately selectable M1–M5 checkers
-- `evalkit/`: tasks, provider interface, grading, runner, manifest, replay, CLI
-- `tasks/`: oracle-derived frozen task instances
-- `backend/`: Quart API, migrations, derived SQLite ingest, and static server
-- `frontend/dist/`: shipped offline dashboard
+- `evalkit/domain/` — history parsers and M1–M5 checking logic
+- `evalkit/` — task generation, providers, runner, grading, scoring, manifests,
+  replay, reports, and CLI
+- `tasks/` — frozen oracle-derived task records
+- `results/` — run evidence, reports, and manifests; SQLite is a derived index
+- `backend/` — Quart API, static serving, schema, ingest, and migrations
+- `frontend/src/` — React, TypeScript, and Three.js dashboard
+- `frontend/dist/` — built frontend assets served by Quart
+- `docs/` — current architecture, domain, API, operations, and evidence
+  documentation
 
-## Release and operations
+See [docs/ARCHITECTURE.md](docs/ARCHITECTURE.md) for the architecture diagram,
+[docs/MODELS.md](docs/MODELS.md) for the formal rules, and
+[docs/API.md](docs/API.md) for HTTP and event-stream contracts.
 
-The release gates and evidence policy are documented in
-[docs/RELEASE.md](docs/RELEASE.md). Operator procedures for quotas, migrations,
-backups, logs, live-run approval, and incident recovery are in
-[docs/OPERATIONS.md](docs/OPERATIONS.md). API and SSE contracts are in
-[docs/API.md](docs/API.md).
+## Results and limitations
+
+The checked-in mock run demonstrates the pipeline only. It is not a measured
+commercial-model result. No human review or human-confirmed failure labels are
+claimed. Any reported live study must be based on actual saved run evidence and
+record its model, provider, configuration, date, and artifact hashes.
+
+See [docs/RELEASE.md](docs/RELEASE.md),
+[docs/OPERATIONS.md](docs/OPERATIONS.md), and
+[docs/DISCLOSURES.md](docs/DISCLOSURES.md) for release, operation, and
+authorship/evidence notes.

@@ -1,16 +1,29 @@
 # Quart backend
 
-The backend is a read-only Quart application created by `create_app(Settings)`.
-It reads the manifest-verified SQLite index when available and falls back to
-the authoritative task files for task browsing. Run `python -m evalkit ingest`
-before serving indexed run data.
+The backend is created by `create_app(Settings)` in `backend/app.py` and is
+started locally with:
 
-The API exposes health, metadata, OpenAPI, tasks and task detail, modules,
-models, providers, runs, summaries, paginated attempts and attempt detail,
-failures, grader reliability, manifests, migrations, integrity, and versioned
-SSE event reads. Invalid pagination, missing resources, unauthorized live
-requests, and disabled live runs return RFC-style `about:blank` problem
-objects. Responses include request IDs, CSP, no-sniff, frame, referrer,
-permissions, and cache headers. Provider credentials are never loaded into or
-returned by the browser. Live-run creation and cancellation are disabled by
-default and require an explicit server setting and optional bearer gate.
+```powershell
+python -m evalkit ingest
+python -m backend.serve
+```
+
+By default it listens on `127.0.0.1:5000`. Quart serves both the `/api/*`
+endpoints and the built dashboard from `frontend/dist`. Build that static
+bundle with `npm run build`. During frontend development, Vite can serve the
+source UI and proxy `/api` to the backend.
+
+The API reads the SQLite projection for run and result data. Task listing can
+fall back to the authoritative `tasks/*.json` files when no indexed task rows
+are available. Rebuild the projection with `python -m evalkit ingest`.
+
+The API includes health, metadata, OpenAPI, integrity, task and module data,
+models, providers, runs, summaries, attempts, failures, grader reliability,
+manifests, and migration-version endpoints. Live-run create/cancel/SSE
+operations are disabled by default and require explicit server configuration.
+Errors use JSON problem responses; responses also receive request IDs and
+security/cache headers. Provider credentials remain server-side and must not
+be returned to browser clients.
+
+See [API.md](API.md) for routes and payload contracts and [OPERATIONS.md](OPERATIONS.md)
+for local run instructions.

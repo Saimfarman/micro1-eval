@@ -1,24 +1,27 @@
 # Reproducibility and failure analysis
 
-Raw attempts are immutable evidence records. Each record contains a
-`content_sha256` over its complete JSON payload and the SHA-256 of the task
-file used to create it. `verify` checks both hashes, the file manifest, stored
-grades, and any stored summary.
+The authoritative artifacts are frozen tasks and saved run/evaluation files.
+Each raw attempt includes a content hash and the hash of its source task file.
+`results/MANIFEST.json` records hashes for covered task and result files, along
+with selected configuration and runtime inputs.
 
-`replay` reads only local task and raw-attempt files. It never calls a provider.
-`verify_results` recomputes every grade and compares it with `grades.jsonl`.
-Reports can therefore be regenerated from the evidence files in a clean
-environment without API keys.
+The local CLI supports:
 
-The rebuildable SQLite projection is created with `python -m evalkit ingest`;
-schema migrations are applied automatically and never replace source files.
-`python -m evalkit preflight` checks the offline release contract, and
-`python -m evalkit package` creates a clean-room archive without keys, caches,
-databases, or prior archives. The package can be unpacked in a fresh
-environment and run through the mock workflow without network access.
+```powershell
+python -m evalkit verify
+python -m evalkit replay
+python -m evalkit reproduce
+```
 
-Failed attempts receive conservative machine-derived tags such as
-`malformed-json`, `wrong-verdict`, and `invalid-certificate`, plus a suggestion
-and a `human_review` object. The default status is `not_requested` or
-`not_reviewed`; the system never claims a human reviewed or confirmed a
-failure.
+Verification checks manifest and attempt/task integrity and stored results.
+Replay grades saved raw responses without contacting a provider. Reproduction
+verifies local evidence and regenerates the report from it. These operations
+do not make model API calls.
+
+`python -m evalkit ingest` applies SQLite migrations and builds the
+rebuildable dashboard projection; it never replaces source evidence.
+`python -m evalkit preflight` checks the offline release contract.
+
+Failures are classified from the actual response and grade. The human-review
+field remains unreviewed unless a review is performed and recorded. Machine
+labels are not human-confirmed findings.

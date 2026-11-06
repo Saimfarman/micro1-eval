@@ -65,9 +65,8 @@ export function LiveRun() {
         <div>
           <h3>Safety Policy: Web-Initiated Live Runs Are Protected</h3>
           <p className="muted">
-            In accordance with hackathon reproducibility rules, live model
-            requests cannot be dispatched directly from an unauthenticated web
-            client. Live runs are triggered through the CLI (
+            Live model requests cannot be dispatched directly from an
+            unauthenticated web client. Live runs are triggered through the CLI (
             <code>python -m evalkit run</code>) or an authorized token header.
           </p>
         </div>

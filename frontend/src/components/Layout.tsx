@@ -324,17 +324,35 @@ const navSections: { category: string; items: NavItem[] }[] = [
   },
 ];
 
+function sectionIndexForHash(hash: string): number {
+  const index = navSections.findIndex((section) =>
+    section.items.some((item) =>
+      item.href === "#/"
+        ? hash === "" || hash === "#" || hash === "#/" || hash === "#/overview"
+        : hash.startsWith(item.href),
+    ),
+  );
+  return index < 0 ? 0 : index;
+}
+
 export function Layout({ children }: { children: ReactNode }) {
   const [theme, setTheme] = useState<Theme>(getInitialTheme);
   const [integrityOk, setIntegrityOk] = useState<boolean | null>(null);
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
+  const [sidebarExpanded, setSidebarExpanded] = useState(false);
   const [currentHash, setCurrentHash] = useState(
     () => window.location.hash || "#/",
+  );
+  const [activeSection, setActiveSection] = useState(() =>
+    sectionIndexForHash(window.location.hash || "#/"),
   );
 
   useEffect(() => {
     const handleHash = () => {
-      setCurrentHash(window.location.hash || "#/");
+      const hash = window.location.hash || "#/";
+      setCurrentHash(hash);
+      setActiveSection(sectionIndexForHash(hash));
+      setSidebarExpanded(false);
       setMobileMenuOpen(false);
     };
     const handleThemeChange = (evt: Event) => {
@@ -357,6 +375,16 @@ export function Layout({ children }: { children: ReactNode }) {
     };
   }, []);
 
+  useEffect(() => {
+    if (!mobileMenuOpen) return;
+
+    const handleEscape = (event: KeyboardEvent) => {
+      if (event.key === "Escape") setMobileMenuOpen(false);
+    };
+    window.addEventListener("keydown", handleEscape);
+    return () => window.removeEventListener("keydown", handleEscape);
+  }, [mobileMenuOpen]);
+
   const toggleTheme = () => {
     const next: Theme = theme === "light" ? "dark" : "light";
     setTheme(next);
@@ -376,9 +404,12 @@ export function Layout({ children }: { children: ReactNode }) {
   };
 
   const isLight = theme === "light";
+  const activeSectionData = navSections[activeSection];
 
   return (
-    <div className={`app-shell ${isLight ? "theme-light" : "theme-dark"}`}>
+    <div
+      className={`app-shell ${isLight ? "theme-light" : "theme-dark"} ${sidebarExpanded ? "sidebar-expanded" : "sidebar-collapsed"}`}
+    >
       <a className="skip-link" href="#main">
         Skip to content
       </a>
@@ -398,16 +429,64 @@ export function Layout({ children }: { children: ReactNode }) {
               <div className="brand-text">
                 <span className="brand-title">TRANSACTION / EVAL</span>
                 <span className="brand-sub">
-                  micro1 hackathon · formal oracle verification
+                  Formal consistency evaluation
                 </span>
               </div>
             </a>
           </div>
 
+          <button
+            type="button"
+            className="sidebar-expand-toggle"
+            aria-label={sidebarExpanded ? "Collapse navigation" : "Expand navigation"}
+            aria-expanded={sidebarExpanded}
+            aria-controls="primary-navigation"
+            title={sidebarExpanded ? "Collapse navigation" : "Expand navigation"}
+            onClick={() => setSidebarExpanded((expanded) => !expanded)}
+          >
+            <svg viewBox="0 0 20 20" aria-hidden="true">
+              {sidebarExpanded ? (
+                <path d="m12 4-6 6 6 6" />
+              ) : (
+                <path d="m8 4 6 6-6 6" />
+              )}
+            </svg>
+          </button>
+
+          <nav className="icon-rail-nav" aria-label="Navigation sections">
+            {navSections.map((section, index) => {
+              const sectionActive = activeSection === index;
+              return (
+                <button
+                  type="button"
+                  key={section.category}
+                  className={`icon-rail-link ${sectionActive ? "active" : ""}`}
+                  aria-label={section.category}
+                  aria-expanded={sidebarExpanded && sectionActive}
+                  aria-controls="primary-navigation"
+                  title={section.category}
+                  onClick={() => {
+                    setActiveSection(index);
+                    setSidebarExpanded(true);
+                  }}
+                >
+                  {section.items[0].icon(sectionActive)}
+                </button>
+              );
+            })}
+          </nav>
+
           {/* Quick status & Actions */}
           <div className="header-actions">
             <div
               className={`integrity-badge ${integrityOk === null ? "checking" : integrityOk ? "ok" : "err"}`}
+              aria-label={
+                integrityOk === null
+                  ? "Checking evidence integrity"
+                  : integrityOk
+                    ? "Evidence integrity verified"
+                    : "Evidence integrity check required"
+              }
               title={
                 integrityOk
                   ? "Cryptographic manifest verified"
@@ -463,8 +542,9 @@ export function Layout({ children }: { children: ReactNode }) {
               type="button"
               className="mobile-toggle"
               onClick={() => setMobileMenuOpen((prev) => !prev)}
-              aria-label="Toggle menu"
+              aria-label={mobileMenuOpen ? "Close navigation" : "Open navigation"}
               aria-expanded={mobileMenuOpen}
+              aria-controls="primary-navigation"
             >
               <svg
                 viewBox="0 0 20 20"
@@ -493,40 +573,52 @@ export function Layout({ children }: { children: ReactNode }) {
 
         {/* Primary Tab Navigation */}
         <nav
+          id="primary-navigation"
           aria-label="Primary navigation"
           className={`primary-nav ${mobileMenuOpen ? "mobile-open" : ""}`}
         >
           <div className="nav-scroll-container">
-            {navSections.map((sec, secIdx) => (
-              <div key={sec.category} className="nav-group">
-                <span className="nav-group-title">{sec.category}</span>
-                <div className="nav-items-row">
-                  {sec.items.map((item) => {
-                    const active = isCurrentActive(item.href);
-                    return (
-                      <a
-                        key={item.id}
-                        href={item.href}
-                        className={`nav-tab ${active ? "active" : ""}`}
-                        aria-current={active ? "page" : undefined}
-                      >
-                        <span className="nav-tab-icon">
-                          {item.icon(active)}
-                        </span>
-                        <span className="nav-tab-label">{item.label}</span>
-                        {item.badge && (
-                          <span className="nav-tab-badge">{item.badge}</span>
-                        )}
-                        {active && <span className="active-pill-indicator" />}
-                      </a>
-                    );
-                  })}
-                </div>
-                {secIdx < navSections.length - 1 && (
-                  <div className="nav-divider" aria-hidden="true" />
-                )}
+            <div className="nav-group">
+              <div className="nav-panel-heading">
+                <span className="nav-group-title">
+                  {activeSectionData.category}
+                </span>
+                <button
+                  type="button"
+                  className="nav-collapse-button"
+                  aria-label="Close navigation panel"
+                  onClick={() => setSidebarExpanded(false)}
+                >
+                  <span aria-hidden="true">×</span>
+                </button>
               </div>
-            ))}
+              <div className="nav-items-row">
+                {activeSectionData.items.map((item) => {
+                  const active = isCurrentActive(item.href);
+                  return (
+                    <a
+                      key={item.id}
+                      href={item.href}
+                      className={`nav-tab ${active ? "active" : ""}`}
+                      aria-current={active ? "page" : undefined}
+                      onClick={() => {
+                        setSidebarExpanded(false);
+                        setMobileMenuOpen(false);
+                      }}
+                    >
+                      <span className="nav-tab-icon">
+                        {item.icon(active)}
+                      </span>
+                      <span className="nav-tab-label">{item.label}</span>
+                      {item.badge && (
+                        <span className="nav-tab-badge">{item.badge}</span>
+                      )}
+                      {active && <span className="active-pill-indicator" />}
+                    </a>
+                  );
+                })}
+              </div>
+            </div>
           </div>
         </nav>
       </header>
@@ -540,8 +632,7 @@ export function Layout({ children }: { children: ReactNode }) {
       <footer className="site-footer">
         <div className="footer-left">
           <div className="footer-brand">
-            <strong>Transaction History Evaluation Benchmark</strong> · micro1
-            AI Hackathon
+            <strong>Transaction History Evaluation Benchmark</strong>
           </div>
           <div className="footer-sub">
             Formal mathematical consistency oracles (O1 Reference Simulator, O2

@@ -147,8 +147,6 @@ export interface FailureItem {
 
 export interface GraderReliability {
   method: string;
-  human_review: boolean;
-  note?: string;
 }
 
 export interface Run {

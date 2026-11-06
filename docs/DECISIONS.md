@@ -1,7 +1,14 @@
-# Decisions log (add three lines at the end of every working day)
+# Decisions log
+
+The dated entries below preserve the project's implementation history. Where
+an earlier entry conflicts with the current project, the later full-scope
+implementation takes precedence. Current state: the repository implements
+M1–M5, with a Quart backend, React/Vite/TypeScript dashboard, and a
+version-5 rebuildable SQLite projection.
 
 - 2026-10-31: Domain chosen: checking database-transaction histories (snapshot isolation, serializability, in-doubt).
-- 2026-10-31: M4 (linearizability) is out of scope for the six-day edition.
+- 2026-10-31: M4 (linearizability) was initially out of scope; this was later
+  superseded when the full scope was restored.
 - 2026-10-31: SQLite chosen for the dashboard index (zero setup; derived from files). No external CDNs.
 - No live provider run is included in this repository release. Any future live
   run requires owner approval, local credentials, and a dated run record.
@@ -19,3 +26,6 @@
   and O3 encodes order/source constraints in Z3. Aborted transactions are
   ignored and prepared transactions are rejected; expected results are
   produced by these checkers, not hand-entered.
+- Current implementation note: `/api/meta` reports the supported module set
+  from the task module registry. SQLite schema version 5 repairs projection
+  metadata tables through numbered migrations; it remains a rebuildable index.

@@ -49,3 +49,16 @@ def test_quart_api_rejects_bad_pagination_and_missing_task(tmp_path):
         assert (await missing.get_json())["title"] == "Task not found"
 
     asyncio.run(check())
+
+
+def test_grader_reliability_omits_removed_human_review_card_fields(tmp_path):
+    app = _app(tmp_path)
+
+    async def check():
+        response = await app.test_client().get("/api/grader/reliability")
+        payload = await response.get_json()
+        assert response.status_code == 200
+        assert "human_review" not in payload
+        assert "note" not in payload
+
+    asyncio.run(check())

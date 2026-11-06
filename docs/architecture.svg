@@ -1,0 +1,81 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1280" height="760" viewBox="0 0 1280 760" role="img" aria-labelledby="title description">
+  <title id="title">Transaction History Evaluation Architecture</title>
+  <desc id="description">Diagram showing frozen tasks and optional mock or live providers flowing through the evaluation runner, immutable attempt records, grading, reports, manifests, SQLite ingest, the Quart API, and the React dashboard.</desc>
+  <defs>
+    <marker id="arrow" markerWidth="10" markerHeight="8" refX="9" refY="4" orient="auto">
+      <path d="M0,0 L10,4 L0,8 Z" fill="#46627f"/>
+    </marker>
+    <style>
+      .bg { fill: #f5f8fc; }
+      .box { fill: #fff; stroke: #315777; stroke-width: 2; rx: 12; }
+      .source { fill: #e6f4ef; stroke: #237b61; }
+      .compute { fill: #eaf0fb; stroke: #4266a1; }
+      .store { fill: #fff3dd; stroke: #a56a11; }
+      .ui { fill: #f2eafb; stroke: #7550a4; }
+      .title { font: 700 22px Segoe UI, Arial, sans-serif; fill: #162a3d; }
+      .label { font: 700 17px Segoe UI, Arial, sans-serif; fill: #162a3d; }
+      .small { font: 14px Segoe UI, Arial, sans-serif; fill: #344b60; }
+      .arrow { fill: none; stroke: #46627f; stroke-width: 2.5; marker-end: url(#arrow); }
+      .dashed { stroke-dasharray: 8 6; }
+    </style>
+  </defs>
+  <rect class="bg" width="1280" height="760"/>
+  <text class="title" x="48" y="46">Offline-first evaluation pipeline</text>
+
+  <rect class="box source" x="48" y="100" width="250" height="130"/>
+  <text class="label" x="72" y="135">Frozen task corpus</text>
+  <text class="small" x="72" y="166">Oracle-derived M1–M5 tasks</text>
+  <text class="small" x="72" y="190">Validated history + certificates</text>
+
+  <rect class="box compute" x="365" y="100" width="260" height="130"/>
+  <text class="label" x="389" y="135">Evaluation runner</text>
+  <text class="small" x="389" y="166">Quota + retry + resume</text>
+  <text class="small" x="389" y="190">Defaults to local mock</text>
+
+  <rect class="box source" x="48" y="300" width="250" height="125"/>
+  <text class="label" x="72" y="335">Optional providers</text>
+  <text class="small" x="72" y="366">Mock: offline fixture</text>
+  <text class="small" x="72" y="390">Live: opt-in, local secrets</text>
+
+  <rect class="box store" x="705" y="100" width="250" height="130"/>
+  <text class="label" x="729" y="135">Immutable evidence</text>
+  <text class="small" x="729" y="166">results/runs/*/raw/</text>
+  <text class="small" x="729" y="190">Attempt and run records</text>
+
+  <rect class="box compute" x="705" y="300" width="250" height="125"/>
+  <text class="label" x="729" y="335">Grader + analysis</text>
+  <text class="small" x="729" y="366">Certificates, scores, tags</text>
+  <text class="small" x="729" y="390">Replay + reports</text>
+
+  <rect class="box store" x="1015" y="100" width="220" height="130"/>
+  <text class="label" x="1039" y="135">Integrity records</text>
+  <text class="small" x="1039" y="166">MANIFEST.json</text>
+  <text class="small" x="1039" y="190">Hashes for evidence</text>
+
+  <rect class="box store" x="390" y="515" width="270" height="130"/>
+  <text class="label" x="414" y="550">SQLite projection</text>
+  <text class="small" x="414" y="581">Schema v5; rebuildable index</text>
+  <text class="small" x="414" y="605">Never the evidence authority</text>
+
+  <rect class="box compute" x="735" y="515" width="230" height="130"/>
+  <text class="label" x="759" y="550">Quart API</text>
+  <text class="small" x="759" y="581">JSON + gated live endpoints</text>
+  <text class="small" x="759" y="605">Serves frontend assets</text>
+
+  <rect class="box ui" x="1015" y="515" width="220" height="130"/>
+  <text class="label" x="1039" y="550">React dashboard</text>
+  <text class="small" x="1039" y="581">Vite + TypeScript</text>
+  <text class="small" x="1039" y="605">Three.js + 2D/table views</text>
+
+  <path class="arrow" d="M298 165 H355"/>
+  <path class="arrow dashed" d="M298 360 C340 360 330 210 365 195"/>
+  <path class="arrow" d="M625 165 H695"/>
+  <path class="arrow" d="M830 230 V290"/>
+  <path class="arrow" d="M705 362 H675 C650 362 650 190 635 190"/>
+  <path class="arrow" d="M830 425 C830 470 530 465 530 505"/>
+  <path class="arrow" d="M955 165 H1005"/>
+  <path class="arrow" d="M660 580 H725"/>
+  <path class="arrow" d="M965 580 H1005"/>
+  <path class="arrow dashed" d="M1125 505 V240"/>
+  <text class="small" x="55" y="700">Solid arrows: local data flow. Dashed arrows: optional provider input or integrity reference.</text>
+</svg>

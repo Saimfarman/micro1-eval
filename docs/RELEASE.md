@@ -1,41 +1,42 @@
 # Release checklist and evidence policy
 
-## Required checks
+## Local verification
 
-From a clean checkout:
+From a clean checkout, install the pinned dependencies and run:
 
-```text
+```powershell
 npm ci
+python -m pip install -r requirements.txt -r requirements-dev.txt
 python -m pytest
 npm run typecheck
 npm run build
 npm run accessibility
 python -m evalkit validate-tasks
 python -m evalkit preflight
-python -m evalkit package
 ```
 
-`preflight` checks the task corpus, required documentation, `.env.example`,
-absence of committed secret values and non-plan placeholders, manifest
-coverage, dependency locks, generated frontend assets, OpenAPI structure,
-migration bootstrap, and offline API health. It never makes a provider call.
-An external reviewer, live-provider pilot, video URL, participant agreement,
-and submission confirmation are not required for this offline release.
+`preflight` checks the task corpus, required documentation and environment
+template, pinned Python requirements, generated frontend assets, manifest
+coverage, OpenAPI shape, migration bootstrap, and offline API health. It does
+not contact a provider. Run `python -m evalkit ingest` to build the local
+dashboard index.
 
-## Package contents
+Record the actual command output and artifact hashes for any release claims.
+The test count and build status should be taken from a fresh run, not copied
+from an older report. Automated accessibility checks do not constitute an
+independent browser audit.
 
-`python -m evalkit package` writes `micro1-eval-submission.zip` while excluding
-`.env`, virtual environments, caches, node modules, databases, and prior zip
-archives. The package contains source, pinned dependency manifests,
-documentation, tasks, and generated frontend assets. SQLite remains a derived
-local artifact.
+## Evidence and packaging
+
+The submission evidence is the checked-in source, tasks, and verified result
+files. SQLite is derived and is not the evidence authority. A packaging command
+exists in the CLI for local use, but no archive is required in this repository;
+create any submission archive separately when preparing the submission.
 
 ## Claims policy
 
-Release notes may claim only commands whose output is attached to the release
-record. The current repository evidence is 128 passing Python tests and a
-successful Vite production build. No live provider call, human review, or
-browser accessibility audit is claimed here. A video link may be added later
-to the README without changing the offline release gates. Future claims must
-include the command, date, configuration, and artifact hash. Mock results are
-not commercial-model results.
+The deterministic mock is a pipeline fixture, not a commercial-model result.
+Do not claim live-provider findings, human review, reviewer sign-off, or
+accessibility conformance without the corresponding recorded evidence. Any
+future study should record its command, date, exact model/provider,
+configuration, and output artifact hashes.

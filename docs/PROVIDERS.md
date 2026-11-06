@@ -1,29 +1,30 @@
 # Providers and quota controls
 
-The runner uses one `ProviderResponse` shape for mock and HTTP providers:
-response text, returned model, finish reason, usage, latency, and provider
-response ID. The mock provider is fully offline and is the only provider used
-by tests.
+The runner normalizes provider outputs into `ProviderResponse`: response text,
+returned model, finish reason, usage, latency, and provider response ID. The
+default `mock` provider is deterministic and offline. Supported optional
+provider IDs are `groq`, `gemini`, `openrouter`, `mistral`, and
+`azure-openai`; live adapters use OpenAI-compatible chat-completion requests.
 
-Configured provider IDs are `mock`, `groq`, `gemini`, `openrouter`, `mistral`,
-and `azure-openai`. The checked-in model table is metadata only; disabled live
-models do not make a network request. Environment variable names are listed in
-`.env.example`: `GROQ_API_KEY`, `GROQ_BASE_URL`, `GROQ_MODEL`,
-`GEMINI_API_KEY`, `GEMINI_BASE_URL`, `GEMINI_MODEL`,
-`OPENROUTER_API_KEY`, `OPENROUTER_BASE_URL`, `OPENROUTER_MODEL`,
-`MISTRAL_API_KEY`, `AZURE_OPENAI_ENDPOINT`, `AZURE_OPENAI_API_KEY`,
-`AZURE_OPENAI_DEPLOYMENT`, and `MAX_SPEND_USD`. Values belong only in the
-git-ignored `.env`.
+Provider/model entries in `models.yaml` are configuration metadata. The
+checked-in live model entries are disabled. Running `python -m evalkit run`
+without a provider option uses `mock`; selecting a live provider may make
+external network requests and incur cost. Live requests must be explicitly
+approved by the operator.
 
-HTTP requests are opt-in. The adapters read keys from the local `.env`, classify
-429 and 5xx responses as retryable, use bounded exponential backoff, and do not
-include secrets in attempt records. Authentication and other 4xx responses fail
-immediately.
+Credentials and endpoint/model values are read from local environment
+variables or the git-ignored `.env`. `.env.example` lists variable names only.
+Never put key values in source, tasks, results, logs, manifests, API responses,
+or frontend assets.
 
-`Quota` enforces requests-per-minute, requests-per-day, and optional spend caps.
-The runner writes each raw attempt before grading. Pass `--run-id ID` to resume
-an existing run; existing attempt files are reused and are not requested again.
-`--no-resume` explicitly disables reuse. `estimate` reports calls, token
-estimates, quota fraction, and pacing runtime for every configured model.
-Provider-specific capability differences, exact model IDs, prices, and enabled
-status must be recorded in `models.yaml` before an approved live run.
+The runner supports bounded retries for retryable transport, 429, and server
+errors, quota tracking, optional spend caps, immutable attempt writes, and
+resume by run ID. Estimate configured work without making provider requests:
+
+```powershell
+python -m evalkit estimate
+```
+
+For a live study, confirm provider, model ID, pricing, quota, repetition count,
+and spend cap before selecting a live provider. No live result should be
+claimed unless it is present in saved run evidence.

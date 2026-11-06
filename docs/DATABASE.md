@@ -1,19 +1,27 @@
 # SQLite derived index
 
-The official evidence remains the task, attempt, grade, summary, and manifest
-files. `results/index.sqlite3` is a rebuildable read-only index;
-the database is ignored and is never a submission source.
+`results/index.sqlite3` is a rebuildable projection for dashboard queries. It
+is not authoritative evaluation evidence. Source tasks, raw attempts, grades,
+reports, and `results/MANIFEST.json` remain files.
 
-`backend/db/schema.sql` is versioned at schema version 4. Numbered migrations
-live in `backend/db/migrations/` and apply from an empty database or upgrade an
-older projection. Ingest enables WAL and foreign keys, loads all valid runs,
-tasks, models, providers, attempts, grades, failures, summaries, manifests,
-and live-run events, and records the manifest hash. Repeating ingest with the
-same manifest is a no-op. A changed manifest rebuilds the index, while
-tampered attempts or stale task snapshots are rejected before any rows are
-committed.
+The current projection schema is version **5**. The baseline schema is in
+`backend/db/schema.sql`; ordered migrations are in `backend/db/migrations/`.
+They create and upgrade projection tables including modules, providers,
+manifests, tasks, models, runs, attempts, grades, failure tags, summaries, and
+live-run events.
 
-Use `python -m evalkit ingest` after producing verified evidence. The command
-does not call providers and does not invent partial grades or missing attempts.
-Back up `tasks/` and `results/`; the ignored SQLite file can always be deleted
-and rebuilt.
+Ingest with:
+
+```powershell
+python -m evalkit ingest
+```
+
+Ingest verifies the manifest and attempt/task hashes by default, applies
+migrations, and projects the local files. Re-ingesting the same manifest is a
+no-op. A changed manifest causes the projection to be rebuilt; invalid or
+tampered source evidence is rejected. Ingest does not contact model providers
+or invent missing rows.
+
+The database uses SQLite WAL mode and foreign keys. Back up `tasks/`,
+`results/` source files, `models.yaml`, and dependency manifests. The SQLite
+file can be regenerated and should not be edited as evidence.

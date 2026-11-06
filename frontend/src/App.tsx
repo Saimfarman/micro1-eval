@@ -1,21 +1,65 @@
-import { useEffect, useState } from "react";
+import { lazy, Suspense, useEffect, useState } from "react";
 import { Layout } from "./components/Layout";
-import { Overview } from "./pages/Overview";
-import { TaskDetail } from "./pages/TaskDetail";
-import { Tasks } from "./pages/Tasks";
-import { FailureMap } from "./pages/FailureMap";
-import { Results } from "./pages/Results";
-import { Failures } from "./pages/Failures";
-import { Modules } from "./pages/Modules";
-import { Runs } from "./pages/Runs";
-import { Providers } from "./pages/Providers";
-import { LiveRun } from "./pages/LiveRun";
-import { Grader } from "./pages/Grader";
-import { Method } from "./pages/Method";
-import { Learn } from "./pages/Learn";
-import { Reproduce } from "./pages/Reproduce";
-import { Settings } from "./pages/Settings";
-import { Accessibility } from "./pages/Accessibility";
+import { LoadingState } from "./components/LoadingState";
+
+const Overview = lazy(() =>
+  import("./pages/Overview").then((module) => ({ default: module.Overview })),
+);
+const TaskDetail = lazy(() =>
+  import("./pages/TaskDetail").then((module) => ({
+    default: module.TaskDetail,
+  })),
+);
+const Tasks = lazy(() =>
+  import("./pages/Tasks").then((module) => ({ default: module.Tasks })),
+);
+const FailureMap = lazy(() =>
+  import("./pages/FailureMap").then((module) => ({
+    default: module.FailureMap,
+  })),
+);
+const Results = lazy(() =>
+  import("./pages/Results").then((module) => ({ default: module.Results })),
+);
+const Failures = lazy(() =>
+  import("./pages/Failures").then((module) => ({ default: module.Failures })),
+);
+const Modules = lazy(() =>
+  import("./pages/Modules").then((module) => ({ default: module.Modules })),
+);
+const Runs = lazy(() =>
+  import("./pages/Runs").then((module) => ({ default: module.Runs })),
+);
+const Providers = lazy(() =>
+  import("./pages/Providers").then((module) => ({
+    default: module.Providers,
+  })),
+);
+const LiveRun = lazy(() =>
+  import("./pages/LiveRun").then((module) => ({ default: module.LiveRun })),
+);
+const Grader = lazy(() =>
+  import("./pages/Grader").then((module) => ({ default: module.Grader })),
+);
+const Method = lazy(() =>
+  import("./pages/Method").then((module) => ({ default: module.Method })),
+);
+const Learn = lazy(() =>
+  import("./pages/Learn").then((module) => ({ default: module.Learn })),
+);
+const Reproduce = lazy(() =>
+  import("./pages/Reproduce").then((module) => ({
+    default: module.Reproduce,
+  })),
+);
+const Settings = lazy(() =>
+  import("./pages/Settings").then((module) => ({ default: module.Settings })),
+);
+const Accessibility = lazy(() =>
+  import("./pages/Accessibility").then((module) => ({
+    default: module.Accessibility,
+  })),
+);
 
 function parseHashRoute() {
   const hash = window.location.hash.replace(/^#\/?/, "");
@@ -99,5 +143,11 @@ export function App() {
       break;
   }
 
-  return <Layout>{pageContent}</Layout>;
+  return (
+    <Layout>
+      <Suspense fallback={<LoadingState label="Loading page…" />}>
+        {pageContent}
+      </Suspense>
+    </Layout>
+  );
 }
