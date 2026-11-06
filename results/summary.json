@@ -1,100 +1,100 @@
 {
-  "run_id": "20261102T191035Z-db7b409f",
+  "run_id": "20261106T220149Z-db7b409f",
   "runs": 1,
   "human_review": {
     "status": "not_requested",
     "reviewed": false
   },
   "attempts": 19,
-  "passed": 19,
-  "pass_at_1": 1.0,
-  "mean_score": 1.0,
+  "passed": 1,
+  "pass_at_1": 0.05263157894736842,
+  "mean_score": 0.4526315789473685,
   "scopes": {
     "control": {
       "attempts": 9,
-      "passed": 9,
-      "pass_at_1": 1.0,
-      "mean_score": 1.0,
+      "passed": 1,
+      "pass_at_1": 0.1111111111111111,
+      "mean_score": 0.43333333333333335,
       "bootstrap_95": {
-        "low": 1.0,
-        "high": 1.0,
+        "low": 0.0,
+        "high": 0.3333333333333333,
         "seed": 20261102,
         "samples": 2000
       },
-      "consistency": 1.0
+      "consistency": 0.1111111111111111
     },
     "core": {
       "attempts": 10,
-      "passed": 10,
-      "pass_at_1": 1.0,
-      "mean_score": 1.0,
+      "passed": 0,
+      "pass_at_1": 0.0,
+      "mean_score": 0.47000000000000003,
       "bootstrap_95": {
-        "low": 1.0,
-        "high": 1.0,
+        "low": 0.0,
+        "high": 0.0,
         "seed": 20261102,
         "samples": 2000
       },
-      "consistency": 1.0
+      "consistency": 0.0
     }
   },
   "modules": {
     "M1": {
       "attempts": 9,
-      "passed": 9,
-      "pass_at_1": 1.0,
-      "mean_score": 1.0,
+      "passed": 0,
+      "pass_at_1": 0.0,
+      "mean_score": 0.4666666666666667,
       "bootstrap_95": {
-        "low": 1.0,
-        "high": 1.0,
+        "low": 0.0,
+        "high": 0.0,
         "seed": 20261102,
         "samples": 2000
       },
-      "consistency": 1.0
+      "consistency": 0.0
     },
     "M2": {
       "attempts": 6,
-      "passed": 6,
-      "pass_at_1": 1.0,
-      "mean_score": 1.0,
+      "passed": 1,
+      "pass_at_1": 0.16666666666666666,
+      "mean_score": 0.46666666666666673,
       "bootstrap_95": {
-        "low": 1.0,
-        "high": 1.0,
+        "low": 0.0,
+        "high": 0.5,
         "seed": 20261102,
         "samples": 2000
       },
-      "consistency": 1.0
+      "consistency": 0.16666666666666666
     },
     "M3": {
       "attempts": 2,
-      "passed": 2,
-      "pass_at_1": 1.0,
-      "mean_score": 1.0,
+      "passed": 0,
+      "pass_at_1": 0.0,
+      "mean_score": 0.3,
       "bootstrap_95": {
-        "low": 1.0,
-        "high": 1.0,
+        "low": 0.0,
+        "high": 0.0,
         "seed": 20261102,
         "samples": 2000
       },
-      "consistency": 1.0
+      "consistency": 0.0
     },
     "M4": {
       "attempts": 2,
-      "passed": 2,
-      "pass_at_1": 1.0,
-      "mean_score": 1.0,
+      "passed": 0,
+      "pass_at_1": 0.0,
+      "mean_score": 0.5,
       "bootstrap_95": {
-        "low": 1.0,
-        "high": 1.0,
+        "low": 0.0,
+        "high": 0.0,
         "seed": 20261102,
         "samples": 2000
       },
-      "consistency": 1.0
+      "consistency": 0.0
     }
   },
   "control_vs_core": {
-    "core_pass_at_1": 1.0,
-    "control_pass_at_1": 1.0,
-    "difference": 0.0
+    "core_pass_at_1": 0.0,
+    "control_pass_at_1": 0.1111111111111111,
+    "difference": 0.1111111111111111
   },
   "seed": 20261102
 }

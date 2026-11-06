@@ -1,5 +1,16 @@
 # Transaction History Evaluation
 
+## Short description
+
+This evaluation tests whether language models can apply formal database
+transaction-consistency rules to synthetic histories and produce correct,
+machine-checkable verdicts and certificates. In one run, Groq's
+`openai/gpt-oss-120b` passed 1 of 19 tasks (5.3%) across M1–M4; this is an
+initial result from one model and one repetition, not a general claim about
+frontier models. The author is a computer science undergraduate, and the
+evaluation draws on formal transaction-history semantics and the cited
+consistency literature.
+
 An offline-first benchmark for evaluating whether AI models can reason about
 database transaction histories. It includes a formal domain core, oracle-derived
 tasks, a reproducible evaluation and grading harness, a Quart API, a rebuildable

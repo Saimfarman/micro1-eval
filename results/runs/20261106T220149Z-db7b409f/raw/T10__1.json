@@ -1,0 +1,37 @@
+{
+  "attempt_key": "20261106T220149Z-db7b409f/groq/T10/1",
+  "task_id": "T10",
+  "task_hash": "14aa4385f01739b50502a14b46e7b6608f0a84b90a7129192b3b72c02e304650",
+  "prompt_sent": "Apply M4 to this history. Explain the decision and end with a fenced JSON object containing verdict valid, invalid, or undetermined.\n\nRegister: initial=0.\nR1  invoke=1  response=2  write=1\nR2  invoke=3  response=4  read=1\nR3  invoke=5  response=6  write=2\nR4  invoke=7  response=8  write=3",
+  "model_requested": "groq",
+  "model_returned": "openai/gpt-oss-120b",
+  "settings": {
+    "temperature": 0,
+    "max_tokens": 4096
+  },
+  "response_text": "**Applying M4 (Linearizability Check)**  \n\n1. **Initial state** \u2013 Register value =\u202f0.  \n\n2. **R1** \u2013 `invoke=1` \u2192 `response=2` \u2192 `write=1`  \n   *Operation*: Write value\u202f1.  \n   *Result*: Register becomes 1.  \n\n3. **R2** \u2013 `invoke=3` \u2192 `response=4` \u2192 `read=1`  \n   *Operation*: Read.  \n   *Observed value*: 1, which matches the most\u2011recent write (R1).  \n\n4. **R3** \u2013 `invoke=5` \u2192 `response=6` \u2192 `write=2`  \n   *Operation*: Write value\u202f2.  \n   *Result*: Register becomes 2.  \n\n5. **R4** \u2013 `invoke=7` \u2192 `response=8` \u2192 `write=3`  \n   *Operation*: Write value\u202f3.  \n   *Result*: Register becomes 3.  \n\nAll operations can be ordered sequentially (R1 \u2192 R2 \u2192 R3 \u2192 R4) such that each read returns the value of the latest preceding write. No contradictions or out\u2011of\u2011order reads are present.\n\n**Verdict:** The history is **linearizable** (valid).\n\n```json\n{\n  \"verdict\": \"valid\"\n}\n```",
+  "finish_reason": "stop",
+  "usage": {
+    "queue_time": 0.005171674,
+    "prompt_tokens": 163,
+    "prompt_time": 0.007606366,
+    "completion_tokens": 362,
+    "completion_time": 0.763889267,
+    "total_tokens": 525,
+    "total_time": 0.771495633,
+    "completion_tokens_details": {
+      "reasoning_tokens": 68
+    }
+  },
+  "latency_ms": 843,
+  "provider_response_id": "chatcmpl-076fec14-665a-4e01-aa8c-3d72bb9e2b11",
+  "request_metadata": {
+    "provider": "groq",
+    "base_url": "https://api.groq.com/openai/v1",
+    "model": "openai/gpt-oss-120b",
+    "live": true
+  },
+  "run_date": "2026-11-06",
+  "created_at": "2026-11-06T22:02:08.978081+00:00",
+  "content_sha256": "f60b2fb3a5e435933d9baeed094c99651ededfb02ae01d90d855ecd1a5e3659b"
+}

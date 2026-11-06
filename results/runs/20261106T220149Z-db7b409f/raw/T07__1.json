@@ -1,0 +1,37 @@
+{
+  "attempt_key": "20261106T220149Z-db7b409f/groq/T07/1",
+  "task_id": "T07",
+  "task_hash": "3d9fc3058405ff14cdcdb2034f681ae890c2b89a215c0fd2f61a885c9ecef156",
+  "prompt_sent": "Apply M1 to this history. Explain the decision and end with a fenced JSON object containing verdict valid, invalid, or undetermined.\n\nKeys: x, y. Initial: x=0, y=0. Every written value is unique per key.\nT1  start=1  commit=3  w(x)=1  r(x)=1",
+  "model_requested": "groq",
+  "model_returned": "openai/gpt-oss-120b",
+  "settings": {
+    "temperature": 0,
+    "max_tokens": 4096
+  },
+  "response_text": "**Applying M1 (Monotonicity of Writes and Reads)**  \n\n- **Transaction T1**  \n  - Starts at logical time **1** and commits at **3** (start\u202f<\u202fcommit, satisfying the basic temporal ordering).  \n  - Performs a **write** `w(x)=1`. Since each key receives a unique value, this write is well\u2011formed.  \n  - Performs a **read** `r(x)=1`. The read observes the value written by the same transaction, which is allowed because the write precedes the read within the same transaction and the transaction has not yet committed when the read occurs.  \n\nThere are no other transactions, no conflicting accesses, and the read observes a value that is monotonic with respect to the transaction\u2019s own write. Hence the history respects M1.\n\n**Verdict:** The history is **valid** under M1.\n\n```json\n{\n  \"verdict\": \"valid\"\n}\n```",
+  "finish_reason": "stop",
+  "usage": {
+    "queue_time": 0.371939086,
+    "prompt_tokens": 142,
+    "prompt_time": 0.005802511,
+    "completion_tokens": 249,
+    "completion_time": 0.510798976,
+    "total_tokens": 391,
+    "total_time": 0.516601487,
+    "completion_tokens_details": {
+      "reasoning_tokens": 45
+    }
+  },
+  "latency_ms": 953,
+  "provider_response_id": "chatcmpl-eda55113-8398-4e1f-8ac5-1061f5265ff7",
+  "request_metadata": {
+    "provider": "groq",
+    "base_url": "https://api.groq.com/openai/v1",
+    "model": "openai/gpt-oss-120b",
+    "live": true
+  },
+  "run_date": "2026-11-06",
+  "created_at": "2026-11-06T22:02:05.902119+00:00",
+  "content_sha256": "8d66c925785280016b910ac1496cb1021d4a539f812025bddf64b1c7db100681"
+}

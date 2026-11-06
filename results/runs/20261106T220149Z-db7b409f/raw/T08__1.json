@@ -1,0 +1,37 @@
+{
+  "attempt_key": "20261106T220149Z-db7b409f/groq/T08/1",
+  "task_id": "T08",
+  "task_hash": "9ac65b6fd216efa8aa96beef3f4b96c915795d2917e307cc388f0f25cc240435",
+  "prompt_sent": "Apply M1 to this history. Explain the decision and end with a fenced JSON object containing verdict valid, invalid, or undetermined.\n\nKeys: x, y. Initial: x=0, y=0. Every written value is unique per key.\nT1  start=1  commit=3  w(x)=1  r(x)=0",
+  "model_requested": "groq",
+  "model_returned": "openai/gpt-oss-120b",
+  "settings": {
+    "temperature": 0,
+    "max_tokens": 4096
+  },
+  "response_text": "**Applying M1**\n\nM1 checks that each transaction\u2019s reads observe the most recent committed write to the same key that precedes the transaction\u2019s start time, and that writes are unique per key.\n\n- **Transaction T1**\n  - **Start**: 1  \n  - **Commit**: 3  \n  - **Write**: `w(x)=1` (commits at time\u202f3)  \n  - **Read**: `r(x)=0`\n\nThe read of `x` occurs before the write to `x` is committed (the write becomes visible only at commit time\u202f3). The latest committed value of `x` before T1\u2019s start time (1) is the initial value `0`. Therefore, `r(x)=0` is consistent with M1.\n\nAll keys have unique written values (`x` is written only once with value\u202f1), and there are no conflicting reads or writes.\n\n**Decision:** The history satisfies M1.\n\n```json\n{\n  \"verdict\": \"valid\"\n}\n```",
+  "finish_reason": "stop",
+  "usage": {
+    "queue_time": 0.307590539,
+    "prompt_tokens": 142,
+    "prompt_time": 0.006001929,
+    "completion_tokens": 311,
+    "completion_time": 0.647933552,
+    "total_tokens": 453,
+    "total_time": 0.653935481,
+    "completion_tokens_details": {
+      "reasoning_tokens": 89
+    }
+  },
+  "latency_ms": 1014,
+  "provider_response_id": "chatcmpl-8f22541c-9700-4be4-81ba-fd55e8ef42f1",
+  "request_metadata": {
+    "provider": "groq",
+    "base_url": "https://api.groq.com/openai/v1",
+    "model": "openai/gpt-oss-120b",
+    "live": true
+  },
+  "run_date": "2026-11-06",
+  "created_at": "2026-11-06T22:02:06.926235+00:00",
+  "content_sha256": "c3edfeff46b18a1871c9328d38253fd73c671100dfcebca2f7754b343c8f5d80"
+}

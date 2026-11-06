@@ -1,0 +1,37 @@
+{
+  "attempt_key": "20261106T220149Z-db7b409f/groq/T06/1",
+  "task_id": "T06",
+  "task_hash": "31ab1bb011dc8ef5279fff8dd682b37f8919cf865c516c2d70fac549276c41fb",
+  "prompt_sent": "Apply M1 to this history. Explain the decision and end with a fenced JSON object containing verdict valid, invalid, or undetermined.\n\nKeys: x, y. Initial: x=0, y=0. Every written value is unique per key.\nT1  start=1  commit=4  w(x)=1  w(x)=2\nT2  start=5  commit=6  r(x)=1",
+  "model_requested": "groq",
+  "model_returned": "openai/gpt-oss-120b",
+  "settings": {
+    "temperature": 0,
+    "max_tokens": 4096
+  },
+  "response_text": "**Decision Explanation (M1)**  \n\nM1 requires that *every written value be unique per key* throughout the entire history.  \n- Transaction **T1** writes to key **x** twice: first `w(x)=1` and later `w(x)=2`.  \n- Since both writes occur within the same transaction (and there is no intervening read that would justify a version change), the same key receives two distinct values before the transaction commits. This violates the \u201cunique per\u2011key write\u201d rule of M1.  \n\nTherefore the history does **not** satisfy M1.\n\n```json\n{\n  \"verdict\": \"invalid\"\n}\n```",
+  "finish_reason": "stop",
+  "usage": {
+    "queue_time": 0.308077889,
+    "prompt_tokens": 158,
+    "prompt_time": 0.006998114,
+    "completion_tokens": 208,
+    "completion_time": 0.430769802,
+    "total_tokens": 366,
+    "total_time": 0.437767916,
+    "completion_tokens_details": {
+      "reasoning_tokens": 65
+    }
+  },
+  "latency_ms": 813,
+  "provider_response_id": "chatcmpl-ca9ad170-59aa-4323-9c9b-55355f2fecd6",
+  "request_metadata": {
+    "provider": "groq",
+    "base_url": "https://api.groq.com/openai/v1",
+    "model": "openai/gpt-oss-120b",
+    "live": true
+  },
+  "run_date": "2026-11-06",
+  "created_at": "2026-11-06T22:02:04.945899+00:00",
+  "content_sha256": "cebedc847b750fc7c03828ff01b36e74d2a9754a20a82e3177884c088fe7fb4b"
+}

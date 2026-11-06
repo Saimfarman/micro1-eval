@@ -1,0 +1,37 @@
+{
+  "attempt_key": "20261106T220149Z-db7b409f/groq/T04/1",
+  "task_id": "T04",
+  "task_hash": "ccf09ee7e0de19cc45928cdc2bdf45d35adc66d600fe59b8d3910174677474b3",
+  "prompt_sent": "Apply M1 to this history. Explain the decision and end with a fenced JSON object containing verdict valid, invalid, or undetermined.\n\nKeys: x, y. Initial: x=0, y=0. Every written value is unique per key.\nT1  start=1  commit=3  w(x)=1\nT2  start=2  commit=4  r(x)=0",
+  "model_requested": "groq",
+  "model_returned": "openai/gpt-oss-120b",
+  "settings": {
+    "temperature": 0,
+    "max_tokens": 4096
+  },
+  "response_text": "**Applying M1**\n\n- **Uniqueness** \u2013 Each written value for a key is unique (`x=1` is the only write to *x*). \u2705  \n- **Read\u2011after\u2011write** \u2013 Transaction\u202fT2 reads *x* at time\u202f2, before T1\u2019s write becomes visible (T1 commits at\u202f3). The read sees the initial value\u202f0, which is allowed because the write has not yet committed. \u2705  \n- **Write\u2011write conflicts** \u2013 There is only one write to *x*, so no write\u2011write conflict exists. \u2705  \n\nAll M1 constraints are satisfied, so the history is **valid**.\n\n```json\n{\n  \"verdict\": \"valid\"\n}\n```",
+  "finish_reason": "stop",
+  "usage": {
+    "queue_time": 0.005122969,
+    "prompt_tokens": 153,
+    "prompt_time": 0.006538615,
+    "completion_tokens": 304,
+    "completion_time": 0.684330461,
+    "total_tokens": 457,
+    "total_time": 0.690869076,
+    "completion_tokens_details": {
+      "reasoning_tokens": 144
+    }
+  },
+  "latency_ms": 780,
+  "provider_response_id": "chatcmpl-2597b6a2-ea66-4a0b-a874-83b373b2e25c",
+  "request_metadata": {
+    "provider": "groq",
+    "base_url": "https://api.groq.com/openai/v1",
+    "model": "openai/gpt-oss-120b",
+    "live": true
+  },
+  "run_date": "2026-11-06",
+  "created_at": "2026-11-06T22:02:03.117324+00:00",
+  "content_sha256": "57afbba2b42a74cf8ab544c54ec4584906e07fbb2ae9b3bcd8689723d648d5e8"
+}

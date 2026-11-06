@@ -1,0 +1,37 @@
+{
+  "attempt_key": "20261106T220149Z-db7b409f/groq/T05/1",
+  "task_id": "T05",
+  "task_hash": "c1e36f50f87d5ad450eb4e2f03e35d9d4a6a3c357e7f02535a79e3864cf9917e",
+  "prompt_sent": "Apply M1 to this history. Explain the decision and end with a fenced JSON object containing verdict valid, invalid, or undetermined.\n\nKeys: x, y. Initial: x=0, y=0. Every written value is unique per key.\nT1  start=1  abort=2  w(x)=1\nT2  start=3  commit=4  r(x)=1",
+  "model_requested": "groq",
+  "model_returned": "openai/gpt-oss-120b",
+  "settings": {
+    "temperature": 0,
+    "max_tokens": 4096
+  },
+  "response_text": "**Applying M1 (Monotonic Reads / Write\u2011Uniqueness Check)**  \n\n- **Transaction\u202fT1** writes `x = 1` and then aborts. Because the transaction aborts, its write must not become visible to any other transaction.  \n- **Transaction\u202fT2** starts after T1\u2019s abort and reads `x`. Under M1, a transaction may only see values that have been **committed** and are the **most recent** committed value for that key. Since T1\u2019s write was aborted, the only committed value for `x` is the initial value `0`.  \n\nT2 reads `x = 1`, which contradicts the rule that aborted writes are invisible. Therefore the history violates M1.\n\n**Verdict:** `invalid`\n\n```json\n{\n  \"verdict\": \"invalid\"\n}\n```",
+  "finish_reason": "stop",
+  "usage": {
+    "queue_time": 0.372511997,
+    "prompt_tokens": 153,
+    "prompt_time": 0.006483437,
+    "completion_tokens": 263,
+    "completion_time": 0.548420028,
+    "total_tokens": 416,
+    "total_time": 0.554903465,
+    "completion_tokens_details": {
+      "reasoning_tokens": 79
+    }
+  },
+  "latency_ms": 1000,
+  "provider_response_id": "chatcmpl-400554ae-3492-4571-b87e-14bd46c1f8ca",
+  "request_metadata": {
+    "provider": "groq",
+    "base_url": "https://api.groq.com/openai/v1",
+    "model": "openai/gpt-oss-120b",
+    "live": true
+  },
+  "run_date": "2026-11-06",
+  "created_at": "2026-11-06T22:02:04.122793+00:00",
+  "content_sha256": "ce518d8967aa0bcbbe43b90487f0b63c2c3c2ab3eac731eb1f39586371e4bf3d"
+}

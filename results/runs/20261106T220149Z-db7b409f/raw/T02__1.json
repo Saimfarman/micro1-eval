@@ -1,0 +1,37 @@
+{
+  "attempt_key": "20261106T220149Z-db7b409f/groq/T02/1",
+  "task_id": "T02",
+  "task_hash": "104c33c7b5416100c883e8ed99fc723b6395bff0653bc48a245d4aa611e004b6",
+  "prompt_sent": "Apply M1 to this history. Explain the decision and end with a fenced JSON object containing verdict valid, invalid, or undetermined.\n\nKeys: x, y. Initial: x=0, y=0. Every written value is unique per key.\nT1  start=1  commit=4  r(x)=0  w(x)=1\nT2  start=2  commit=5  r(x)=0  w(x)=2",
+  "model_requested": "groq",
+  "model_returned": "openai/gpt-oss-120b",
+  "settings": {
+    "temperature": 0,
+    "max_tokens": 4096
+  },
+  "response_text": "**Applying M1 (conflict\u2011serializability test)**  \n\n1. **Identify conflicting operations**  \n   - `T1` writes `x` (writes\u202f1) and `T2` writes `x` (writes\u202f2).  \n   - These two writes conflict because they access the same key `x` and at least one is a write.  \n\n2. **Determine the order of the conflicting operations**  \n   - `T1` starts at time\u202f1 and commits at time\u202f4.  \n   - `T2` starts at time\u202f2 and commits at time\u202f5.  \n   - Since the writes overlap (both transactions are active concurrently), there is **no enforced order** between the two writes in the schedule.\n\n3. **Build the precedence graph**  \n   - Edge `T1 \u2192 T2` would exist if `T1`\u2019s write preceded `T2`\u2019s write.  \n   - Edge `T2 \u2192 T1` would exist if `T2`\u2019s write preceded `T1`\u2019s write.  \n   - Because the schedule does not impose a clear order, **both edges would be required** to respect the observed writes, creating a cycle `T1 \u2194 T2`.\n\n4. **Conclusion**  \n   - The precedence graph contains a cycle, so the history is **not conflict\u2011serializable** under M1.  \n   - Therefore the schedule is **invalid**.\n\n```json\n{\n  \"verdict\": \"invalid\"\n}\n```",
+  "finish_reason": "stop",
+  "usage": {
+    "queue_time": 0.372244062,
+    "prompt_tokens": 163,
+    "prompt_time": 0.008594437,
+    "completion_tokens": 425,
+    "completion_time": 0.895169175,
+    "total_tokens": 588,
+    "total_time": 0.903763612,
+    "completion_tokens_details": {
+      "reasoning_tokens": 102
+    }
+  },
+  "latency_ms": 1327,
+  "provider_response_id": "chatcmpl-a7f6a24a-addc-4ffb-9b3b-a42817492ad3",
+  "request_metadata": {
+    "provider": "groq",
+    "base_url": "https://api.groq.com/openai/v1",
+    "model": "openai/gpt-oss-120b",
+    "live": true
+  },
+  "run_date": "2026-11-06",
+  "created_at": "2026-11-06T22:02:01.018345+00:00",
+  "content_sha256": "7f16407e786032b3159d7e6645e9a2b401d027e3a4b93f55d570c7bc8a581131"
+}

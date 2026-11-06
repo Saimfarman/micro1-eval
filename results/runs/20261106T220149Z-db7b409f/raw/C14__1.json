@@ -1,0 +1,37 @@
+{
+  "attempt_key": "20261106T220149Z-db7b409f/groq/C14/1",
+  "task_id": "C14",
+  "task_hash": "6dfb369fe3ccc68ff68d552612f89814322f5e2ea2d0d75c3896ec4498b8477d",
+  "prompt_sent": "Apply M2 to this history. Explain the decision and end with a fenced JSON object containing verdict valid, invalid, or undetermined.\n\nKeys: x, y. Initial: x=0, y=0. Every written value is unique per key.\nT1  abort  w(x)=1\nT2  commit=4  r(x)=1",
+  "model_requested": "groq",
+  "model_returned": "openai/gpt-oss-120b",
+  "settings": {
+    "temperature": 0,
+    "max_tokens": 4096
+  },
+  "response_text": "**Applying M2 (Monotonic Reads) to the given history**\n\n- **Transaction T1** writes `x = 1` but then aborts.  \n  - Under M2, an aborted write must not become visible to any other transaction because the write never successfully committed.\n\n- **Transaction T2** reads `x = 1` and then commits.  \n  - Since the only write of `x = 1` comes from a transaction that aborted, T2 is observing a value that should not exist in a serializable view of the committed state.\n\nBecause T2 reads a value that was produced by an aborted transaction, the history violates the monotonic\u2011reads guarantee (and also basic atomicity). Therefore the history is **invalid** under M2.\n\n```json\n{\n  \"verdict\": \"invalid\"\n}\n```",
+  "finish_reason": "stop",
+  "usage": {
+    "queue_time": 0.005355281,
+    "prompt_tokens": 143,
+    "prompt_time": 0.006628708,
+    "completion_tokens": 258,
+    "completion_time": 0.546590737,
+    "total_tokens": 401,
+    "total_time": 0.553219445,
+    "completion_tokens_details": {
+      "reasoning_tokens": 78
+    }
+  },
+  "latency_ms": 625,
+  "provider_response_id": "chatcmpl-72b3449b-b4f6-4493-ad21-fb78745981cd",
+  "request_metadata": {
+    "provider": "groq",
+    "base_url": "https://api.groq.com/openai/v1",
+    "model": "openai/gpt-oss-120b",
+    "live": true
+  },
+  "run_date": "2026-11-06",
+  "created_at": "2026-11-06T22:01:54.560969+00:00",
+  "content_sha256": "4640d9fc29553cfd54b7a7948958ba1f1dc91d088fff458f60d5f1b45628606d"
+}

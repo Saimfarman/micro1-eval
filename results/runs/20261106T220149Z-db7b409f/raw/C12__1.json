@@ -1,0 +1,37 @@
+{
+  "attempt_key": "20261106T220149Z-db7b409f/groq/C12/1",
+  "task_id": "C12",
+  "task_hash": "60b3d4c39c96323bb65f86a2bf9f635e3fff3f0e145b43b81884233569035144",
+  "prompt_sent": "Apply M2 to this history. Explain the decision and end with a fenced JSON object containing verdict valid, invalid, or undetermined.\n\nKeys: x, y. Initial: x=0, y=0. Every written value is unique per key.\nT2  commit=4  w(x)=1  w(y)=2\nT1  commit=6  r(x)=0  r(y)=2",
+  "model_requested": "groq",
+  "model_returned": "openai/gpt-oss-120b",
+  "settings": {
+    "temperature": 0,
+    "max_tokens": 4096
+  },
+  "response_text": "**Applying M2**\n\nM2 (Monotonic Reads) requires that a transaction never observes a state that is older than a state it has already observed for any given key. In other words, once a transaction has seen a particular version of a key, any later reads of that same key must see that version or a newer one.\n\n- **Transaction\u202fT2** writes `x = 1` and `y = 2` and commits at logical time\u202f4.\n- **Transaction\u202fT1** starts later (commit time\u202f6) and reads `x = 0` and `y = 2`.\n\nFor key **y**, T1 sees the value `2`, which is the most recent write (by T2). This satisfies monotonic reads for `y`.\n\nFor key **x**, however, T1 reads the initial value `0` even though a newer value `1` was already committed by T2 at time\u202f4. This means T1 observes an older version of `x` after a newer version has become visible, violating the monotonic\u2011reads guarantee.\n\nBecause the history violates M2 for key `x`, the overall history is **invalid** under the M2 model.\n\n```json\n{\n  \"verdict\": \"invalid\"\n}\n```",
+  "finish_reason": "stop",
+  "usage": {
+    "queue_time": 0.004910378,
+    "prompt_tokens": 155,
+    "prompt_time": 0.006175065,
+    "completion_tokens": 394,
+    "completion_time": 0.820679017,
+    "total_tokens": 549,
+    "total_time": 0.826854082,
+    "completion_tokens_details": {
+      "reasoning_tokens": 124
+    }
+  },
+  "latency_ms": 891,
+  "provider_response_id": "chatcmpl-ba4b3000-f2dc-465e-b777-c3613b7ba446",
+  "request_metadata": {
+    "provider": "groq",
+    "base_url": "https://api.groq.com/openai/v1",
+    "model": "openai/gpt-oss-120b",
+    "live": true
+  },
+  "run_date": "2026-11-06",
+  "created_at": "2026-11-06T22:01:52.842372+00:00",
+  "content_sha256": "32e8af5e40ab72d22d66e07c36c2ac028c9164764e09d96c8c721ab2fd40a102"
+}

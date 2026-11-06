@@ -1,0 +1,37 @@
+{
+  "attempt_key": "20261106T220149Z-db7b409f/groq/C11/1",
+  "task_id": "C11",
+  "task_hash": "053c08e14be662efaab16553739e0db7df869f9cf30c0e056ddf3ed1a55295cd",
+  "prompt_sent": "Apply M2 to this history. Explain the decision and end with a fenced JSON object containing verdict valid, invalid, or undetermined.\n\nKeys: x, y. Initial: x=0, y=0. Every written value is unique per key.\nT1  commit=4  r(x)=0  w(x)=1\nT2  commit=5  r(x)=0  w(x)=2",
+  "model_requested": "groq",
+  "model_returned": "openai/gpt-oss-120b",
+  "settings": {
+    "temperature": 0,
+    "max_tokens": 4096
+  },
+  "response_text": "**Applying M2**\n\nM2 (Monotonic Reads) requires that each transaction sees a non\u2011decreasing view of the database: a transaction must not read a version of a key that is older than a version it has already observed.  \n\n- **Transaction\u202fT1** reads `x = 0` (the initial version) and then writes `x = 1`.  \n- **Transaction\u202fT2** also reads `x = 0` (the same initial version) and then writes `x = 2`.  \n\nBoth transactions read the same initial version and never read a version that is older than a version they have already observed. There is no read\u2011after\u2011write conflict, and the writes are to the same key but are unique (different values). The commit order (T1 at 4, T2 at 5) does not violate monotonic reads because each transaction\u2019s reads are consistent with the version history up to its start time.\n\nHence, the history satisfies the M2 constraint.\n\n**Verdict**\n\n```json\n{\n  \"verdict\": \"valid\"\n}\n```",
+  "finish_reason": "stop",
+  "usage": {
+    "queue_time": 0.004724231,
+    "prompt_tokens": 155,
+    "prompt_time": 0.006639875,
+    "completion_tokens": 349,
+    "completion_time": 0.740530986,
+    "total_tokens": 504,
+    "total_time": 0.747170861,
+    "completion_tokens_details": {
+      "reasoning_tokens": 115
+    }
+  },
+  "latency_ms": 797,
+  "provider_response_id": "chatcmpl-00c5420b-34d5-4356-87e6-89b563ef59cb",
+  "request_metadata": {
+    "provider": "groq",
+    "base_url": "https://api.groq.com/openai/v1",
+    "model": "openai/gpt-oss-120b",
+    "live": true
+  },
+  "run_date": "2026-11-06",
+  "created_at": "2026-11-06T22:01:51.943627+00:00",
+  "content_sha256": "c1ea59be3966673dd39d17c4b115457bfd1ad6d8d9651cce7edc439b005551ac"
+}

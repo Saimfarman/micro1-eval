@@ -1,0 +1,37 @@
+{
+  "attempt_key": "20261106T220149Z-db7b409f/groq/C10/1",
+  "task_id": "C10",
+  "task_hash": "62eaf26e1a74f0793b54cb391871e12e01c9919645d7727bf811d525a97ce39c",
+  "prompt_sent": "Apply M2 to this history. Explain the decision and end with a fenced JSON object containing verdict valid, invalid, or undetermined.\n\nKeys: x, y. Initial: x=0, y=0. Every written value is unique per key.\nT2  commit=5  r(y)=0  w(x)=1\nT1  commit=6  r(x)=0  w(y)=1",
+  "model_requested": "groq",
+  "model_returned": "openai/gpt-oss-120b",
+  "settings": {
+    "temperature": 0,
+    "max_tokens": 4096
+  },
+  "response_text": "**Applying M2 (Monotonic Reads) to the given history**\n\n- **Monotonic Reads** requires that each transaction sees a non\u2011decreasing sequence of versions for any key it reads.\n- Transaction **T2** reads `y = 0`, which is the initial version of `y`. No later read of `y` occurs, so the monotonic\u2011read condition is satisfied for `y`.\n- Transaction **T1** reads `x = 0`, which is the initial version of `x`. No later read of `x` occurs, so the monotonic\u2011read condition is satisfied for `x`.\n- Both reads observe the initial values, and there is no scenario where a transaction reads an older version after having observed a newer one.\n\nSince all reads respect the monotonic\u2011read property, the history is **valid** under M2.\n\n```json\n{\n  \"verdict\": \"valid\"\n}\n```",
+  "finish_reason": "stop",
+  "usage": {
+    "queue_time": 0.246453592,
+    "prompt_tokens": 155,
+    "prompt_time": 0.006239816,
+    "completion_tokens": 358,
+    "completion_time": 0.749349847,
+    "total_tokens": 513,
+    "total_time": 0.755589663,
+    "completion_tokens_details": {
+      "reasoning_tokens": 158
+    }
+  },
+  "latency_ms": 1155,
+  "provider_response_id": "chatcmpl-504266c9-fe39-4f2f-8083-9777f826e642",
+  "request_metadata": {
+    "provider": "groq",
+    "base_url": "https://api.groq.com/openai/v1",
+    "model": "openai/gpt-oss-120b",
+    "live": true
+  },
+  "run_date": "2026-11-06",
+  "created_at": "2026-11-06T22:01:51.130218+00:00",
+  "content_sha256": "56aed73dcf0cee3f32a4fbe745c9ce42c1956414e8bb8d17cbb916110d444b8c"
+}

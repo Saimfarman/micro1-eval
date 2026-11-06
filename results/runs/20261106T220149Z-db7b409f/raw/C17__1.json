@@ -1,0 +1,37 @@
+{
+  "attempt_key": "20261106T220149Z-db7b409f/groq/C17/1",
+  "task_id": "C17",
+  "task_hash": "dae96b4161389591fa620c0003db0a9311e8651c283c6f3fcf9d70e129100455",
+  "prompt_sent": "Apply M3 to this history. Explain the decision and end with a fenced JSON object containing verdict valid, invalid, or undetermined.\n\nKeys: x, y, z. Initial: x=0, y=0, z=0. Every written value is unique per key.\nT1  start=1  prepared commit_ts=4  w(z)=1\nT2  start=5  commit=6  r(x)=0  w(y)=1",
+  "model_requested": "groq",
+  "model_returned": "openai/gpt-oss-120b",
+  "settings": {
+    "temperature": 0,
+    "max_tokens": 4096
+  },
+  "response_text": "**Applying M3**\n\nM3 checks that a transaction\u2019s read set is consistent with a serial order that respects the start and commit timestamps of all transactions, and that no transaction reads a value that could not have been written by a transaction that committed earlier.\n\n- **Transaction\u202fT1**  \n  - Starts at timestamp\u202f1, prepares commit timestamp\u202f4, writes `z = 1`.  \n  - No reads, so no consistency constraints to check.\n\n- **Transaction\u202fT2**  \n  - Starts at timestamp\u202f5, commits at timestamp\u202f6.  \n  - Reads `x = 0`. The only write to `x` in the history is the initial value `0`; no transaction has written a different value to `x` before T2\u2019s start, so the read is valid.  \n  - Writes `y = 1`. This write occurs after T2\u2019s start and does not conflict with any prior write to `y` (the initial value is `0`).\n\nSince T2 starts **after** T1\u2019s commit (5\u202f>\u202f4), the serial order `T1 \u2192 T2` respects both start and commit timestamps. There are no read\u2011write or write\u2011write conflicts that violate M3, and every read sees a value that could have been produced by the preceding serial order.\n\n**Decision:** The history satisfies M3.\n\n```json\n{\n  \"verdict\": \"valid\"\n}\n```",
+  "finish_reason": "stop",
+  "usage": {
+    "queue_time": 0.37168923,
+    "prompt_tokens": 166,
+    "prompt_time": 0.007147225,
+    "completion_tokens": 372,
+    "completion_time": 0.767317533,
+    "total_tokens": 538,
+    "total_time": 0.774464758,
+    "completion_tokens_details": {
+      "reasoning_tokens": 68
+    }
+  },
+  "latency_ms": 1375,
+  "provider_response_id": "chatcmpl-5ee295b4-e356-491e-9d00-ea6690ce6fc0",
+  "request_metadata": {
+    "provider": "groq",
+    "base_url": "https://api.groq.com/openai/v1",
+    "model": "openai/gpt-oss-120b",
+    "live": true
+  },
+  "run_date": "2026-11-06",
+  "created_at": "2026-11-06T22:01:57.549549+00:00",
+  "content_sha256": "c948ace527ffbf499335732242c2d4099a4d9363991da18bbf907d4a5188ed45"
+}

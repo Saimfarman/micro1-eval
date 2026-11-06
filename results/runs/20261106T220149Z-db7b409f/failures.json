@@ -1,0 +1,170 @@
+{
+  "human_review": {
+    "status": "not_requested",
+    "reviewed": false
+  },
+  "failures": [
+    {
+      "tag": "wrong-verdict",
+      "suggestion": "Recheck the formal module definition.",
+      "attempt_key": "20261106T220149Z-db7b409f/groq/C10/1",
+      "human_review": {
+        "status": "not_reviewed",
+        "reviewed": false
+      }
+    },
+    {
+      "tag": "wrong-verdict",
+      "suggestion": "Recheck the formal module definition.",
+      "attempt_key": "20261106T220149Z-db7b409f/groq/C11/1",
+      "human_review": {
+        "status": "not_reviewed",
+        "reviewed": false
+      }
+    },
+    {
+      "tag": "wrong-verdict",
+      "suggestion": "Recheck the formal module definition.",
+      "attempt_key": "20261106T220149Z-db7b409f/groq/C13/1",
+      "human_review": {
+        "status": "not_reviewed",
+        "reviewed": false
+      }
+    },
+    {
+      "tag": "invalid-certificate",
+      "suggestion": "Provide a certificate derived from the history.",
+      "attempt_key": "20261106T220149Z-db7b409f/groq/C14/1",
+      "human_review": {
+        "status": "not_reviewed",
+        "reviewed": false
+      }
+    },
+    {
+      "tag": "invalid-certificate",
+      "suggestion": "Provide a certificate derived from the history.",
+      "attempt_key": "20261106T220149Z-db7b409f/groq/C15/1",
+      "human_review": {
+        "status": "not_reviewed",
+        "reviewed": false
+      }
+    },
+    {
+      "tag": "wrong-verdict",
+      "suggestion": "Recheck the formal module definition.",
+      "attempt_key": "20261106T220149Z-db7b409f/groq/C16/1",
+      "human_review": {
+        "status": "not_reviewed",
+        "reviewed": false
+      }
+    },
+    {
+      "tag": "invalid-certificate",
+      "suggestion": "Provide a certificate derived from the history.",
+      "attempt_key": "20261106T220149Z-db7b409f/groq/C17/1",
+      "human_review": {
+        "status": "not_reviewed",
+        "reviewed": false
+      }
+    },
+    {
+      "tag": "invalid-certificate",
+      "suggestion": "Provide a certificate derived from the history.",
+      "attempt_key": "20261106T220149Z-db7b409f/groq/C18/1",
+      "human_review": {
+        "status": "not_reviewed",
+        "reviewed": false
+      }
+    },
+    {
+      "tag": "wrong-verdict",
+      "suggestion": "Recheck the formal module definition.",
+      "attempt_key": "20261106T220149Z-db7b409f/groq/T01/1",
+      "human_review": {
+        "status": "not_reviewed",
+        "reviewed": false
+      }
+    },
+    {
+      "tag": "invalid-certificate",
+      "suggestion": "Provide a certificate derived from the history.",
+      "attempt_key": "20261106T220149Z-db7b409f/groq/T02/1",
+      "human_review": {
+        "status": "not_reviewed",
+        "reviewed": false
+      }
+    },
+    {
+      "tag": "wrong-verdict",
+      "suggestion": "Recheck the formal module definition.",
+      "attempt_key": "20261106T220149Z-db7b409f/groq/T03/1",
+      "human_review": {
+        "status": "not_reviewed",
+        "reviewed": false
+      }
+    },
+    {
+      "tag": "invalid-certificate",
+      "suggestion": "Provide a certificate derived from the history.",
+      "attempt_key": "20261106T220149Z-db7b409f/groq/T04/1",
+      "human_review": {
+        "status": "not_reviewed",
+        "reviewed": false
+      }
+    },
+    {
+      "tag": "invalid-certificate",
+      "suggestion": "Provide a certificate derived from the history.",
+      "attempt_key": "20261106T220149Z-db7b409f/groq/T05/1",
+      "human_review": {
+        "status": "not_reviewed",
+        "reviewed": false
+      }
+    },
+    {
+      "tag": "invalid-certificate",
+      "suggestion": "Provide a certificate derived from the history.",
+      "attempt_key": "20261106T220149Z-db7b409f/groq/T06/1",
+      "human_review": {
+        "status": "not_reviewed",
+        "reviewed": false
+      }
+    },
+    {
+      "tag": "invalid-certificate",
+      "suggestion": "Provide a certificate derived from the history.",
+      "attempt_key": "20261106T220149Z-db7b409f/groq/T07/1",
+      "human_review": {
+        "status": "not_reviewed",
+        "reviewed": false
+      }
+    },
+    {
+      "tag": "wrong-verdict",
+      "suggestion": "Recheck the formal module definition.",
+      "attempt_key": "20261106T220149Z-db7b409f/groq/T08/1",
+      "human_review": {
+        "status": "not_reviewed",
+        "reviewed": false
+      }
+    },
+    {
+      "tag": "invalid-certificate",
+      "suggestion": "Provide a certificate derived from the history.",
+      "attempt_key": "20261106T220149Z-db7b409f/groq/T09/1",
+      "human_review": {
+        "status": "not_reviewed",
+        "reviewed": false
+      }
+    },
+    {
+      "tag": "invalid-certificate",
+      "suggestion": "Provide a certificate derived from the history.",
+      "attempt_key": "20261106T220149Z-db7b409f/groq/T10/1",
+      "human_review": {
+        "status": "not_reviewed",
+        "reviewed": false
+      }
+    }
+  ]
+}
