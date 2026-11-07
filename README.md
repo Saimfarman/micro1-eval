@@ -30,12 +30,11 @@ reads, or complete distributed protocols.
 
 ## GitHub repository
 
-[Saimfarman/micro1-eval](https://github.com/Saimfarman/micro1-eval)
+[github.com/Saimfarman/micro1-eval](https://github.com/Saimfarman/micro1-eval)
 
 ## Project video
 
-Video walkthrough: not available yet. Add the published video URL here when it
-is ready.
+Video walkthrough: [drive.google.com/drive/folders/1MM5__kjWaKAihCNjcYd2yQWLtQcR8-Pa?usp=drive_link](https://drive.google.com/drive/folders/1MM5__kjWaKAihCNjcYd2yQWLtQcR8-Pa?usp=drive_link)
 
 ## What is included
 
